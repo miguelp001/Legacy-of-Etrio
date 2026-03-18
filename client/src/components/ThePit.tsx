@@ -8,19 +8,18 @@ const ThePit: React.FC = () => {
     const [combatLogs, setCombatLogs] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
     const intervalRef = useRef<any>(null);
 
     const simulateFloor = async () => {
         if (party.length === 0) {
-            setCombatLogs(prev => ["Cannot descend without a party. Visit the Tavern!", ...prev]);
-            setIsDescentActive(false);
-            return;
+            setCombatLogs(prev => ["You descend alone into the depths...", ...prev]);
         }
 
         setLoading(true);
         try {
             // Generate floor and enemies
-            const res = await fetch(`http://localhost:3001/api/calculate-offline-gains`, {
+            const res = await fetch(`${API_URL}/api/calculate-offline-gains`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
