@@ -98,6 +98,9 @@ A collective progression milestone system.
 
 ---
 
+## ☁️ Deployment
+Check out our [Deployment Guide](deployment_guide.md) for instructions on how to run Legacy of Etrio on Cloudflare Pages and other platforms.
+
 ## 📜 Credits & License
 Developed as part of the **Advanced Agentic Coding** initiative at Google DeepMind.
 Concept and Mechanics for "Legacy of Etrio" © 2026.
