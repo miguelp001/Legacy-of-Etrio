@@ -3,7 +3,8 @@ import { HeartPulse, Clock, Activity, ShieldAlert, Sparkles, Heart, Users } from
 import { useGameStore } from '../store/gameStore';
 
 const Hospital: React.FC = () => {
-    const { party } = useGameStore();
+    const { party, mainCharacter, healCharacter } = useGameStore();
+    const fullParty = mainCharacter ? [mainCharacter, ...party] : party;
     const [currentTime, setCurrentTime] = useState(Date.now());
 
     // Update time every second for recovery countdowns
@@ -28,8 +29,8 @@ const Hospital: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {party.length > 0 ? (
-                    party.map((member: any) => {
+                {fullParty.length > 0 ? (
+                    fullParty.map((member: any) => {
                         const isInjured = member.recoveryUntil && member.recoveryUntil > currentTime;
                         const remainingMs = isInjured ? member.recoveryUntil - currentTime : 0;
                         const remainingSecs = Math.ceil(remainingMs / 1000);
@@ -84,7 +85,10 @@ const Hospital: React.FC = () => {
                                                 <Sparkles size={14} />
                                                 Ready for Battle
                                             </div>
-                                            <button className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold transition-colors">
+                                            <button 
+                                                onClick={() => healCharacter(member.id, 50)}
+                                                className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold transition-colors"
+                                            >
                                                 Fast Recover (50g)
                                             </button>
                                         </div>

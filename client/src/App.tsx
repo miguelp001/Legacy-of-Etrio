@@ -6,7 +6,13 @@ import {
   Shield, 
   Mountain, 
   ChevronRight,
-  LayoutDashboard
+  LayoutDashboard,
+  Target,
+  Coins,
+  Map,
+  User,
+  Hammer,
+  Heart
 } from 'lucide-react';
 import { useGameStore } from './store/gameStore';
 import Tavern from './components/Tavern';
@@ -15,12 +21,13 @@ import Hospital from './components/Hospital';
 import GuildHall from './components/GuildHall';
 import ThePit from './components/ThePit';
 import LineageHall from './components/LineageHall';
+import CharacterCreation from './components/CharacterCreation';
 
 type Location = 'Tavern' | 'Blacksmith' | 'Hospital' | 'GuildHall' | 'ThePit' | 'LineageHall';
 
 const App: React.FC = () => {
   const [location, setLocation] = useState<Location>('Tavern');
-  const { gold, party, currentFloor } = useGameStore();
+  const { gold, party, currentFloor, mainCharacter, mainCharacterPersonality } = useGameStore();
 
   const navItems = [
     { id: 'Tavern', name: 'Tavern', icon: Users },
@@ -100,10 +107,46 @@ const App: React.FC = () => {
           {location === 'LineageHall' && <LineageHall />}
           {location === 'ThePit' && <ThePit />}
         </section>
+
+        {!mainCharacter && <CharacterCreation />}
       </main>
 
       {/* Right Column: Dynamic Status/Feed (Visible on XL) */}
-      <aside className="hidden xl:flex w-80 glass border-l border-white/5 p-6 flex-col gap-8 animate-fade-in">
+      <aside className="hidden xl:flex w-96 glass border-l border-white/5 p-6 flex-col gap-8 animate-fade-in overflow-y-auto">
+        {/* Player Identity Section */}
+        {mainCharacter && (
+            <div className="glass p-6 rounded-3xl border border-primary-color/30 bg-primary-color/5 shadow-[0_0_30px_rgba(139,92,246,0.1)] relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-30 transition-opacity">
+                <Target size={40} />
+              </div>
+              <div className="relative z-10">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-2xl font-black text-gradient leading-none">{mainCharacter.name}</h3>
+                    <div className="flex items-center gap-2 mt-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-accent-color bg-accent-color/10 px-2 py-0.5 rounded">{mainCharacterPersonality}</span>
+                        <span className="text-[10px] font-bold text-muted uppercase tracking-widest">{mainCharacter.baseClass}</span>
+                    </div>
+                  </div>
+                  <div className="bg-white/10 px-3 py-1 rounded-xl text-xs font-black">LVL {mainCharacter.level}</div>
+                </div>
+
+                <div className="space-y-2 mt-6">
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted">
+                        <span>Vitality</span>
+                        <span>{Math.floor(mainCharacter.hp)} / {mainCharacter.maxHp}</span>
+                    </div>
+                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                        <div 
+                            className="h-full bg-secondary-color shadow-[0_0_10px_rgba(16,185,129,0.5)] transition-all duration-500" 
+                            style={{ width: `${(mainCharacter.hp / mainCharacter.maxHp) * 100}%` }}
+                        ></div>
+                    </div>
+                </div>
+              </div>
+            </div>
+          )}
+
         <div>
           <h3 className="text-sm font-black uppercase tracking-widest text-muted mb-4">World Events</h3>
           <div className="space-y-4">

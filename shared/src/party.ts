@@ -1,5 +1,5 @@
 import { BaseClass, StatCalculator } from './stats.js';
-import type { CharacterStats } from './stats.js';
+import type { Combatant } from './combat.js';
 
 export interface Trait {
     name: string;
@@ -28,7 +28,7 @@ const TRAITS: Trait[] = [
 const NAMES = ['Alaric', 'Bryn', 'Caelum', 'Dara', 'Elowen', 'Faelan', 'Gwyneth', 'Harkin', 'Iona', 'Jace'];
 
 export class NPCGenerator {
-    static generateNPC(level: number, generation: number): CharacterStats & { name: string; traits: Trait[] } {
+    static generateNPC(level: number, generation: number): Combatant & { traits: Trait[] } {
         const name = NAMES[Math.floor(Math.random() * NAMES.length)]!;
         const baseClasses = Object.values(BaseClass);
         const baseClass = baseClasses[Math.floor(Math.random() * baseClasses.length)] as BaseClass;
@@ -50,6 +50,7 @@ export class NPCGenerator {
         });
 
         return {
+            id: Math.random().toString(36).substring(2, 11),
             name,
             level,
             baseClass,
@@ -59,7 +60,11 @@ export class NPCGenerator {
             hp: StatCalculator.calculateHP(stats),
             maxHp: StatCalculator.calculateHP(stats),
             mp: StatCalculator.calculateMP(stats),
-            maxMp: StatCalculator.calculateMP(stats)
+            maxMp: StatCalculator.calculateMP(stats),
+            isEnemy: false,
+            weapon: null,
+            armor: null,
+            accessory: null
         };
     }
 

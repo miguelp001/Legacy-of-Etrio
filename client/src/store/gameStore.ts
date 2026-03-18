@@ -24,6 +24,8 @@ interface GameState {
   biome: string;
   isAutoSellEnabled: boolean;
   autoSellRarityThreshold: string;
+  mainCharacter: Combatant | null;
+  mainCharacterPersonality: string | null;
   
   // Actions
   addGold: (amount: number) => void;
@@ -38,6 +40,9 @@ interface GameState {
   setBiome: (biome: string) => void;
   toggleAutoSell: () => void;
   setAutoSellThreshold: (threshold: string) => void;
+  createMainCharacter: (name: string, baseClass: any, personality: string) => void;
+  equipItem: (targetId: string, item: Item, slot: 'weapon' | 'armor' | 'accessory') => void;
+  healCharacter: (targetId: string, cost: number) => void;
 }
 
 export const useGameStore = create<GameState>()((set) => ({
@@ -55,6 +60,8 @@ export const useGameStore = create<GameState>()((set) => ({
   biome: 'Frozen Caves',
   isAutoSellEnabled: false,
   autoSellRarityThreshold: 'Common',
+  mainCharacter: null,
+  mainCharacterPersonality: null,
 
   addGold: (amount: number) => set((state) => ({ gold: state.gold + amount })),
   
@@ -114,4 +121,79 @@ export const useGameStore = create<GameState>()((set) => ({
   toggleAutoSell: () => set((state) => ({ isAutoSellEnabled: !state.isAutoSellEnabled })),
 
   setAutoSellThreshold: (threshold: string) => set({ autoSellRarityThreshold: threshold }),
+
+  createMainCharacter: (name, baseClass, personality) => set((_state) => {
+    const stats = {
+        strength: 10, agility: 10, intelligence: 10,
+        vitality: 10, spirit: 10, luck: 10
+    };
+
+    if (personality === 'Aggressive') stats.strength += 5;
+    if (personality === 'Stoic') stats.vitality += 5;
+    if (personality === 'Optimistic') stats.spirit += 5;
+    if (personality === 'Cynical') stats.agility += 5;
+
+    const mc: Combatant = {
+        id: 'player-mc',
+        name,
+        level: 1,
+        baseClass,
+        generation: 0,
+        stats,
+        hp: stats.vitality * 10,
+        maxHp: stats.vitality * 10,
+        mp: stats.spirit * 8,
+        maxMp: stats.spirit * 8,
+        isEnemy: false,
+        weapon: null,
+        armor: null,
+        accessory: null
+    };
+
+    return { mainCharacter: mc, mainCharacterPersonality: personality };
+  }),
+
+  equipItem: (targetId, item, slot) => set((state) => {
+    let target: Combatant | null = null;
+    let oldItem: Item | null = null;
+
+    if (targetId === 'player-mc') {
+        target = state.mainCharacter;
+        oldItem = target ? target[slot] : null;
+    } else {
+        target = state.party.find(m => m.id === targetId) || null;
+        oldItem = target ? target[slot] : null;
+    }
+
+    if (!target) return state;
+
+    const updatedTarget = { ...target, [slot]: item };
+    const nextInventory = state.inventory.filter(i => i.id !== item.id);
+    if (oldItem) nextInventory.push(oldItem);
+
+    if (targetId === 'player-mc') {
+        return { mainCharacter: updatedTarget, inventory: nextInventory };
+    } else {
+        return {
+            party: state.party.map(m => m.id === targetId ? updatedTarget : m),
+            inventory: nextInventory
+        };
+    }
+  }),
+
+  healCharacter: (targetId, cost) => set((state) => {
+    if (state.gold < cost) return state;
+
+    if (targetId === 'player-mc' && state.mainCharacter) {
+        return {
+            gold: state.gold - cost,
+            mainCharacter: { ...state.mainCharacter, hp: state.mainCharacter.maxHp }
+        };
+    } else {
+        return {
+            gold: state.gold - cost,
+            party: state.party.map(m => m.id === targetId ? { ...m, hp: m.maxHp } : m)
+        };
+    }
+  }),
 }));

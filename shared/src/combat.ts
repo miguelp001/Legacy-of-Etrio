@@ -1,9 +1,13 @@
 import type { CharacterStats } from './stats.js';
+import type { Item } from './items.js';
 
 export interface Combatant extends CharacterStats {
     id: string;
     name: string;
     isEnemy: boolean;
+    weapon: Item | null;
+    armor: Item | null;
+    accessory: Item | null;
 }
 
 export interface CombatLog {

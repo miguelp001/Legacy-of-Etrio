@@ -3,7 +3,7 @@ import { Mountain, Skull, Swords, Trophy, MapPin, Loader2, Play, Pause, ChevronD
 import { useGameStore } from '../store/gameStore';
 
 const ThePit: React.FC = () => {
-    const { currentFloor, setFloor, biome, setBiome, addGold, addToInventory, party, isAutoSellEnabled, autoSellRarityThreshold, updateAffinity } = useGameStore();
+    const { currentFloor, setFloor, biome, setBiome, addGold, addToInventory, party, mainCharacter, isAutoSellEnabled, autoSellRarityThreshold, updateAffinity } = useGameStore();
     const [isDescentActive, setIsDescentActive] = useState(false);
     const [combatLogs, setCombatLogs] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
@@ -37,10 +37,11 @@ const ThePit: React.FC = () => {
             gains.items.forEach((item: any) => addToInventory(item));
             
             // Gain Affinity
-            if (party.length >= 2) {
-                for (let i = 0; i < party.length; i++) {
-                    for (let j = i + 1; j < party.length; j++) {
-                        updateAffinity(party[i]!.id, party[j]!.id, 5);
+            const fullParty = mainCharacter ? [mainCharacter, ...party] : party;
+            if (fullParty.length >= 2) {
+                for (let i = 0; i < fullParty.length; i++) {
+                    for (let j = i + 1; j < fullParty.length; j++) {
+                        updateAffinity(fullParty[i]!.id, fullParty[j]!.id, 5);
                     }
                 }
             }

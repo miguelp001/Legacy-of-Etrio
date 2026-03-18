@@ -3,7 +3,8 @@ import { Hammer, Trash2, ShieldCheck, ShoppingCart, Loader2 } from 'lucide-react
 import { useGameStore } from '../store/gameStore';
 
 const Blacksmith: React.FC = () => {
-    const { inventory, addGold, removeFromInventory, isAutoSellEnabled, toggleAutoSell, autoSellRarityThreshold, setAutoSellThreshold } = useGameStore();
+    const { inventory, mainCharacter, party, addGold, removeFromInventory, isAutoSellEnabled, toggleAutoSell, autoSellRarityThreshold, setAutoSellThreshold, equipItem } = useGameStore();
+    const fullParty = mainCharacter ? [mainCharacter, ...party] : party;
     const [newItemLoading, setNewItemLoading] = useState(false);
 
     const generateTestItem = async () => {
@@ -68,9 +69,23 @@ const Blacksmith: React.FC = () => {
                                         ))}
                                     </div>
                                 </div>
-                                <button onClick={() => handleSell(item)} className="mt-4 btn-outline text-danger-color border-danger-color/20 hover:bg-danger-color/10 w-full py-2">
-                                    <Trash2 size={16} /> Sell for 50g
-                                </button>
+                                <div className="mt-4 space-y-2">
+                                    <button onClick={() => handleSell(item)} className="btn-outline text-danger-color border-danger-color/20 hover:bg-danger-color/10 w-full py-2">
+                                        <Trash2 size={16} /> Sell for 50g
+                                    </button>
+                                    
+                                    <div className="flex gap-2">
+                                        {fullParty.map(member => (
+                                            <button 
+                                                key={member.id}
+                                                onClick={() => equipItem(member.id, item, item.type.toLowerCase() as any)}
+                                                className="flex-1 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold uppercase truncate"
+                                            >
+                                                Equip: {member.name.split(' ')[0]}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>
