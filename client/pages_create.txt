@@ -1,0 +1,5 @@
+
+ Γ¢à∩╕Å wrangler 4.75.0
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+Γ£¿ Successfully created the 'etrio-client' project. It will be available at https://etrio-client.pages.dev/ once you create your first deployment.
+To deploy a folder of assets, run 'wrangler pages deploy [directory]'.

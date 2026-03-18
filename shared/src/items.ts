@@ -1,19 +1,21 @@
 import type { Stats } from './stats.js';
 
-export enum Rarity {
-    Common = "Common",
-    Uncommon = "Uncommon",
-    Rare = "Rare",
-    Epic = "Epic",
-    Legendary = "Legendary",
-    Corrupted = "Corrupted"
-}
+export const Rarity = {
+    Common: "Common",
+    Uncommon: "Uncommon",
+    Rare: "Rare",
+    Epic: "Epic",
+    Legendary: "Legendary",
+    Corrupted: "Corrupted"
+} as const;
+export type Rarity = (typeof Rarity)[keyof typeof Rarity];
 
-export enum ItemType {
-    Weapon = "Weapon",
-    Armor = "Armor",
-    Accessory = "Accessory"
-}
+export const ItemType = {
+    Weapon: "Weapon",
+    Armor: "Armor",
+    Accessory: "Accessory"
+} as const;
+export type ItemType = (typeof ItemType)[keyof typeof ItemType];
 
 export interface Item {
     id: string;
@@ -27,7 +29,7 @@ export interface Item {
     level: number;
 }
 
-const PREFIXES = [
+const PREFIXES: { name: string; rarity: Rarity; stats: Partial<Stats>; mutation?: string }[] = [
     { name: 'Burning', rarity: Rarity.Uncommon, stats: { strength: 2, intelligence: 2 } },
     { name: 'Frozen', rarity: Rarity.Uncommon, stats: { vitality: 2, spirit: 2 } },
     { name: 'Swift', rarity: Rarity.Rare, stats: { agility: 5 } },
@@ -45,7 +47,7 @@ const BASE_ITEMS = [
     { name: 'Leather Vest', type: ItemType.Armor, stats: { agility: 4, vitality: 4 } }
 ];
 
-const SUFFIXES = [
+const SUFFIXES: { name: string; rarity: Rarity; stats: Partial<Stats>; mutation?: string }[] = [
     { name: 'of Might', rarity: Rarity.Uncommon, stats: { strength: 3 } },
     { name: 'of Shadows', rarity: Rarity.Rare, stats: { agility: 6, luck: 4 } },
     { name: 'of Holy Light', rarity: Rarity.Epic, stats: { spirit: 10, intelligence: 5 } },
@@ -69,7 +71,7 @@ export class ItemGenerator {
 
         const name = nameParts.join(' ');
         
-        let rarity = Rarity.Common;
+        let rarity: Rarity = Rarity.Common;
         if (prefix && suffix) rarity = Rarity.Rare;
         if (prefix?.rarity === Rarity.Legendary || suffix?.rarity === Rarity.Legendary) rarity = Rarity.Legendary;
         if (prefix?.rarity === Rarity.Corrupted || suffix?.rarity === Rarity.Corrupted) rarity = Rarity.Corrupted;

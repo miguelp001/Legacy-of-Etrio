@@ -1,0 +1,7 @@
+../shared/src/combat.ts(1,31): error TS6196: 'Stats' is declared but never used.
+../shared/src/items.ts(3,13): error TS1294: This syntax is not allowed when 'erasableSyntaxOnly' is enabled.
+../shared/src/items.ts(12,13): error TS1294: This syntax is not allowed when 'erasableSyntaxOnly' is enabled.
+../shared/src/lineage.ts(1,10): error TS6133: 'BaseClass' is declared but its value is never read.
+../shared/src/lineage.ts(2,1): error TS6133: 'NPCGenerator' is declared but its value is never read.
+../shared/src/stats.ts(1,13): error TS1294: This syntax is not allowed when 'erasableSyntaxOnly' is enabled.
+../shared/src/stats.ts(8,13): error TS1294: This syntax is not allowed when 'erasableSyntaxOnly' is enabled.

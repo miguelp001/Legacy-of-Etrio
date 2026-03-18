@@ -2,12 +2,13 @@ import { BaseClass } from './stats.js';
 import { NPCGenerator } from './party.js';
 import type { Combatant } from './combat.js';
 
-export enum BiomeType {
-    Frozen = 'Frozen Caves',
-    Crystalline = 'Crystalline Peaks',
-    Fungal = 'Fungal Grotto',
-    Volcanic = 'Volcanic Depths'
-}
+export const BiomeType = {
+    Frozen: 'Frozen Caves',
+    Crystalline: 'Crystalline Peaks',
+    Fungal: 'Fungal Grotto',
+    Volcanic: 'Volcanic Depths'
+} as const;
+export type BiomeType = (typeof BiomeType)[keyof typeof BiomeType];
 
 export interface DungeonFloor {
     floorNumber: number;

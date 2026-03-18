@@ -1,4 +1,4 @@
-import type { CharacterStats, Stats } from './stats.js';
+import type { CharacterStats } from './stats.js';
 
 export interface Combatant extends CharacterStats {
     id: string;

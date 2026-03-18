@@ -24,7 +24,13 @@ To deploy **Legacy of Etrio** to Cloudflare, you will use **Cloudflare Pages** f
 
 3.  **Environment Variables**:
     - Under **Settings** > **Environment Variables**, add:
-        - `VITE_API_URL`: The URL of your deployed backend (e.g., `https://api.etrio.com`).
+        - `VITE_API_URL`: `https://etrio-api.miguelp001.workers.dev`
+
+---
+
+## 🔗 Live URLs (Auto-Deployed)
+- **Frontend**: `https://etrio-client.pages.dev`
+- **Backend API**: `https://etrio-api.miguelp001.workers.dev`
 
 ---
 

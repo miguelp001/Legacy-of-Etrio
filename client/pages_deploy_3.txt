@@ -1,0 +1,16 @@
+
+ Γ¢à∩╕Å wrangler 4.75.0
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+Γû▓ [WARNING] Warning: Your working directory is a git repo and has uncommitted changes
+
+  To silence this warning, pass in --commit-dirty=true
+
+
+Uploading... (0/5)
+Uploading... (2/5)
+Uploading... (3/5)
+Uploading... (5/5)
+Γ£¿ Success! Uploaded 5 files (1.99 sec)
+
+≡ƒîÄ Deploying...
+Γ£¿ Deployment complete! Take a peek over at https://04311bb1.etrio-client.pages.dev

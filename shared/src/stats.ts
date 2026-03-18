@@ -1,20 +1,22 @@
-export enum BaseClass {
-    Warrior = 'Warrior',
-    Mage = 'Mage',
-    Healer = 'Healer',
-    Thief = 'Thief'
-}
+export const BaseClass = {
+    Warrior: 'Warrior',
+    Mage: 'Mage',
+    Healer: 'Healer',
+    Thief: 'Thief'
+} as const;
+export type BaseClass = (typeof BaseClass)[keyof typeof BaseClass];
 
-export enum SubClass {
-    Brawler = 'Brawler',
-    Knight = 'Knight',
-    Elementalist = 'Elementalist',
-    Summoner = 'Summoner',
-    Cleric = 'Cleric',
-    Paladin = 'Paladin',
-    Assassin = 'Assassin',
-    Gunslinger = 'Gunslinger'
-}
+export const SubClass = {
+    Brawler: 'Brawler',
+    Knight: 'Knight',
+    Elementalist: 'Elementalist',
+    Summoner: 'Summoner',
+    Cleric: 'Cleric',
+    Paladin: 'Paladin',
+    Assassin: 'Assassin',
+    Gunslinger: 'Gunslinger'
+} as const;
+export type SubClass = (typeof SubClass)[keyof typeof SubClass];
 
 export interface Stats {
     strength: number;

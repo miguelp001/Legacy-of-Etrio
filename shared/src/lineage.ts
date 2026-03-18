@@ -1,5 +1,4 @@
-import { BaseClass, StatCalculator } from './stats.js';
-import { NPCGenerator } from './party.js';
+import { StatCalculator } from './stats.js';
 import type { CharacterStats } from './stats.js';
 import type { Trait } from './party.js';
 
