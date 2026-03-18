@@ -1,0 +1,6 @@
+name: etrio-api
+main: src/index.ts
+compatibility_date: "2024-03-18"
+
+[vars]
+# Add and override variables in the Cloudflare dashboard for production

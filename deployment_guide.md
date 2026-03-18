@@ -1,6 +1,22 @@
 # ☁️ Cloudflare Deployment Guide
 
-To deploy **Legacy of Etrio** to Cloudflare, you will use **Cloudflare Pages** for the frontend and a Node.js-compatible host for the backend.
+Legacy of Etrio is now set up for **Automated CI/CD** via GitHub Actions. Every push to the `main` branch will automatically deploy your frontend to **Cloudflare Pages** and your backend to **Cloudflare Workers**.
+
+---
+
+## 🚀 Setting up GitHub Actions (Proper Connection)
+
+To enable automatic deployments, you must add two secrets to your GitHub repository:
+
+1.  **Get your Cloudflare Token**:
+    - Go to [Cloudflare Dashboard](https://dash.cloudflare.com/profile/api-tokens).
+    - Create a token with **Edit Cloudflare Workers** and **Edit Cloudflare Pages** permissions.
+2.  **Add Secrets to GitHub**:
+    - Go to your GitHub Repo > **Settings** > **Secrets and variables** > **Actions**.
+    - Add `CLOUDFLARE_API_TOKEN`: (Your Token)
+    - Add `CLOUDFLARE_ACCOUNT_ID`: (Your Account ID, found in the side column of the Cloudflare dashboard).
+
+Once these are set, every `git push` will trigger the [.github/workflows/deploy.yml](file:///.github/workflows/deploy.yml) workflow.
 
 ---
 
