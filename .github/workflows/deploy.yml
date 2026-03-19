@@ -35,7 +35,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy client/dist --project-name=etrio-client
+          command: pages deploy client/dist --project-name=etrio-web
 
   deploy-server:
     name: Deploy Server (Workers)
