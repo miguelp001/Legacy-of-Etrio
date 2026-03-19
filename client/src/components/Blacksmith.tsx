@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import { Hammer, Trash2, ShieldCheck, ShoppingCart, Loader2 } from 'lucide-react';
+import { Hammer, Trash2, ShieldCheck, ShoppingCart, Loader2, Zap, AlertTriangle } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
 const Blacksmith: React.FC = () => {
-    const { inventory, mainCharacter, party, addGold, removeFromInventory, isAutoSellEnabled, toggleAutoSell, autoSellRarityThreshold, setAutoSellThreshold, equipItem } = useGameStore();
+    const { 
+        inventory, mainCharacter, party, addGold, 
+        removeFromInventory, isAutoSellEnabled, toggleAutoSell, 
+        autoSellRarityThreshold, setAutoSellThreshold, equipItem,
+        gold, infuseItem
+    } = useGameStore();
     const fullParty = mainCharacter ? [mainCharacter, ...party] : party;
     const [newItemLoading, setNewItemLoading] = useState(false);
 
@@ -23,6 +28,10 @@ const Blacksmith: React.FC = () => {
     const handleSell = (item: any) => {
         addGold(50); // Simplified sell value
         removeFromInventory(item.id);
+    };
+
+    const handleInfuse = (index: number) => {
+        infuseItem(index, 500);
     };
 
     return (
@@ -47,17 +56,26 @@ const Blacksmith: React.FC = () => {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                         {inventory.map((item) => (
-                            <div key={item.id} className="glass p-4 rounded-xl border border-white/5 flex flex-col justify-between">
+                            <div 
+                                key={item.id} 
+                                className={`glass p-4 rounded-xl border border-white/5 flex flex-col justify-between transition-all ${
+                                    item.rarity === 'Abyssal' ? 'rarity-abyssal scale-[1.02]' : ''
+                                }`}
+                            >
                                 <div>
                                     <div className="flex justify-between items-start mb-2">
-                                        <span className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                                        <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
+                                            item.rarity === 'Abyssal' ? 'bg-[#e0a7ff]/20 text-[#e0a7ff] shadow-[0_0_10px_#9333ea]' :
                                             item.rarity === 'Legendary' ? 'bg-accent-color/20 text-accent-color' :
                                             item.rarity === 'Rare' ? 'bg-primary-color/20 text-primary-color' :
                                             'bg-white/10 text-muted'
                                         }`}>
                                             {item.rarity}
                                         </span>
-                                        <span className="text-xs text-muted">Dur: {item.durability}/{item.maxDurability}</span>
+                                        <div className="flex gap-1">
+                                            {item.isInfused && <Zap size={14} className="text-primary-color fill-primary-color" title="Aether Infused" />}
+                                            <span className="text-xs text-muted">Dur: {item.durability}/{item.maxDurability}</span>
+                                        </div>
                                     </div>
                                     <h4 className="font-bold text-lg mb-2">{item.name}</h4>
                                     <div className="space-y-1 text-sm">
@@ -85,6 +103,16 @@ const Blacksmith: React.FC = () => {
                                             </button>
                                         ))}
                                     </div>
+
+                                    {!item.isInfused && !item.isCorrupted && (
+                                        <button 
+                                            onClick={() => handleInfuse(inventory.indexOf(item))}
+                                            disabled={gold < 500}
+                                            className="w-full py-2 bg-primary-color/10 hover:bg-primary-color/20 border border-primary-color/20 rounded-lg text-xs font-black text-primary-color flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                                        >
+                                            <Zap size={14} /> Infuse Gear (500g)
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -122,6 +150,23 @@ const Blacksmith: React.FC = () => {
                                     <option value="Uncommon">Uncommon & Below</option>
                                     <option value="Rare">Rare & Below</option>
                                 </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="glass p-6 rounded-2xl border border-primary-color/20 bg-primary-color/5">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-primary-color">
+                            <Zap size={20} />
+                            Aether Infusion
+                        </h3>
+                        <p className="text-sm text-muted mb-4 italic">"Overload your gear with raw aetheric energy. Power comes at a price..."</p>
+                        
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-xs font-bold text-green-400">
+                                <ShieldCheck size={14} /> 90% Success: +20% Stats
+                            </div>
+                            <div className="flex items-center gap-2 text-xs font-bold text-red-400">
+                                <AlertTriangle size={14} /> 10% Failure: Permanent Corruption
                             </div>
                         </div>
                     </div>

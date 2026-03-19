@@ -1,0 +1,288 @@
+import { CombatEngine } from '../../shared/src/combat.js';
+import type { CombatEvent, Combatant, NightsdeepTrait } from '../../shared/src/combat.js';
+import { ItemGenerator } from '../../shared/src/items.js';
+import type { Item } from '../../shared/src/items.js';
+import { DungeonManager } from '../../shared/src/dungeon.js';
+import { prisma } from './db.js';
+
+const BANTER: Record<NightsdeepTrait, string[]> = {
+    Stoic: [
+        "...",
+        "Hmph.",
+        "Steel yourself.",
+        "Focus."
+    ],
+    Cheerful: [
+        "We've got this!",
+        "Look at that shiny loot!",
+        "The Deep isn't so scary with friends.",
+        "Great job, everyone!"
+    ],
+    'Hot-Headed': [
+        "Get out of my way!",
+        "I'll crush them all!",
+        "Is that the best you've got?",
+        "More! I need more!"
+    ]
+};
+
+const EMOJI_TAGS = ['🔥', '❄️', '⚡', '✨'];
+
+const MIRACLE_EFFECTS: Record<string, string> = {
+    'See the Truth': 'The party sees through the darkness. Accuracy increased!',
+    'Blessing of Blood': 'Saluwan\'s fire burns in their veins. Extra damage dealt!',
+    'Saluwan\'s Wrath': 'A righteous fury takes hold. Strength increased!',
+    'Cleanse the Mind': 'Fear is purged. The party stands firm.',
+    'Walk the Flames': 'The heat of The Deep is ignored. Vitality increased!',
+    'Mark the Path': 'Saluwan guides their blades. Crit chance increased!'
+};
+
+export class SnapshotService {
+    static async calculateOfflineProgress(
+        timeElapsedMs: number,
+        party: Combatant[],
+        startFloor: number,
+        playerId: string,
+        initialBloodRations: number,
+        isResonatorActive: boolean = false,
+        resonatorMastery: number = 0
+    ): Promise<{ 
+        events: CombatEvent[]; 
+        gold: number; 
+        items: Item[]; 
+        lostGear?: Item[];
+        wiped: boolean; 
+        finalFloor: number; 
+        bloodpricePenalty: number; 
+        bloodRationsRemaining: number 
+    }> {
+        const timeElapsedMin = Math.floor(timeElapsedMs / (1000 * 60));
+        const ticks = Math.min(Math.floor(timeElapsedMin / 2), 720); // 1 check every 2 minutes, max 24 hours
+        
+        let currentGold = 0;
+        const foundItems: Item[] = [];
+        const allEvents: CombatEvent[] = [];
+        let currentFloor = startFloor;
+        let wiped = false;
+        let bloodpricePenalty = 0;
+        let bloodRations = initialBloodRations;
+        const lostGear: Item[] = [];
+
+        for (let i = 0; i < ticks; i++) {
+            if (wiped) break;
+
+            // Handle Blood Consumption
+            const vampireCount = party.filter(m => m.isVampire).length;
+            const rationsNeeded = vampireCount * 5; // 5 rations per vampire per 2-min tick
+
+            if (bloodRations >= rationsNeeded) {
+                bloodRations -= rationsNeeded;
+                party.forEach(m => { if (m.isVampire) m.isStarving = false; });
+            } else {
+                bloodRations = 0;
+                party.forEach(m => { if (m.isVampire) m.isStarving = true; });
+                if (i % 30 === 0) { // Log starvation occasionally
+                    allEvents.push({
+                        turn: i,
+                        attackerName: 'SYSTEM',
+                        defenderName: 'Party',
+                        damage: 0,
+                        isCrit: false,
+                        isMiss: false,
+                        remainingHp: 0,
+                        banter: "The vampires are starving... their strength fades.",
+                        emojiTag: '🩸'
+                    });
+                }
+            }
+
+            // Handle Miracles
+            party.forEach(member => {
+                if (!member.isVampire && member.piety && member.piety > 0) {
+                    const miracleChance = (member.piety / 100) * 0.05;
+                    if (Math.random() < miracleChance) {
+                        const blessing = member.blessings?.[0] || 'See the Truth';
+                        allEvents.push({
+                            turn: i,
+                            attackerName: member.name,
+                            defenderName: 'THE DEEP',
+                            damage: 0,
+                            isCrit: false,
+                            isMiss: false,
+                            remainingHp: 0,
+                            banter: `MIRACLE: ${MIRACLE_EFFECTS[blessing]}`,
+                            emojiTag: '✨'
+                        });
+                        
+                        // Apply temporary buff for this tick simulation if needed
+                        if (blessing === 'Saluwan\'s Wrath') {
+                            party.forEach(p => p.stats.strength *= 1.2);
+                        } else if (blessing === 'Mark the Path') {
+                            party.forEach(p => p.stats.luck *= 1.5);
+                        }
+                    }
+                }
+            });
+
+            // Handle Aether Breach (Rare high-risk event)
+            let floorMultiplier = (isResonatorActive ? 1.5 : 1.0) * (1 + resonatorMastery * 0.1);
+            const isBreach = Math.random() < 0.01; // 1% chance
+            
+            if (isBreach) {
+                floorMultiplier *= 5;
+                allEvents.push({
+                    turn: i,
+                    attackerName: 'THE VOID',
+                    defenderName: 'Reality',
+                    damage: 0,
+                    isCrit: false,
+                    isMiss: false,
+                    remainingHp: 0,
+                    banter: "AN AETHER BREACH HAS OPENED! The Deep's riches pour forth, but the shadows grow hungrier...",
+                    emojiTag: '🌀',
+                    isAetherBreach: true
+                });
+
+                // 10% chance for Abyssal Relic during Breach
+                if (Math.random() < 0.1) {
+                    const relic = ItemGenerator.generateRelic(currentFloor);
+                    foundItems.push(relic);
+                    allEvents.push({
+                        turn: i,
+                        attackerName: 'THE VOID',
+                        defenderName: 'FOUND',
+                        damage: 0,
+                        isCrit: false,
+                        isMiss: false,
+                        remainingHp: 0,
+                        banter: `A relic of the ancient world has been pulled from the rift: ${relic.name}!`,
+                        emojiTag: '🌌'
+                    });
+                }
+            }
+
+            const floorData = DungeonManager.generateFloor(currentFloor);
+            // If breach, enemies are significantly stronger (simulated via level boost)
+            const effectiveLevel = isBreach ? floorData.floorNumber + 10 : floorData.floorNumber;
+            const enemies = floorData.enemies.map(e => ({ ...e, level: effectiveLevel, isEnemy: true } as Combatant));
+            
+            const result = CombatEngine.simulate(party, enemies);
+            
+            // Add GDD-compliant metadata to events
+            result.events.forEach(event => {
+                if (Math.random() > 0.8) {
+                    const speaker = party[Math.floor(Math.random() * party.length)];
+                    if (speaker?.trait) {
+                        const banterPool = BANTER[speaker.trait];
+                        const banter = banterPool[Math.floor(Math.random() * banterPool.length)];
+                        if (banter) event.banter = banter;
+                    }
+                    const tag = EMOJI_TAGS[Math.floor(Math.random() * EMOJI_TAGS.length)];
+                    if (tag) event.emojiTag = tag;
+                }
+            });
+
+            allEvents.push(...result.events);
+
+            if (result.victory) {
+                currentGold += Math.floor(10 * floorData.goldMultiplier * floorMultiplier);
+                currentFloor++;
+                
+                // Item degradation logic: -1 durability per win
+                party.forEach(member => {
+                    this.degradeGear(member, 1);
+                });
+            } else {
+                wiped = true;
+                await this.handleWipe(playerId, party[0]?.name || 'Bondi', currentFloor);
+                
+                // Calculate Bloodprice for companions
+                const companions = party.filter(p => p.id !== 'player-mc');
+                companions.forEach(c => {
+                    bloodpricePenalty += this.calculateBloodprice(c);
+                });
+
+                // Gear loss logic: Non-soulbound gear on all fallen members is lost
+                party.forEach(member => {
+                    [member.weapon, member.armor, member.accessory].forEach(item => {
+                        if (item && !item.isSoulBound) {
+                            lostGear.push(item);
+                        }
+                    });
+                });
+
+                // Add Wipe Event
+                allEvents.push({
+                    turn: i,
+                    attackerName: 'SYSTEM',
+                    defenderName: party[0]?.name || 'Bondi',
+                    damage: 0,
+                    isCrit: false,
+                    isMiss: false,
+                    remainingHp: 0,
+                    banter: "The party has fallen into the darkness of The Deep...",
+                    corpseData: { playerId, floor: currentFloor },
+                    emojiTag: '💀'
+                });
+                break;
+            }
+        }
+
+        return {
+            events: allEvents,
+            gold: wiped ? Math.round(currentGold * 0.9) : currentGold,
+            items: foundItems,
+            lostGear,
+            wiped,
+            finalFloor: currentFloor,
+            bloodpricePenalty,
+            bloodRationsRemaining: bloodRations
+        };
+    }
+
+    private static calculateBloodprice(member: Combatant): number {
+        const prices = {
+            'Thrall': 100,
+            'Bondi': 500,
+            'Vardr': 1000,
+            'Scrifadr': 2500,
+            'Drengskapr': 10000
+        };
+        return prices[member.socialClass || 'Thrall'];
+    }
+
+    private static degradeGear(member: Combatant, amount: number) {
+        [member.weapon, member.armor, member.accessory].forEach(item => {
+            if (item) {
+                item.durability = Math.max(0, item.durability - amount);
+            }
+        });
+    }
+
+    private static async handleWipe(playerId: string, playerName: string, floor: number) {
+        await prisma.corpse.create({
+            data: {
+                playerId,
+                playerName,
+                floor
+            }
+        });
+    }
+
+    static async getCorpses() {
+        return await prisma.corpse.findMany({
+            orderBy: { timestamp: 'desc' }
+        });
+    }
+
+    static async layToRest(corpseId: string) {
+        try {
+            await prisma.corpse.delete({
+                where: { id: corpseId }
+            });
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+}

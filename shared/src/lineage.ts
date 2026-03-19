@@ -1,9 +1,13 @@
 import { StatCalculator } from './stats.js';
 import type { CharacterStats } from './stats.js';
 import type { Trait } from './party.js';
+import type { SocialClass } from './combat.js';
 
 export class LineageManager {
-    static createHeir(parent1: CharacterStats & { name: string; traits: Trait[] }, parent2: CharacterStats & { name: string; traits: Trait[] }): CharacterStats & { name: string; traits: Trait[] } {
+    static createHeir(
+        parent1: CharacterStats & { name: string; traits: Trait[]; socialClass: SocialClass }, 
+        parent2: CharacterStats & { name: string; traits: Trait[]; socialClass: SocialClass }
+    ): CharacterStats & { name: string; traits: Trait[]; socialClass: SocialClass } {
         const generation = Math.max(parent1.generation, parent2.generation) + 1;
         const level = 1;
 
@@ -11,11 +15,26 @@ export class LineageManager {
         const baseClass = Math.random() > 0.5 ? parent1.baseClass : parent2.baseClass;
         
         // Inherit traits (chance to keep or gain new ones)
-        const combinedTraits = [...parent1.traits, ...parent2.traits];
+        const p1Traits = parent1.traits || [];
+        const p2Traits = parent2.traits || [];
+        const combinedTraits = [...p1Traits, ...p2Traits];
         const uniqueTraits = Array.from(new Set(combinedTraits.map(t => t.name)))
             .map(name => combinedTraits.find(t => t.name === name)!);
         
         const heirTraits: Trait[] = uniqueTraits.filter(() => Math.random() > 0.4);
+
+        // Social Class inheritance
+        const classLevels: SocialClass[] = ['Thrall', 'Bondi', 'Vardr', 'Scrifadr', 'Drengskapr'];
+        const p1Level = classLevels.indexOf(parent1.socialClass);
+        const p2Level = classLevels.indexOf(parent2.socialClass);
+        const maxLevel = Math.max(p1Level, p2Level);
+        
+        let heirLevel = maxLevel;
+        const roll = Math.random();
+        if (roll < 0.1) heirLevel = Math.max(0, heirLevel - 1); // Disgrace
+        else if (roll > 0.9) heirLevel = Math.min(classLevels.length - 1, heirLevel + 1); // Merit
+        
+        const heirClass = classLevels[heirLevel]!;
 
         // Calculate stats with new generation bonus
         const stats = StatCalculator.calculateStats(level, baseClass, generation);
@@ -29,6 +48,7 @@ export class LineageManager {
             baseClass,
             generation,
             traits: heirTraits,
+            socialClass: heirClass,
             stats,
             hp: StatCalculator.calculateHP(stats),
             maxHp: StatCalculator.calculateHP(stats),

@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Heart, Users, Sparkles, UserPlus, ShieldAlert, History } from 'lucide-react';
+import { Heart, Users, Sparkles, UserPlus, ShieldAlert, History, ShieldCheck, Zap } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 import { LineageManager } from '../../../shared/src/lineage';
 
 const LineageHall: React.FC = () => {
-    const { party, relationships, addToParty, removeFromParty } = useGameStore();
+    const { 
+        party, relationships, addToParty, removeFromParty, 
+        mainCharacter, bindItemToSoul, gold 
+    } = useGameStore();
     const [selectedParents, setSelectedParents] = useState<string[]>([]);
 
     const getRelationship = (m1: string, m2: string) => {
@@ -18,6 +21,25 @@ const LineageHall: React.FC = () => {
         } else if (selectedParents.length < 2) {
             setSelectedParents([...selectedParents, id]);
         }
+    };
+
+    const getRitualCost = () => {
+        // Average class cost or based on parents? Let's use the highest parent class.
+        const p1 = party.find(m => m.id === selectedParents[0]);
+        const p2 = party.find(m => m.id === selectedParents[1]);
+        if (!p1 || !p2) return 0;
+
+        const costs: Record<string, number> = {
+            'Thrall': 2000,
+            'Bondi': 1000,
+            'Vardr': 500,
+            'Scrifadr': 250,
+            'Drengskapr': 0
+        };
+        // The higher the class, the lower the ritual cost (as they own the hall).
+        const c1 = costs[p1.socialClass || 'Bondi'] ?? 1000;
+        const c2 = costs[p2.socialClass || 'Bondi'] ?? 1000;
+        return Math.min(c1, c2);
     };
 
     const performRitual = () => {
@@ -34,11 +56,18 @@ const LineageHall: React.FC = () => {
             return;
         }
 
+        const { gold, addGold } = useGameStore.getState();
+        const cost = getRitualCost();
+        if (gold < cost) {
+            alert(`Not enough gold! Ritual costs ${cost}g.`);
+            return;
+        }
+
         // Create Heir
-        // The cast is needed because useGameStore party has Combatant type which is slightly different but compatible
         const heir = LineageManager.createHeir(parent1 as any, parent2 as any);
         
-        // Add to party (if space)
+        // Subtract gold and add to party
+        addGold(-cost);
         addToParty(heir as any);
         
         alert(`Success! ${heir.name} (Generation ${heir.generation}) has been born with a +${heir.generation * 10}% Legacy Bonus.`);
@@ -48,6 +77,12 @@ const LineageHall: React.FC = () => {
     const handleRetire = (id: string, name: string) => {
         if (confirm(`Are you sure you want to retire ${name}? They will leave the party and pass their equipment to the vault.`)) {
             removeFromParty(id);
+        }
+    };
+
+    const handleBind = (itemId: string) => {
+        if (confirm("Perform the Soul Ritual? This item will never be lost in the depths of The Deep.")) {
+            bindItemToSoul(itemId, 2500);
         }
     };
 
@@ -121,6 +156,43 @@ const LineageHall: React.FC = () => {
                             </div>
                         )}
                     </div>
+
+                    <h3 className="text-lg font-bold flex items-center gap-2 mt-12 mb-6">
+                        <Zap size={20} className="text-primary-color" />
+                        Soul-Binding Ritual
+                    </h3>
+                    <p className="text-sm text-muted mb-6 italic">Anchor an item's essence to the lineage. Soul-bound items are returned to the vault even if the bearer falls.</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[mainCharacter, ...party].filter((m): m is any => m !== null).map((member) => (
+                            <div key={member.id + '-bind'} className="glass p-4 rounded-xl border border-primary-color/10 bg-primary-color/5">
+                                <div className="text-xs font-bold text-primary-color mb-3 uppercase tracking-widest">{member.name}'s Gear</div>
+                                <div className="space-y-2">
+                                    {[member.weapon, member.armor, member.accessory].map((item, i) => item && (
+                                        <div key={item.id} className="flex justify-between items-center text-sm p-2 bg-black/20 rounded-lg">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs opacity-50">[{['W', 'A', 'X'][i]}]</span>
+                                                <span className={item.isSoulBound ? 'text-primary-color font-bold' : ''}>{item.name}</span>
+                                                {item.isSoulBound && <ShieldCheck size={14} className="text-primary-color" />}
+                                            </div>
+                                            {!item.isSoulBound && (
+                                                <button 
+                                                    onClick={() => handleBind(item.id)}
+                                                    disabled={gold < 2500}
+                                                    className="px-3 py-1 bg-primary-color/20 hover:bg-primary-color/40 border border-primary-color/20 rounded text-[10px] font-bold transition-all disabled:opacity-50"
+                                                >
+                                                    BIND (2500g)
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    {![member.weapon, member.armor, member.accessory].some(Boolean) && (
+                                        <div className="text-[10px] text-muted text-center py-2">No gear equipped to bind.</div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Succession Ritual */}
@@ -164,7 +236,7 @@ const LineageHall: React.FC = () => {
                         }`}
                     >
                         <UserPlus size={20} />
-                        Produce Legacy Heir
+                        Produce Legacy Heir ({getRitualCost()}g)
                     </button>
                     
                     <div className="mt-6 flex items-start gap-2 text-xs text-muted leading-relaxed">

@@ -3,7 +3,8 @@ import { HeartPulse, Clock, Activity, ShieldAlert, Sparkles, Heart, Users } from
 import { useGameStore } from '../store/gameStore';
 
 const Hospital: React.FC = () => {
-    const { party, mainCharacter, healCharacter } = useGameStore();
+    const { party, mainCharacter, healCharacter, pollutionLevel } = useGameStore();
+    const pollutionPenalty = pollutionLevel > 50 ? 1.2 : 1.0;
     const fullParty = mainCharacter ? [mainCharacter, ...party] : party;
     const [currentTime, setCurrentTime] = useState(Date.now());
 
@@ -22,6 +23,11 @@ const Hospital: React.FC = () => {
                 <div>
                     <h2 className="text-2xl font-bold">Respite Sanitarium</h2>
                     <p className="text-muted">Advanced recovery for survivors of the Pit.</p>
+                    {pollutionLevel > 50 && (
+                        <div className="text-[10px] text-orange-500 font-bold uppercase tracking-widest mt-1">
+                            ΓÜá∩╕Å Industrial Grime: Slower/Costly Healing
+                        </div>
+                    )}
                 </div>
                 <div className="p-3 bg-danger-color/20 rounded-xl text-danger-color">
                     <HeartPulse size={24} />
@@ -41,7 +47,10 @@ const Hospital: React.FC = () => {
                                 <div className="flex justify-between items-start mb-6">
                                     <div>
                                         <div className="font-bold text-lg">{member.name}</div>
-                                        <div className="text-xs text-muted uppercase tracking-widest">{member.baseClass}</div>
+                                        <div className="flex gap-2 items-center">
+                                            <span className="text-[10px] text-muted uppercase tracking-widest">{member.baseClass}</span>
+                                            <span className="text-[10px] text-secondary-color uppercase tracking-widest font-bold">{member.socialClass}</span>
+                                        </div>
                                     </div>
                                     {isInjured ? (
                                         <div className="p-2 bg-danger-color/20 rounded-lg text-danger-color animate-pulse">
@@ -85,12 +94,32 @@ const Hospital: React.FC = () => {
                                                 <Sparkles size={14} />
                                                 Ready for Battle
                                             </div>
-                                            <button 
-                                                onClick={() => healCharacter(member.id, 50)}
-                                                className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold transition-colors"
-                                            >
-                                                Fast Recover (50g)
-                                            </button>
+                                            {(() => {
+                                                const healCosts: Record<string, number> = {
+                                                    'Thrall': 25,
+                                                    'Bondi': 50,
+                                                    'Vardr': 100,
+                                                    'Scrifadr': 250,
+                                                    'Drengskapr': 1000
+                                                };
+                                                const cost = Math.floor((healCosts[member.socialClass || 'Bondi'] || 50) * pollutionPenalty);
+                                                return (
+                                                    <button 
+                                                        onClick={() => {
+                                                            const { gold, addGold } = useGameStore.getState();
+                                                            if (gold < cost) {
+                                                                alert('Not enough gold!');
+                                                                return;
+                                                            }
+                                                            addGold(-cost);
+                                                            healCharacter(member.id, member.maxHp);
+                                                        }}
+                                                        className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold transition-colors"
+                                                    >
+                                                        Fast Recover ({cost}g)
+                                                    </button>
+                                                );
+                                            })()}
                                         </div>
                                     )}
                                 </div>

@@ -1,0 +1,12 @@
+--- Verifying Phase 15: Resonator Mastery ---
+1. Testing SnapshotService Multiplier Scaling
+Mastery 0 Gold: 16 (Wiped: false, Events: 1)
+Mastery 5 Gold: 24
+Mastery 10 Gold: 33
+Γ£à SUCCESS: Snapshot gold gain scales correctly with resonator mastery.
+
+2. Testing Store Upgrade Logic (Cost Scaling)
+Cost Level 1: 10000
+Cost Level 6: 320000
+Γ£à SUCCESS: Upgrade cost scaling is exponentially correct.
+--- Verification Complete ---

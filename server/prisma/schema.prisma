@@ -1,0 +1,35 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Corpse {
+  id         String   @id @default(uuid())
+  playerId   String
+  playerName String
+  floor      Int
+  timestamp  DateTime @default(now())
+}
+
+model GuildSettings {
+  id             String @id @default("global")
+  pollutionLevel Int    @default(0)
+  masteryLevel   Int    @default(0)
+}
+
+model PlayerState {
+  id        String   @id // UserId or PlayerId
+  state     String   // JSON string of the GameStore
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}

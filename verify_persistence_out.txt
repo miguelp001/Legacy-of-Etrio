@@ -1,0 +1,27 @@
+--- Phase 7 Verification: The Nine Tribes ---
+
+1. Testing NPC Generation...
+Generated 50 NPCs. Vampires: 11
+Tribe Distribution: {
+  Vinrforad: 3,
+  Grima: 1,
+  Jotunheimr: 3,
+  'The Frozen': 2,
+  'The Beasts': 1,
+  Logi: 1
+}
+
+2. Testing Tribal Stat Bonuses (Jotunheimr example)...
+Base Vitality: 10, Jotunheimr Vitality: 12.5
+Γ£à Jotunheimr bonus (+25% VIT) applied correctly.
+
+3. Testing Starvation Penalty...
+Base Strength: 10, Starving Strength: 5
+Γ£à Starvation penalty (-50%) applied correctly.
+
+4. Testing Snapshot Blood Consumption...
+Initial Rations: 100, Remaining: 0
+Is Starving in result: true
+Γ£à Blood consumption and starvation logic verified.
+
+--- Verification Complete ---

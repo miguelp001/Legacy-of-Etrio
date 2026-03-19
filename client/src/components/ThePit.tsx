@@ -3,12 +3,13 @@ import { Mountain, Skull, Swords, Trophy, MapPin, Loader2, Play, Pause, ChevronD
 import { useGameStore } from '../store/gameStore';
 
 const ThePit: React.FC = () => {
-    const { currentFloor, setFloor, biome, setBiome, addGold, addToInventory, party, mainCharacter, isAutoSellEnabled, autoSellRarityThreshold, updateAffinity } = useGameStore();
+    const { 
+        currentFloor, biome, setBiome, party, councilMembers, 
+        confrontHeart, processCombatTick, isAutoSellEnabled, autoSellRarityThreshold
+    } = useGameStore();
     const [isDescentActive, setIsDescentActive] = useState(false);
     const [combatLogs, setCombatLogs] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
-    
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
     const intervalRef = useRef<any>(null);
 
     const simulateFloor = async () => {
@@ -18,54 +19,28 @@ const ThePit: React.FC = () => {
 
         setLoading(true);
         try {
-            // Generate floor and enemies
-            const res = await fetch(`${API_URL}/api/calculate-offline-gains`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    startTime: Date.now() - 120000, // Pretend we spent 2 minutes
-                    endTime: Date.now(),
-                    startFloor: currentFloor,
-                    autoSellRarity: isAutoSellEnabled ? autoSellRarityThreshold : null
-                })
-            });
-
-            const gains = await res.json();
+            const res = await processCombatTick();
             
-            // Apply rewards
-            addGold(gains.gold);
-            gains.items.forEach((item: any) => addToInventory(item));
-            
-            // Gain Affinity
-            const fullParty = mainCharacter ? [mainCharacter, ...party] : party;
-            if (fullParty.length >= 2) {
-                for (let i = 0; i < fullParty.length; i++) {
-                    for (let j = i + 1; j < fullParty.length; j++) {
-                        updateAffinity(fullParty[i]!.id, fullParty[j]!.id, 5);
-                    }
+            if (res && res.result.victory) {
+                // Biome Shift logic (can stay here for UI feedback)
+                const nextFloor = currentFloor + 1;
+                if (nextFloor % 10 === 1) {
+                    const biomes = ['Frozen Caves', 'Crystalline Peaks', 'Fungal Grotto', 'Volcanic Depths'];
+                    const nextBiome = biomes[Math.floor(nextFloor / 10) % biomes.length] || 'The Void';
+                    setBiome(nextBiome);
+                    setCombatLogs(prev => [`--- BIOME SHIFT: ${nextBiome} ---`, ...prev]);
                 }
+
+                setCombatLogs(prev => [
+                    `Floor ${currentFloor} Cleared! Verified on server.`,
+                    ...prev.slice(0, 19)
+                ]);
+            } else {
+                setCombatLogs(prev => ["Battle in progress...", ...prev]);
             }
-
-            // Increment floor
-            const nextFloor = currentFloor + 1;
-            setFloor(nextFloor);
-            
-            // Biome Shift every 10 floors
-            if (nextFloor % 10 === 1) {
-                const biomes = ['Frozen Caves', 'Crystalline Peaks', 'Fungal Grotto', 'Volcanic Depths'];
-                const nextBiome = biomes[Math.floor(nextFloor / 10) % biomes.length] || 'The Void';
-                setBiome(nextBiome);
-                setCombatLogs(prev => [`--- BIOME SHIFT: ${nextBiome} ---`, ...prev]);
-            }
-
-            setCombatLogs(prev => [
-                `Floor ${nextFloor} Cleared! Gained ${gains.gold} gold.`,
-                ...prev.slice(0, 19)
-            ]);
-
         } catch (error) {
             console.error(error);
-            setCombatLogs(prev => ["Failed to contact engine...", ...prev]);
+            setCombatLogs(prev => ["Failed to contact authoritative engine...", ...prev]);
         } finally {
             setLoading(false);
         }
@@ -108,11 +83,42 @@ const ThePit: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                {/* Progression Info */}
+                {/* Progression Info / Final Boss */}
                 <div className="glass p-8 rounded-2xl border border-white/10 flex flex-col items-center justify-center text-center relative overflow-hidden h-[400px]">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60 z-0"></div>
                     
-                    {isDescentActive ? (
+                    {currentFloor >= 1000 ? (
+                        <div className="relative z-10 flex flex-col items-center">
+                            <div className="w-32 h-32 bg-primary-color/20 rounded-full flex items-center justify-center mb-8 border-4 border-primary-color animate-pulse shadow-[0_0_50px_var(--primary-glow)]">
+                                <MapPin size={48} className="text-primary-color" />
+                            </div>
+                            <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">The Void Singularity</h3>
+                            <p className="text-sm text-muted mb-8 max-w-xs">
+                                The Heart of Etrio beats here. Only a complete Council of Ascended Heroes can pierce the veil.
+                            </p>
+                            
+                            <div className="mb-6 flex gap-2">
+                                {[...Array(4)].map((_, i) => (
+                                    <div 
+                                        key={i} 
+                                        className={`w-3 h-3 rounded-full ${i < councilMembers.length ? 'bg-primary-color shadow-[0_0_5px_var(--primary-glow)]' : 'bg-white/10'}`}
+                                    ></div>
+                                ))}
+                            </div>
+
+                            <button 
+                                onClick={() => confrontHeart()}
+                                disabled={councilMembers.length < 4}
+                                className={`px-12 py-4 rounded-xl font-black uppercase tracking-widest transition-all ${
+                                    councilMembers.length >= 4
+                                    ? 'bg-primary-color text-white hover:scale-105 shadow-[0_0_30px_#9333ea]' 
+                                    : 'bg-white/5 text-muted cursor-not-allowed'
+                                }`}
+                            >
+                                {councilMembers.length >= 4 ? 'Confront The Heart' : 'Council Incomplete'}
+                            </button>
+                        </div>
+                    ) : isDescentActive ? (
                         <div className="relative z-10 flex flex-col items-center">
                             <div className="w-32 h-32 border-4 border-primary-color border-t-transparent rounded-full animate-spin mb-8 flex items-center justify-center">
                                 <ChevronDown size={48} className="text-primary-color animate-bounce" />

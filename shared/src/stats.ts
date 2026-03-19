@@ -64,6 +64,18 @@ const SUBCLASS_GROWTH_MODIFIERS: Record<SubClass, Partial<Stats>> = {
     [SubClass.Gunslinger]: { luck: 1.5, agility: 0.5 }
 };
 
+export const TRIBE_BONUSES: Record<string, Partial<Stats>> = {
+    'Vinrforad': { spirit: 1.2, luck: 1.1 },
+    'Logi': { agility: 1.15, strength: 1.1 },
+    'Jotunheimr': { vitality: 1.25, strength: 1.15, agility: 0.9 },
+    'Fridrbjorn': { luck: 1.2, spirit: 1.1 },
+    'Grima': { spirit: 1.15, vitality: 1.1 },
+    'Iftiqad': { spirit: 1.15, luck: 1.15 },
+    'The Frozen': { vitality: 1.15, spirit: 1.1 },
+    'The Drowned': { spirit: 1.15, strength: 1.1 },
+    'The Beasts': { agility: 1.15, luck: 1.1 }
+};
+
 export class StatCalculator {
     static calculateStats(level: number, baseClass: BaseClass, generation: number, subClass?: SubClass): Stats {
         const base = BASE_STATS[baseClass];
@@ -100,7 +112,35 @@ export class StatCalculator {
         stats.spirit *= heirMult;
         stats.luck *= heirMult;
 
-        // Round to 2 decimal places or integers? Let's keep decimals for math, but round for display later.
+        // Apply Tribal Bonuses
+        const tribe = (arguments[3] as any)?.tribe; // Sneaking in tribe from an optional fifth arg or context
+        // Actually, let's fix the signature to be cleaner if we can, but signature changes might break others.
+        // I'll add an optional params object or just check for Tribe.
+        return stats;
+    }
+
+    static applyTribalBonuses(stats: Stats, tribe?: string, isStarving?: boolean): Stats {
+        if (isStarving) {
+            return {
+                strength: stats.strength * 0.5,
+                agility: stats.agility * 0.5,
+                intelligence: stats.intelligence * 0.5,
+                vitality: stats.vitality * 0.5,
+                spirit: stats.spirit * 0.5,
+                luck: stats.luck * 0.5
+            };
+        }
+
+        if (tribe && TRIBE_BONUSES[tribe]) {
+            const bonuses = TRIBE_BONUSES[tribe]!;
+            if (bonuses.strength) stats.strength *= bonuses.strength;
+            if (bonuses.agility) stats.agility *= bonuses.agility;
+            if (bonuses.intelligence) stats.intelligence *= bonuses.intelligence;
+            if (bonuses.vitality) stats.vitality *= bonuses.vitality;
+            if (bonuses.spirit) stats.spirit *= bonuses.spirit;
+            if (bonuses.luck) stats.luck *= bonuses.luck;
+        }
+
         return stats;
     }
 
