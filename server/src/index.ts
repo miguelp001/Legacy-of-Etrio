@@ -12,6 +12,20 @@ import { initPrisma } from './db.js';
 
 const app = new Hono<{ Bindings: { DB: any, JWT_SECRET: string } }>();
 
+// Global Error Handler
+app.onError((err, c) => {
+    console.error('GLOBAL ERROR CAUGHT:', err.message, err.stack);
+    return c.json({ 
+        error: 'Internal Server Error', 
+        message: err.message,
+        stack: err.stack 
+    }, 500);
+});
+
+app.notFound((c) => {
+    return c.json({ error: 'Not Found', path: c.req.path }, 404);
+});
+
 // Middleware
 app.use('*', async (c, next) => {
     initPrisma(c.env.DB);
