@@ -113,9 +113,6 @@ export class StatCalculator {
         stats.luck *= heirMult;
 
         // Apply Tribal Bonuses
-        const tribe = (arguments[3] as any)?.tribe; // Sneaking in tribe from an optional fifth arg or context
-        // Actually, let's fix the signature to be cleaner if we can, but signature changes might break others.
-        // I'll add an optional params object or just check for Tribe.
         return stats;
     }
 

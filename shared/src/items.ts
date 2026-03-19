@@ -170,10 +170,6 @@ export class ItemGenerator {
     }
 
     static generateRelic(level: number): Item {
-        const base = BASE_ITEMS[Math.floor(Math.random() * BASE_ITEMS.length)]!;
-        const prefix = PREFIXES[Math.floor(Math.random() * PREFIXES.length)];
-        const suffix = SUFFIXES[Math.floor(Math.random() * SUFFIXES.length)];
-
         const item = this.generateItem(level);
         item.rarity = Rarity.Abyssal;
         item.name = `Abyssal ${item.name} of Convergence`; // Unique relic name pattern
