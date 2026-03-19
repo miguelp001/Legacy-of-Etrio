@@ -4,19 +4,29 @@ import { prisma } from './db.js';
 
 export class AuthService {
     static async register(username: string, password: string, jwtSecret: string) {
-        const existing = await (prisma as any).user.findUnique({ where: { username } });
-        if (existing) throw new Error('Username already taken');
+        try {
+            console.log('Registering user:', username);
+            const existing = await (prisma as any).user.findUnique({ where: { username } });
+            if (existing) throw new Error('Username already taken');
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await (prisma as any).user.create({
-            data: {
-                username,
-                password: hashedPassword
-            }
-        });
+            console.log('Hashing password...');
+            const hashedPassword = await bcrypt.hash(password, 10);
+            
+            console.log('Creating user in DB...');
+            const user = await (prisma as any).user.create({
+                data: {
+                    username,
+                    password: hashedPassword
+                }
+            });
 
-        const token = jwt.sign({ userId: user.id }, jwtSecret, { expiresIn: '7d' });
-        return { user, token };
+            console.log('Signing JWT...');
+            const token = jwt.sign({ userId: user.id }, jwtSecret, { expiresIn: '7d' });
+            return { user, token };
+        } catch (error: any) {
+            console.error('Registration error details:', error);
+            throw error;
+        }
     }
 
     static async login(username: string, password: string, jwtSecret: string) {

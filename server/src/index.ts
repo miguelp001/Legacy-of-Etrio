@@ -174,12 +174,16 @@ app.post('/api/game/ascend', async (c) => {
 });
 
 app.post('/api/auth/register', async (c) => {
-    const { username, password } = await c.req.json();
     try {
-        const result = await AuthService.register(username, password, c.env.JWT_SECRET);
+        const body = await c.req.json();
+        console.log('Registration request received for:', body.username);
+        
+        const result = await AuthService.register(body.username, body.password, c.env.JWT_SECRET);
+        console.log('Registration successful for:', body.username);
         return c.json(result);
     } catch (e: any) {
-        return c.json({ error: e.message }, 400);
+        console.error('Registration route error:', e.message, e.stack);
+        return c.json({ error: e.message || 'Internal Server Error' }, 400);
     }
 });
 
