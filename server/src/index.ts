@@ -8,10 +8,16 @@ import { SnapshotService } from './snapshotService.js';
 import { StateService } from './stateService.js';
 import { GameService } from './gameService.js';
 import { AuthService } from './authService.js';
+import { initPrisma } from './db.js';
 
-const app = new Hono();
+const app = new Hono<{ Bindings: { DB: any } }>();
 
 // Middleware
+app.use('*', async (c, next) => {
+    initPrisma(c.env.DB);
+    await next();
+});
+
 app.use('*', cors());
 
 app.get('/api/health', (c) => {

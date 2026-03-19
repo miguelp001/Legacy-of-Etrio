@@ -4,3 +4,8 @@ compatibility_date: "2024-03-18"
 
 [vars]
 # Add and override variables in the Cloudflare dashboard for production
+
+[[d1_databases]]
+binding = "DB"
+database_name = "etrio-db"
+database_id = "276990f4-c91c-41cb-b7c8-56c16b1456ab"
