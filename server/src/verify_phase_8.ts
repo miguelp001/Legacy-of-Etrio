@@ -31,12 +31,14 @@ async function verifyPhase8() {
     piousPaladin.piety = 100;
     piousPaladin.blessings = ['Saluwan\'s Wrath'];
 
-    const snapshotResult = SnapshotService.calculateOfflineProgress(
+    const snapshotResult = await SnapshotService.calculateOfflineProgress(
         1000 * 2 * 60 * 1000, // 1000 ticks
         [piousPaladin],
         1,
         'test-player',
-        100
+        100,
+        false,
+        0
     );
 
     const miracleEvents = snapshotResult.events.filter(e => e.banter?.startsWith('MIRACLE:'));
@@ -44,7 +46,7 @@ async function verifyPhase8() {
     
     if (miracleEvents.length > 0) {
         console.log("✅ Miracles triggered correctly.");
-        console.log("Sample Miracle:", miracleEvents[0].banter);
+        console.log("Sample Miracle:", miracleEvents[0]?.banter);
     } else {
         console.warn("⚠️ No miracles triggered in 60 ticks (Probability per tick: 5%). This might be bad luck or a bug.");
     }

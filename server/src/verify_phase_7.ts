@@ -48,23 +48,25 @@ async function verifyPhase7() {
         NPCGenerator.generateNPC(100, 0), 
         NPCGenerator.generateNPC(100, 0)
     ];
-    party[0].isVampire = true; // Ensure at least one vampire
-    party[1].isVampire = false;
+    (party[0] as any).isVampire = true; // Ensure at least one vampire
+    (party[1] as any).isVampire = false;
 
     const snapshotResult = await SnapshotService.calculateOfflineProgress(
         60 * 60 * 1000, // 1 hour
         party,
         1,
         'test-player',
-        100 // initial rations
+        100, // initial rations
+        false,
+        0
     );
 
     console.log(`Initial Rations: 100, Remaining: ${snapshotResult.bloodRationsRemaining}`);
     // 1 vampire * 5 rations * 30 ticks (60 mins / 2 mins) = 150 rations needed.
     // So remaining should be 0 and isStarving should be true.
-    console.log("Is Starving in result:", party[0].isStarving);
+    console.log("Is Starving in result:", (party[0] as any).isStarving);
     
-    if (snapshotResult.bloodRationsRemaining === 0 && party[0].isStarving) {
+    if (snapshotResult.bloodRationsRemaining === 0 && (party[0] as any).isStarving) {
         console.log("✅ Blood consumption and starvation logic verified.");
     } else {
         console.error("❌ Blood logic failure. Remaining:", snapshotResult.bloodRationsRemaining);

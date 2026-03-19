@@ -38,7 +38,9 @@ async function verifySoulBinding() {
         party, 
         1, 
         'player-mc', 
-        100
+        100,
+        false,
+        0
     );
 
     console.log(`Snapshot Result: Wiped = ${result.wiped}`);

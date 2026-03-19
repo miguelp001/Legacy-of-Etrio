@@ -47,7 +47,9 @@ async function verifyAbyssalRelics() {
             JSON.parse(JSON.stringify(party)), 
             1, 
             'player-mc', 
-            1000
+            1000,
+            false,
+            0
         );
 
         const relicInResult = result.items.find(item => item.rarity === Rarity.Abyssal);

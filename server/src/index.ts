@@ -1,55 +1,50 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { NPCGenerator } from '../../shared/src/party.js';
 import { ItemGenerator, Rarity } from '../../shared/src/items.js';
 import { CombatEngine } from '../../shared/src/combat.js';
 import { OfflineEngine } from '../../shared/src/offline.js';
-import { DungeonManager } from '../../shared/src/dungeon.js';
 import { SnapshotService } from './snapshotService.js';
 import { StateService } from './stateService.js';
 import { GameService } from './gameService.js';
 import { AuthService } from './authService.js';
 
-dotenv.config();
+const app = new Hono();
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+// Middleware
+app.use('*', cors());
 
-app.use(cors());
-app.use(express.json());
-
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', message: 'Legacy of Etrio Backend Running' });
+app.get('/api/health', (c) => {
+    return c.json({ status: 'ok', message: 'Legacy of Etrio Backend Running on Hono' });
 });
 
-app.get('/api/generate-npc', (req, res) => {
-    const level = parseInt(req.query.level as string) || 1;
-    const generation = parseInt(req.query.generation as string) || 0;
+app.get('/api/generate-npc', (c) => {
+    const level = parseInt(c.req.query('level') || '1');
+    const generation = parseInt(c.req.query('generation') || '0');
     const npc = NPCGenerator.generateNPC(level, generation);
-    res.json(npc);
+    return c.json(npc);
 });
 
-app.get('/api/generate-item', (req, res) => {
-    const level = parseInt(req.query.level as string) || 1;
+app.get('/api/generate-item', (c) => {
+    const level = parseInt(c.req.query('level') || '1');
     const item = ItemGenerator.generateItem(level);
-    res.json(item);
+    return c.json(item);
 });
 
-app.post('/api/simulate-combat', (req, res) => {
-    const { party, enemies } = req.body;
+app.post('/api/simulate-combat', async (c) => {
+    const { party, enemies } = await c.req.json();
     if (!party || !enemies) {
-        return res.status(400).json({ error: 'Party and enemies are required' });
+        return c.json({ error: 'Party and enemies are required' }, 400);
     }
     const result = CombatEngine.simulate(party, enemies);
-    res.json(result);
+    return c.json(result);
 });
 
-app.post('/api/calculate-snapshot', async (req, res) => {
-    const { lastLogout, currentTime, party, startFloor, playerId, bloodRations, isResonatorActive, resonatorMastery } = req.body;
+app.post('/api/calculate-snapshot', async (c) => {
+    const { lastLogout, currentTime, party, startFloor, playerId, bloodRations, isResonatorActive, resonatorMastery } = await c.req.json();
     
     if (!lastLogout || !currentTime || !party || startFloor === undefined || !playerId) {
-        return res.status(400).json({ error: 'Missing required fields for snapshot calculation.' });
+        return c.json({ error: 'Missing required fields for snapshot calculation.' }, 400);
     }
 
     const result = await SnapshotService.calculateOfflineProgress(
@@ -62,156 +57,155 @@ app.post('/api/calculate-snapshot', async (req, res) => {
         resonatorMastery || 0
     );
 
-    res.json(result);
+    return c.json(result);
 });
 
-app.get('/api/corpses', async (req, res) => {
-    res.json(await SnapshotService.getCorpses());
+app.get('/api/corpses', async (c) => {
+    return c.json(await SnapshotService.getCorpses());
 });
 
-app.post('/api/lay-to-rest', async (req, res) => {
-    const { corpseId } = req.body;
-    if (!corpseId) return res.status(400).json({ error: 'corpseId is required' });
+app.post('/api/lay-to-rest', async (c) => {
+    const { corpseId } = await c.req.json();
+    if (!corpseId) return c.json({ error: 'corpseId is required' }, 400);
     
     const success = await SnapshotService.layToRest(corpseId);
-    res.json({ success, message: success ? 'Corpse laid to rest. Luck buff granted!' : 'Corpse not found' });
+    return c.json({ success, message: success ? 'Corpse laid to rest. Luck buff granted!' : 'Corpse not found' });
 });
 
-app.get('/api/state/:playerId', async (req, res) => {
-    const state = await StateService.getPlayerState(req.params.playerId);
-    res.json(state);
+app.get('/api/state/:playerId', async (c) => {
+    const playerId = c.req.param('playerId');
+    const state = await StateService.getPlayerState(playerId);
+    return c.json(state);
 });
 
-app.post('/api/state', async (req, res) => {
-    const { playerId, state } = req.body;
-    if (!playerId || !state) return res.status(400).json({ error: 'playerId and state are required' });
+app.post('/api/state', async (c) => {
+    const { playerId, state } = await c.req.json();
+    if (!playerId || !state) return c.json({ error: 'playerId and state are required' }, 400);
     
     await StateService.savePlayerState(playerId, state);
-    res.json({ success: true });
+    return c.json({ success: true });
 });
 
-app.get('/api/guild-settings', async (req, res) => {
-    res.json(await StateService.getGuildSettings());
+app.get('/api/guild-settings', async (c) => {
+    return c.json(await StateService.getGuildSettings());
 });
 
-app.post('/api/guild-settings', async (req, res) => {
-    const { pollutionLevel, masteryLevel } = req.body;
+app.post('/api/guild-settings', async (c) => {
+    const { pollutionLevel, masteryLevel } = await c.req.json();
     await StateService.updateGuildSettings(pollutionLevel, masteryLevel);
-    res.json({ success: true });
+    return c.json({ success: true });
 });
 
 // Authoritative Actions
-app.post('/api/game/upgrade', async (req, res) => {
-    const { playerId, buildingId } = req.body;
+app.post('/api/game/upgrade', async (c) => {
+    const { playerId, buildingId } = await c.req.json();
     try {
         const state = await GameService.upgradeBuilding(playerId, buildingId);
-        res.json(state);
+        return c.json(state);
     } catch (e: any) {
-        res.status(400).json({ error: e.message });
+        return c.json({ error: e.message }, 400);
     }
 });
 
-app.post('/api/game/tick', async (req, res) => {
-    const { playerId } = req.body;
+app.post('/api/game/tick', async (c) => {
+    const { playerId } = await c.req.json();
     try {
         const result = await GameService.processCombatTick(playerId);
-        res.json(result);
+        return c.json(result);
     } catch (e: any) {
-        res.status(400).json({ error: e.message });
+        return c.json({ error: e.message }, 400);
     }
 });
 
-app.post('/api/game/infuse', async (req, res) => {
-    const { playerId, inventoryIndex, cost } = req.body;
+app.post('/api/game/infuse', async (c) => {
+    const { playerId, inventoryIndex, cost } = await c.req.json();
     try {
         const result = await GameService.infuseItem(playerId, inventoryIndex, cost);
-        res.json(result);
+        return c.json(result);
     } catch (e: any) {
-        res.status(400).json({ error: e.message });
+        return c.json({ error: e.message }, 400);
     }
 });
 
-app.post('/api/game/bind', async (req, res) => {
-    const { playerId, itemId, cost } = req.body;
+app.post('/api/game/bind', async (c) => {
+    const { playerId, itemId, cost } = await c.req.json();
     try {
         const state = await GameService.bindItem(playerId, itemId, cost);
-        res.json(state);
+        return c.json(state);
     } catch (e: any) {
-        res.status(400).json({ error: e.message });
+        return c.json({ error: e.message }, 400);
     }
 });
 
-app.post('/api/game/donate', async (req, res) => {
-    const { playerId, amount } = req.body;
+app.post('/api/game/donate', async (c) => {
+    const { playerId, amount } = await c.req.json();
     try {
         const state = await GameService.donateToGate(playerId, amount);
-        res.json(state);
+        return c.json(state);
     } catch (e: any) {
-        res.status(400).json({ error: e.message });
+        return c.json({ error: e.message }, 400);
     }
 });
 
-app.post('/api/game/heal', async (req, res) => {
-    const { playerId, targetId, cost } = req.body;
+app.post('/api/game/heal', async (c) => {
+    const { playerId, targetId, cost } = await c.req.json();
     try {
         const state = await GameService.healCharacter(playerId, targetId, cost);
-        res.json(state);
+        return c.json(state);
     } catch (e: any) {
-        res.status(400).json({ error: e.message });
+        return c.json({ error: e.message }, 400);
     }
 });
 
-app.post('/api/game/ascend', async (req, res) => {
-    const { playerId, characterId } = req.body;
+app.post('/api/game/ascend', async (c) => {
+    const { playerId, characterId } = await c.req.json();
     try {
         const state = await GameService.ascendCharacter(playerId, characterId);
-        res.json(state);
+        return c.json(state);
     } catch (e: any) {
-        res.status(400).json({ error: e.message });
+        return c.json({ error: e.message }, 400);
     }
 });
 
-app.post('/api/auth/register', async (req, res) => {
-    const { username, password } = req.body;
+app.post('/api/auth/register', async (c) => {
+    const { username, password } = await c.req.json();
     try {
         const result = await AuthService.register(username, password);
-        res.json(result);
+        return c.json(result);
     } catch (e: any) {
-        res.status(400).json({ error: e.message });
+        return c.json({ error: e.message }, 400);
     }
 });
 
-app.post('/api/auth/login', async (req, res) => {
-    const { username, password } = req.body;
+app.post('/api/auth/login', async (c) => {
+    const { username, password } = await c.req.json();
     try {
         const result = await AuthService.login(username, password);
-        res.json(result);
+        return c.json(result);
     } catch (e: any) {
-        res.status(400).json({ error: e.message });
+        return c.json({ error: e.message }, 400);
     }
 });
 
-app.post('/api/calculate-offline-gains', (req, res) => {
-    const { startTime, endTime, startFloor, autoSellRarity } = req.body;
+app.post('/api/calculate-offline-gains', async (c) => {
+    const { startTime, endTime, startFloor, autoSellRarity } = await c.req.json();
     
-    // Validate inputs
     if (!startTime || !endTime || startFloor === undefined) {
-        return res.status(400).json({ error: 'startTime, endTime, and startFloor are required' });
+        return c.json({ error: 'startTime, endTime, and startFloor are required' }, 400);
     }
 
     const rawGains = OfflineEngine.calculateGains(startTime, endTime, startFloor);
     
-    // Apply Auto-Sell
     let extraGold = 0;
     const keptItems = rawGains.items.filter(item => {
         if (autoSellRarity && ItemGenerator.shouldAutoSell(item, autoSellRarity as Rarity)) {
-            extraGold += 50; // Standard auto-sell value
+            extraGold += 50; 
             return false;
         }
         return true;
     });
 
-    res.json({
+    return c.json({
         ...rawGains,
         items: keptItems,
         gold: rawGains.gold + extraGold,
@@ -219,6 +213,4 @@ app.post('/api/calculate-offline-gains', (req, res) => {
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+export default app;

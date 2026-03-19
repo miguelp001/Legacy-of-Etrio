@@ -16,7 +16,7 @@ drengComp.socialClass = 'Drengskapr'; // 10000g
 
 const party = [player, bondiComp, drengComp];
 // Mock last logout to be 1 hour ago
-const result = SnapshotService.calculateOfflineProgress(60 * 60 * 1000, party, 1, 'player-mc');
+const result = await SnapshotService.calculateOfflineProgress(60 * 60 * 1000, party, 1, 'player-mc', 100, false, 0);
 console.log(`- Wipe Detected: ${result.wiped}`);
 console.log(`- Total Bloodprice Penalty: ${result.bloodpricePenalty}g (Expected: 10500g if wiped naturally)`);
 // Note: SnapshotService might not always wipe in 1 hour if level 1 is too easy.

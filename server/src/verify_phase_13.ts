@@ -1,5 +1,4 @@
-import { useGameStore } from '../client/src/store/gameStore.js';
-import type { Combatant } from '../shared/src/combat.js';
+import type { Combatant } from '../../shared/src/combat.js';
 
 // Note: Running this via tsx might be tricky because of Zustand's persist middleware and DOM dependencies.
 // However, I've implemented the logic in a way that I can test the stat scaling directly.

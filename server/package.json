@@ -4,7 +4,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,17 +14,15 @@
   "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "cors": "^2.8.6",
     "dotenv": "^17.3.1",
-    "express": "^5.2.1",
     "hono": "^4.12.8",
     "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260317.1",
+    "@hono/node-server": "^1.19.11",
     "@prisma/client": "^6.1.0",
     "@types/bcryptjs": "^2.4.6",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.5.0",
     "prisma": "^6.1.0",

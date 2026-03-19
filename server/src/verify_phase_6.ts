@@ -30,7 +30,7 @@ try {
     drengComp.socialClass = 'Drengskapr'; // 10000g
 
     const party = [player, bondiComp, drengComp];
-    const result = await SnapshotService.calculateOfflineProgress(60 * 60 * 1000, party, 1, 'player-mc', 0);
+    const result = await SnapshotService.calculateOfflineProgress(60 * 60 * 1000, party, 1, 'player-mc', 0, false, 0);
     console.log(`- Wipe Detected: ${result.wiped}`);
     console.log(`- Total Bloodprice Penalty: ${result.bloodpricePenalty}g (Expected: 10500g)`);
 

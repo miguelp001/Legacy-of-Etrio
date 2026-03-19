@@ -14,7 +14,7 @@ export interface Combatant extends CharacterStats {
     socialClass?: SocialClass | undefined;
     tribe?: Tribe | undefined;
     isVampire?: boolean | undefined;
-    isStarving?: boolean | undefined;
+    isStarving?: boolean | undefined; // Tracks resource depletion for vampires
     piety?: number | undefined;
     blessings?: SaluwanBlessing[] | undefined;
     affinityLevel?: number | undefined;

@@ -1,4 +1,4 @@
-import { useGameStore } from '../client/src/store/gameStore.js';
+// Removed unused client import
 
 async function verifyFinalDescent() {
     console.log('--- Verifying Phase 16: The Final Descent ---');
