@@ -8,6 +8,7 @@ import type { GateMilestone } from '../../../shared/src/gate.js';
 import { GateManager } from '../../../shared/src/gate.js';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
+console.log('API_BASE configured as:', API_BASE || '(relative paths)');
 
 interface GuildUpgrade {
     id: string;
