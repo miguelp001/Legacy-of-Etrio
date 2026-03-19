@@ -10,7 +10,19 @@ import { GameService } from './gameService.js';
 import { AuthService } from './authService.js';
 import { initPrisma } from './db.js';
 
+console.log('--- WORKER BOOTING UP: ' + new Date().toISOString() + ' ---');
+
 const app = new Hono<{ Bindings: { DB: any, JWT_SECRET: string } }>();
+
+// 0. Manual OPTIONS handler (Foolproof CORS)
+app.options('*', (c) => {
+    console.log('[OPTIONS-PREFLIGHT] ' + c.req.url);
+    return c.body(null, 204, {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    });
+});
 
 // 1. CORS MUST be at the very top to handle OPTIONS and error headers
 app.use('*', cors());
