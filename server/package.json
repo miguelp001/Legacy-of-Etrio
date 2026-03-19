@@ -18,12 +18,12 @@
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.3.1",
     "hono": "^4.12.8",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "@prisma/client": "^7.5.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260317.1",
     "@hono/node-server": "^1.19.11",
-    "@prisma/client": "^7.5.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.5.0",
