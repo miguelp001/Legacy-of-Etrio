@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Hammer, Trash2, ShieldCheck, ShoppingCart, Loader2, Zap, AlertTriangle } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 const Blacksmith: React.FC = () => {
     const { 
         inventory, mainCharacter, party, addGold, 
@@ -15,7 +17,7 @@ const Blacksmith: React.FC = () => {
     const generateTestItem = async () => {
         setNewItemLoading(true);
         try {
-            const res = await fetch('http://localhost:3001/api/generate-item?level=1');
+            const res = await fetch(`${API_BASE}/api/generate-item?level=1`);
             const item = await res.json();
             useGameStore.getState().addToInventory(item);
         } catch (error) {

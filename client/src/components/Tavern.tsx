@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { UserPlus, RefreshCw, Loader2, Droplets } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 const Tavern: React.FC = () => {
     const [candidates, setCandidates] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -13,9 +15,9 @@ const Tavern: React.FC = () => {
         setLoading(true);
         try {
             const results = await Promise.all([
-                fetch('http://localhost:3001/api/generate-npc?level=1').then(res => res.json()),
-                fetch('http://localhost:3001/api/generate-npc?level=1').then(res => res.json()),
-                fetch('http://localhost:3001/api/generate-npc?level=1').then(res => res.json()),
+                fetch(`${API_BASE}/api/generate-npc?level=1`).then(res => res.json()),
+                fetch(`${API_BASE}/api/generate-npc?level=1`).then(res => res.json()),
+                fetch(`${API_BASE}/api/generate-npc?level=1`).then(res => res.json()),
             ]);
             setCandidates(results);
         } catch (error) {

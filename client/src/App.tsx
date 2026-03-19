@@ -28,6 +28,8 @@ import DepthMap from './components/DepthMap';
 import VictoryScreen from './components/VictoryScreen';
 import LoginScreen from './components/LoginScreen';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 type Location = 'Tavern' | 'Blacksmith' | 'Hospital' | 'GuildHall' | 'ThePit' | 'LineageHall' | 'BloodMarket' | 'Basilica' | 'SteamForge';
 
 const App: React.FC = () => {
@@ -71,7 +73,7 @@ const App: React.FC = () => {
       // Only trigger if more than 5 minutes have passed
       if (timeDiff > 5 * 60 * 1000) {
         try {
-          const response = await fetch('http://localhost:3001/api/calculate-snapshot', {
+          const response = await fetch(`${API_BASE}/api/calculate-snapshot`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -147,7 +149,7 @@ const App: React.FC = () => {
 
   const handleLayToRest = async (playerId: string) => {
       try {
-          const response = await fetch('http://localhost:3001/api/lay-to-rest', {
+          const response = await fetch(`${API_BASE}/api/lay-to-rest`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ corpseId: playerId }) // Simplified

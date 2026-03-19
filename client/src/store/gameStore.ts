@@ -7,6 +7,8 @@ import { NPCGenerator } from '../../../shared/src/party.js';
 import type { GateMilestone } from '../../../shared/src/gate.js';
 import { GateManager } from '../../../shared/src/gate.js';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 interface GuildUpgrade {
     id: string;
     level: number;
@@ -141,7 +143,7 @@ export const useGameStore = create<GameState>()(
           if (!state.playerId) return;
 
           try {
-            const response = await fetch('/api/game/donate', {
+            const response = await fetch(`${API_BASE}/api/game/donate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ playerId: state.playerId, amount })
@@ -172,7 +174,7 @@ export const useGameStore = create<GameState>()(
           if (!state.playerId) return;
 
           try {
-            const response = await fetch('/api/game/upgrade', {
+            const response = await fetch(`${API_BASE}/api/game/upgrade`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ playerId: state.playerId, buildingId: id })
@@ -197,7 +199,7 @@ export const useGameStore = create<GameState>()(
           if (!state.playerId) return;
 
           try {
-            const response = await fetch('/api/game/tick', {
+            const response = await fetch(`${API_BASE}/api/game/tick`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ playerId: state.playerId })
@@ -310,7 +312,7 @@ export const useGameStore = create<GameState>()(
         if (!state.playerId) return;
 
         try {
-          const response = await fetch('/api/game/heal', {
+          const response = await fetch(`${API_BASE}/api/game/heal`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ playerId: state.playerId, targetId, cost })
@@ -361,7 +363,7 @@ export const useGameStore = create<GameState>()(
         if (!state.playerId) return;
 
         try {
-          const response = await fetch('/api/game/infuse', {
+          const response = await fetch(`${API_BASE}/api/game/infuse`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ playerId: state.playerId, inventoryIndex, cost })
@@ -400,7 +402,7 @@ export const useGameStore = create<GameState>()(
         if (!state.playerId) return;
 
         try {
-          const response = await fetch('/api/game/bind', {
+          const response = await fetch(`${API_BASE}/api/game/bind`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ playerId: state.playerId, itemId, cost })
@@ -453,7 +455,7 @@ export const useGameStore = create<GameState>()(
         if (!state.playerId) return;
 
         try {
-          const response = await fetch('/api/game/ascend', {
+          const response = await fetch(`${API_BASE}/api/game/ascend`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ playerId: state.playerId, characterId: memberId })
@@ -534,7 +536,7 @@ export const useGameStore = create<GameState>()(
         
         try {
           // Sync Guild Settings too
-          await fetch('/api/guild-settings', {
+          await fetch(`${API_BASE}/api/guild-settings`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -544,7 +546,7 @@ export const useGameStore = create<GameState>()(
           });
 
           // Save Player State
-          await fetch('/api/state', {
+          await fetch(`${API_BASE}/api/state`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -560,7 +562,7 @@ export const useGameStore = create<GameState>()(
 
       loadProgress: async (id: string) => {
         try {
-          const response = await fetch(`/api/state/${id}`);
+          const response = await fetch(`${API_BASE}/api/state/${id}`);
           const data = await response.json();
           if (data && data.state) {
             const savedState = JSON.parse(data.state);
@@ -574,7 +576,7 @@ export const useGameStore = create<GameState>()(
 
       syncGuildSettings: async () => {
         try {
-          const response = await fetch('/api/guild-settings');
+          const response = await fetch(`${API_BASE}/api/guild-settings`);
           const settings = await response.json();
           if (settings) {
             set({ 
@@ -592,7 +594,7 @@ export const useGameStore = create<GameState>()(
           if (!state.playerId) return;
 
           try {
-            const response = await fetch('/api/game/buy-rations', {
+            const response = await fetch(`${API_BASE}/api/game/buy-rations`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ playerId: state.playerId, amount, cost })
@@ -614,7 +616,7 @@ export const useGameStore = create<GameState>()(
 
       login: async (username: string, password: string) => {
         try {
-          const response = await fetch('/api/auth/login', {
+          const response = await fetch(`${API_BASE}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -634,7 +636,7 @@ export const useGameStore = create<GameState>()(
 
       register: async (username: string, password: string) => {
         try {
-          const response = await fetch('/api/auth/register', {
+          const response = await fetch(`${API_BASE}/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
