@@ -1,0 +1,13 @@
+{
+  "name": "legacy-of-etrio-monorepo",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd shared && npm install && cd ../server && npm install && cd ../client && npm install",
+    "build:shared": "cd shared && npm run build || true",
+    "build:server": "cd server && npm run build",
+    "build:client": "cd client && npm run build",
+    "build": "npm run build:shared && npm run build:server && npm run build:client",
+    "deploy:server": "cd server && npm run deploy",
+    "deploy:client": "cd client && npm run deploy"
+  }
+}
