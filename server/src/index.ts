@@ -12,27 +12,35 @@ import { initPrisma } from './db.js';
 
 const app = new Hono<{ Bindings: { DB: any, JWT_SECRET: string } }>();
 
-// Global Error Handler
+// 1. CORS MUST be at the very top to handle OPTIONS and error headers
+app.use('*', cors());
+
+// 2. Request Logger (Low level)
+app.use('*', async (c, next) => {
+    console.log(`[REQUEST] ${c.req.method} ${c.req.url}`);
+    await next();
+});
+
+// 3. Global Error Handler
 app.onError((err, c) => {
     console.error('GLOBAL ERROR CAUGHT:', err.message, err.stack);
     return c.json({ 
         error: 'Internal Server Error', 
         message: err.message,
-        stack: err.stack 
+        path: c.req.path 
     }, 500);
 });
 
 app.notFound((c) => {
+    console.warn(`[404] Route not found: ${c.req.method} ${c.req.path}`);
     return c.json({ error: 'Not Found', path: c.req.path }, 404);
 });
 
-// Middleware
+// 4. Persistence Init
 app.use('*', async (c, next) => {
     initPrisma(c.env.DB);
     await next();
 });
-
-app.use('*', cors());
 
 app.get('/api/health', (c) => {
     return c.json({ status: 'ok', message: 'Legacy of Etrio Backend Running on Hono' });
