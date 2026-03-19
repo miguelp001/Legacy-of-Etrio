@@ -1,14 +1,9 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from './db.js';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
 
 export class AuthService {
-    static async register(username: string, password: string) {
+    static async register(username: string, password: string, jwtSecret: string) {
         const existing = await (prisma as any).user.findUnique({ where: { username } });
         if (existing) throw new Error('Username already taken');
 
@@ -20,24 +15,24 @@ export class AuthService {
             }
         });
 
-        const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ userId: user.id }, jwtSecret, { expiresIn: '7d' });
         return { user, token };
     }
 
-    static async login(username: string, password: string) {
+    static async login(username: string, password: string, jwtSecret: string) {
         const user = await (prisma as any).user.findUnique({ where: { username } });
         if (!user) throw new Error('Invalid credentials');
 
         const valid = await bcrypt.compare(password, user.password);
         if (!valid) throw new Error('Invalid credentials');
 
-        const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ userId: user.id }, jwtSecret, { expiresIn: '7d' });
         return { user, token };
     }
 
-    static verifyToken(token: string) {
+    static verifyToken(token: string, jwtSecret: string) {
         try {
-            return jwt.verify(token, JWT_SECRET) as { userId: string };
+            return jwt.verify(token, jwtSecret) as { userId: string };
         } catch (e) {
             return null;
         }

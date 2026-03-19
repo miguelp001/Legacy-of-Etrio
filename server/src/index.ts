@@ -10,7 +10,7 @@ import { GameService } from './gameService.js';
 import { AuthService } from './authService.js';
 import { initPrisma } from './db.js';
 
-const app = new Hono<{ Bindings: { DB: any } }>();
+const app = new Hono<{ Bindings: { DB: any, JWT_SECRET: string } }>();
 
 // Middleware
 app.use('*', async (c, next) => {
@@ -176,7 +176,7 @@ app.post('/api/game/ascend', async (c) => {
 app.post('/api/auth/register', async (c) => {
     const { username, password } = await c.req.json();
     try {
-        const result = await AuthService.register(username, password);
+        const result = await AuthService.register(username, password, c.env.JWT_SECRET);
         return c.json(result);
     } catch (e: any) {
         return c.json({ error: e.message }, 400);
@@ -186,7 +186,7 @@ app.post('/api/auth/register', async (c) => {
 app.post('/api/auth/login', async (c) => {
     const { username, password } = await c.req.json();
     try {
-        const result = await AuthService.login(username, password);
+        const result = await AuthService.login(username, password, c.env.JWT_SECRET);
         return c.json(result);
     } catch (e: any) {
         return c.json({ error: e.message }, 400);
