@@ -54,10 +54,16 @@ jobs:
             cd shared && npm install
             cd ../server && npm install
 
+      - name: Build Server
+        run: |
+            cd server && npm run build
+        env:
+          DATABASE_URL: "file:./dev.db" # Placeholder for generation
+
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: server
-          command: deploy src/index.ts --name=etrio-api --compatibility-date=2024-05-18
+          command: deploy
