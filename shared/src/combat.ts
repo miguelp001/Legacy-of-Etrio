@@ -51,13 +51,17 @@ export class CombatEngine {
     static simulate(party: Combatant[], enemies: Combatant[]): CombatResult {
         const events: CombatEvent[] = [];
         let turnCount = 1;
-        const allCombatants = [...party, ...enemies].sort((a, b) => b.stats.agility - a.stats.agility);
+        
+        // Deep clone to prevent permanent state modification of the main state
+        const simulatedParty = party.map(p => ({ ...p, stats: { ...p.stats } }));
+        const simulatedEnemies = enemies.map(e => ({ ...e, stats: { ...e.stats } }));
+        const allCombatants = [...simulatedParty, ...simulatedEnemies].sort((a, b) => b.stats.agility - a.stats.agility);
 
-        while (party.some(p => p.hp > 0) && enemies.some(e => e.hp > 0) && turnCount < 100) {
+        while (simulatedParty.some(p => p.hp > 0) && simulatedEnemies.some(e => e.hp > 0) && turnCount < 200) {
             for (const attacker of allCombatants) {
                 if (attacker.hp <= 0) continue;
 
-                const targets = attacker.isEnemy ? party.filter(p => p.hp > 0) : enemies.filter(e => e.hp > 0);
+                const targets = attacker.isEnemy ? simulatedParty.filter(p => p.hp > 0) : simulatedEnemies.filter(e => e.hp > 0);
                 if (targets.length === 0) break;
 
                 const defender = targets[Math.floor(Math.random() * targets.length)]!;
@@ -89,15 +93,15 @@ export class CombatEngine {
                     remainingHp: defender.hp
                 });
 
-                if (party.every(p => p.hp <= 0) || enemies.every(e => e.hp <= 0)) break;
+                if (simulatedParty.every(p => p.hp <= 0) || simulatedEnemies.every(e => e.hp <= 0)) break;
             }
             turnCount++;
         }
 
         return {
-            victory: enemies.every(e => e.hp <= 0),
+            victory: simulatedEnemies.every(e => e.hp <= 0),
             events,
-            survivingMembers: party.filter(p => p.hp > 0),
+            survivingMembers: simulatedParty.filter(p => p.hp > 0),
             turns: turnCount
         };
     }

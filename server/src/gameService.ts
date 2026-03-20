@@ -57,11 +57,23 @@ export class GameService {
                             (r.member1Id === p1 && r.member2Id === p2) || (r.member1Id === p2 && r.member2Id === p1)
                         );
                         if (!rel) {
-                            rel = { member1Id: p1, member2Id: p2, value: 0 };
+                            rel = { memberIds: [p1, p2].sort(), affinity: 0, stage: 'Stranger' };
                             state.relationships.push(rel);
                         }
-                        rel.value += 5;
+                        rel.affinity += 5;
                     }
+                }
+            }
+        } else {
+            // Safety: Auto-heal low-level players to prevent softlocks
+            if (state.currentFloor <= 5) {
+                console.log('Low floor loss: Auto-healing party to 50%');
+                state.party = state.party.map((p: any) => ({
+                    ...p,
+                    hp: Math.max(p.hp, Math.floor(p.maxHp * 0.5))
+                }));
+                if (state.mainCharacter) {
+                    state.mainCharacter.hp = Math.max(state.mainCharacter.hp, Math.floor(state.mainCharacter.maxHp * 0.5));
                 }
             }
         }

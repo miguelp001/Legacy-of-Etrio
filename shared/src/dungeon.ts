@@ -28,11 +28,22 @@ export class DungeonManager {
 
     static generateFloor(floorNumber: number): DungeonFloor {
         const biome = this.getBiome(floorNumber);
-        const enemyCount = 1 + Math.floor(floorNumber / 20) + Math.floor(Math.random() * 2);
+        const enemyCount = floorNumber === 1 ? 1 : 1 + Math.floor(floorNumber / 20) + Math.floor(Math.random() * 2);
         const enemies: Combatant[] = [];
 
         for (let i = 0; i < Math.min(4, enemyCount); i++) {
-            const npc = NPCGenerator.generateNPC(floorNumber, 0);
+            // Early floor enemies are weaker
+            const enemyLevel = floorNumber === 1 ? 1 : floorNumber;
+            const npc = NPCGenerator.generateNPC(enemyLevel, 0);
+            
+            if (floorNumber === 1) {
+                // Weaken Floor 1 enemies significantly
+                npc.stats.strength *= 0.6;
+                npc.stats.vitality *= 0.6;
+                npc.hp = Math.floor(npc.hp * 0.6);
+                npc.maxHp = npc.hp;
+            }
+
             enemies.push({
                 ...npc,
                 id: `enemy_${floorNumber}_${i}`,
