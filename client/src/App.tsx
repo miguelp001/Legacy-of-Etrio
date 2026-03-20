@@ -11,7 +11,12 @@ import {
   Sparkles,
   Factory,
   Zap,
-  Cloud
+  Cloud,
+  Menu,
+  X,
+  Castle,
+  History,
+  Info
 } from 'lucide-react';
 import { useGameStore } from './store/gameStore';
 import Tavern from './components/Tavern';
@@ -31,47 +36,40 @@ import LoginScreen from './components/LoginScreen';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
-type Location = 'Tavern' | 'Blacksmith' | 'Hospital' | 'GuildHall' | 'ThePit' | 'LineageHall' | 'BloodMarket' | 'Basilica' | 'SteamForge';
-
 const App: React.FC = () => {
-  const [location, setLocation] = useState<Location>('Tavern');
   const { 
     gold, party, currentFloor, mainCharacter, 
-    events, addEvents, addGold, setFloor, 
-    lastLogout, setLastLogout, bloodRations, setBloodRations,
-    isResonatorActive, setResonatorActive, removeItems, councilMembers,
-    resonatorMastery, isGameWon, playerId, isAuthenticated, loadProgress, saveProgress, syncGuildSettings
+    events, bloodRations, isResonatorActive, setResonatorActive,
+    isGameWon, playerId, isAuthenticated, loadProgress, saveProgress, syncGuildSettings,
+    addEvents, addGold, setFloor, setLastLogout, setBloodRations, councilMembers, resonatorMastery, removeItems, lastLogout
   } = useGameStore();
 
+  const [location, setLocation] = useState('Respite');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [lastSnapshotData, setLastSnapshotData] = useState<any>(null);
 
   useEffect(() => {
-    // Initial sync
-    syncGuildSettings();
     if (isAuthenticated && playerId) {
       loadProgress(playerId);
+      syncGuildSettings();
     }
   }, [isAuthenticated, playerId]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    // Periodic auto-save every 60 seconds
-    const interval = setInterval(() => {
-      saveProgress();
-    }, 60000);
-
+    const interval = setInterval(() => saveProgress(), 60000);
     return () => clearInterval(interval);
   }, [isAuthenticated, saveProgress]);
 
+  // Snapshot handling (Background progress)
   useEffect(() => {
     const handleSnapshot = async () => {
-      if (!mainCharacter) return;
+      if (!mainCharacter || !isAuthenticated) return;
       
       const now = Date.now();
       const timeDiff = now - lastLogout;
       
-      // Only trigger if more than 5 minutes have passed
       if (timeDiff > 5 * 60 * 1000) {
         try {
           const response = await fetch(`${API_BASE}/api/calculate-snapshot`, {
@@ -90,48 +88,18 @@ const App: React.FC = () => {
           const data = await response.json();
           if (data.events) {
             addEvents(data.events || []);
-            
             const councilBonus = 1 + (councilMembers.length * 0.05);
             const resonatorBonus = 1 + (resonatorMastery * 0.1);
             const effectiveGold = Math.floor(data.gold * councilBonus * resonatorBonus);
-            
             addGold(effectiveGold - (data.bloodpricePenalty || 0));
             setFloor(data.finalFloor);
-            if (data.bloodRationsRemaining !== undefined) {
-              setBloodRations(data.bloodRationsRemaining);
-            }
-            
+            if (data.bloodRationsRemaining !== undefined) setBloodRations(data.bloodRationsRemaining);
             setLastSnapshotData(data);
             setShowMap(true);
-            setResonatorActive(false); // Consume resonator
-            
-            if (data.bloodpricePenalty > 0) {
-              addEvents([{
-                turn: 0,
-                attackerName: 'SYSTEM',
-                defenderName: 'TREASURY',
-                damage: 0,
-                isCrit: false,
-                isMiss: false,
-                remainingHp: 0,
-                banter: `Paid ${data.bloodpricePenalty}g in Bloodprices to the families of the fallen.`,
-                emojiTag: '🩸'
-              }]);
-            }
+            setResonatorActive(false);
 
             if (data.lostGear && data.lostGear.length > 0) {
               removeItems(data.lostGear.map((i: any) => i.id));
-              addEvents([{
-                turn: 0,
-                attackerName: 'THE DEEP',
-                defenderName: 'EQUIPMENT',
-                damage: 0,
-                isCrit: false,
-                isMiss: false,
-                remainingHp: 0,
-                banter: `Permanent Loss: ${data.lostGear.map((i: any) => i.name).join(', ')} were lost to the shadows.`,
-                emojiTag: '💔'
-              }]);
             }
           }
         } catch (err) {
@@ -142,175 +110,231 @@ const App: React.FC = () => {
     };
 
     handleSnapshot();
-    
-    // Update logout timestamp periodically
     const interval = setInterval(() => setLastLogout(Date.now()), 60000);
     return () => clearInterval(interval);
-  }, [mainCharacter, lastLogout, party, currentFloor, addEvents, addGold, setFloor, setLastLogout, bloodRations, isResonatorActive, setBloodRations, setResonatorActive]);
+  }, [mainCharacter, isAuthenticated, lastLogout, party, currentFloor, addEvents, addGold, setFloor, setLastLogout, bloodRations, isResonatorActive, setBloodRations, setResonatorActive, councilMembers, resonatorMastery, removeItems]);
 
   const handleLayToRest = async (playerId: string) => {
-      try {
-          const response = await fetch(`${API_BASE}/api/lay-to-rest`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ corpseId: playerId }) // Simplified
-          });
-          const data = await response.json();
-          if (data.success) {
-              addEvents([{
-                  turn: 0,
-                  attackerName: 'SYSTEM',
-                  defenderName: 'YOU',
-                  damage: 0,
-                  isCrit: false,
-                  isMiss: false,
-                  remainingHp: 0,
-                  banter: "You laid the fallen Bondi to rest. A warm light fills your heart (+5% Luck buff).",
-                  emojiTag: '✨'
-              }]);
-          }
-      } catch (err) {
-          console.error('Lay to Rest failed:', err);
+    try {
+      const response = await fetch(`${API_BASE}/api/lay-to-rest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ corpseId: playerId })
+      });
+      const data = await response.json();
+      if (data.success) {
+        addEvents([{
+          turn: 0,
+          attackerName: 'SYSTEM',
+          defenderName: 'YOU',
+          damage: 0,
+          isCrit: false,
+          isMiss: false,
+          remainingHp: 0,
+          banter: "You laid the fallen Bondi to rest. A warm light fills your heart (+5% Luck buff).",
+          emojiTag: '✨'
+        }]);
       }
+    } catch (err) {
+      console.error('Lay to Rest failed:', err);
+    }
   };
 
-  const navItems = [
-    { id: 'Tavern', name: 'Tavern', icon: Users },
-    { id: 'Blacksmith', name: 'Blacksmith', icon: Sword },
-    { id: 'Hospital', name: 'Hospital', icon: HeartPulse },
-    { id: 'SteamForge', name: 'Steam Forge', icon: Factory },
-    { id: 'Basilica', name: 'Basilica', icon: Sparkles },
-    { id: 'BloodMarket', name: 'Blood Market', icon: Droplets },
-    { id: 'GuildHall', name: 'Guild Hall', icon: Shield },
-    { id: 'LineageHall', name: 'Lineage Hall', icon: Users },
-    { id: 'ThePit', name: 'The Pit', icon: Mountain },
-  ];
+  if (!isAuthenticated) return <LoginScreen />;
 
-  if (!isAuthenticated) {
-    return <LoginScreen />;
-  }
+  const NavGroup = ({ title, children }: { title: string, children: React.ReactNode }) => (
+    <div className="space-y-1 mb-6">
+      <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2">{title}</h3>
+      {children}
+    </div>
+  );
+
+  const NavItem = ({ id, icon: Icon, label }: { id: string, icon: any, label: string }) => (
+    <button
+      onClick={() => {
+        setLocation(id);
+        setIsMobileMenuOpen(false);
+      }}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${
+        location === id 
+        ? 'bg-primary-color text-white shadow-lg shadow-primary-color/20' 
+        : 'text-muted hover:bg-white/5 hover:text-white'
+      }`}
+    >
+      <Icon size={18} className={location === id ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'} />
+      <span className="font-bold text-sm tracking-tight">{label}</span>
+    </button>
+  );
 
   return (
-    <div className="h-screen flex text-white bg-[#0d0d0f] overflow-hidden">
-      {/* Sidebar Navigation */}
-      <aside className="w-16 md:w-64 glass border-r border-white/5 p-4 md:p-6 flex flex-col gap-8 z-20">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-color rounded-lg flex items-center justify-center shadow-lg shadow-primary-glow">
-            <LayoutDashboard className="text-white" size={24} />
+    <div className="min-h-screen bg-[#050505] text-white flex flex-col md:flex-row font-sans selection:bg-primary-color selection:text-white overflow-hidden">
+      {/* Mobile Header */}
+      <div className="md:hidden flex justify-between items-center p-4 border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary-color flex items-center justify-center font-black italic">E</div>
+          <span className="font-black tracking-tighter text-xl text-gradient">ETRIO</span>
+        </div>
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-muted hover:text-white">
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      {/* Sidebar / Mobile Menu */}
+      <aside className={`
+        fixed inset-0 z-40 md:relative md:flex flex-col w-full md:w-72 bg-[#0a0a0a] border-r border-white/10 transition-transform duration-300
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+        <div className="p-8 hidden md:block">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-color to-secondary-color flex items-center justify-center font-black italic text-xl shadow-lg shadow-primary-color/20">E</div>
+            <div>
+              <h1 className="text-2xl font-black tracking-tighter leading-none">LEGACY</h1>
+              <span className="text-[10px] font-bold text-primary-color tracking-[0.3em] uppercase opacity-80">OF ETRIO</span>
+            </div>
           </div>
-          <h1 className="hidden md:block text-2xl font-black tracking-tighter text-gradient">ETRIO</h1>
         </div>
 
-        <nav className="flex flex-col gap-2">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setLocation(item.id as Location)}
-              className={`w-full justify-center md:justify-start transition-all ${
-                location === item.id ? 'btn-primary' : 'btn-outline border-transparent hover:bg-white/5'
-              }`}
-            >
-              <item.icon size={20} />
-              <span className="hidden md:block">{item.name}</span>
-            </button>
-          ))}
+        <nav className="flex-1 overflow-y-auto px-4 py-4 md:py-0 custom-scrollbar">
+          <NavGroup title="Command">
+            <NavItem id="Respite" icon={LayoutDashboard} label="State Overview" />
+            <NavItem id="The Pit" icon={Sword} label="The Descent" />
+          </NavGroup>
+
+          <NavGroup title="The Hub">
+            <NavItem id="Tavern" icon={Users} label="Tavern" />
+            <NavItem id="Hospital" icon={HeartPulse} label="Infirmary" />
+            <NavItem id="Blacksmith" icon={Shield} label="Blacksmith" />
+            <NavItem id="Market" icon={Droplets} label="Blood Market" />
+          </NavGroup>
+
+          <NavGroup title="Sanctified Wing">
+            <NavItem id="Basilica" icon={Sparkles} label="Basilica" />
+            <NavItem id="Forge" icon={Factory} label="Steam Forge" />
+          </NavGroup>
+
+          <NavGroup title="Legacy Archive">
+            <NavItem id="Guild Hall" icon={Castle} label="Guild Hall" />
+            <NavItem id="Lineage" icon={History} label="Lineage Hall" />
+          </NavGroup>
         </nav>
 
-        <div className="mt-auto space-y-4 hidden md:block">
-          <div className="glass p-4 rounded-xl border-l-4 border-l-accent-color">
-            <div className="text-[10px] text-muted uppercase font-black tracking-widest mb-1">Treasury</div>
-            <div className="text-2xl font-bold text-accent-color">{gold.toLocaleString()}g</div>
+        <div className="p-4 border-t border-white/5 m-4 glass rounded-2xl bg-primary-color/5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Aether Sync</span>
+              <span className="text-xs font-bold text-primary-color uppercase">Verified</span>
+            </div>
+            <button onClick={() => saveProgress()} className="p-2 rounded-lg bg-white/5 text-muted hover:text-white transition-colors" title="Manual Sync">
+              <Cloud size={16} />
+            </button>
           </div>
+          <p className="text-[10px] text-muted leading-tight">Your lineage is preserved in the eternal archives.</p>
         </div>
       </aside>
 
-      {/* DUAL PANE CONTAINER */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* LEFT PANE: RESPITE HUB */}
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto custom-scrollbar bg-black/40">
-          <div className="dark-moody-panel p-6 md:p-12 min-h-full shadow-2xl">
-            <header className="mb-10 flex justify-between items-center relative z-10">
+      {/* Main Content Pane */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto custom-scrollbar bg-black/20">
+          <div className="max-w-4xl mx-auto">
+            <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-white/5">
               <div>
                 <h2 className="text-4xl font-black tracking-tight uppercase text-glow">{location}</h2>
-                <div className="text-xs uppercase tracking-[0.4em] font-black text-primary-color/60">Respite Hub</div>
+                <div className="text-[10px] uppercase tracking-[0.4em] font-black text-primary-color/60 mt-1">Vanguard Authorized</div>
               </div>
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => saveProgress()}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full border bg-white/5 border-white/10 text-muted hover:border-white/20 transition-all font-bold text-xs"
-                  title="Manual State Sync"
-                >
-                  <Cloud size={16} />
-                  <span>SYNC STATE</span>
-                </button>
-                <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+              
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 glass">
                   <Droplets size={16} className="text-red-500" />
-                  <span className="font-bold text-red-500">{Math.floor(bloodRations)}</span>
+                  <span className="font-black text-sm text-red-500">{Math.floor(bloodRations)}</span>
                 </div>
+                
                 <button 
                   onClick={() => setResonatorActive(!isResonatorActive)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
-                    isResonatorActive 
-                    ? 'bg-primary-color/20 border-primary-color text-primary-color shadow-[0_0_15px_rgba(168,85,247,0.3)]' 
-                    : 'bg-white/5 border-white/10 text-muted hover:border-white/20'
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all glass ${
+                    isResonatorActive ? 'bg-primary-color/20 border-primary-color text-primary-color shadow-lg' : 'bg-white/5 border-white/10 text-muted'
                   }`}
-                  title="Aetheric Resonator: +50% Resources on next return"
                 >
                   <Zap size={16} />
-                  <span className="font-bold text-xs">{isResonatorActive ? 'RESONATOR ACTIVE' : 'RESONATOR'}</span>
+                  <span className="font-black text-[10px] uppercase tracking-tighter">{isResonatorActive ? 'Resonator On' : 'Resonator'}</span>
                 </button>
-                <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+
+                <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 glass">
                   <Coins size={16} className="text-accent-color" />
-                  <span className="font-bold text-accent-color">{gold.toLocaleString()}g</span>
+                  <span className="font-black text-sm text-accent-color">{gold.toLocaleString()}g</span>
                 </div>
               </div>
             </header>
 
-            <section className="animate-fade-in">
+            <section className="animate-fade-in pb-20">
+              {location === 'Respite' && (
+                <div className="space-y-8">
+                  <div className="glass p-10 rounded-[2rem] border border-white/5 relative overflow-hidden group">
+                    <div className="absolute -top-10 -right-10 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <Castle size={200} />
+                    </div>
+                    <h3 className="text-3xl font-black mb-4 italic tracking-tighter">THE COMMAND HUB</h3>
+                    <p className="text-muted leading-relaxed mb-8 text-lg">The Depths are quiet for now. Manage your guild, restore your party at the Infirmary, or forge new destiny in the Sanctified Wing. When ready, the Pit awaits.</p>
+                    <div className="flex gap-4">
+                      <button onClick={() => setLocation('The Pit')} className="btn-primary px-10 py-4 text-lg">Enter the Pit</button>
+                      <button onClick={() => setLocation('Tavern')} className="btn-outline px-10 py-4 text-lg">Visit Tavern</button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="glass p-6 rounded-2xl border border-white/5">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Info className="text-primary-color" size={20} />
+                        <h4 className="font-bold text-sm uppercase tracking-widest">Active Party</h4>
+                      </div>
+                      <div className="text-2xl font-black">{party.length + (mainCharacter ? 1 : 0)} / 4</div>
+                      <div className="text-xs text-muted mt-1 uppercase tracking-tighter font-bold">Vanguard Members</div>
+                    </div>
+                    <div className="glass p-6 rounded-2xl border border-white/5">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Mountain className="text-secondary-color" size={20} />
+                        <h4 className="font-bold text-sm uppercase tracking-widest">Current Depth</h4>
+                      </div>
+                      <div className="text-2xl font-black">Floor {currentFloor}</div>
+                      <div className="text-xs text-muted mt-1 uppercase tracking-tighter font-bold">Maximum Pentration</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {location === 'The Pit' && <ThePit />}
               {location === 'Tavern' && <Tavern />}
-              {location === 'Blacksmith' && <Blacksmith />}
               {location === 'Hospital' && <Hospital />}
-              {location === 'BloodMarket' && <BloodMarket />}
+              {location === 'Blacksmith' && <Blacksmith />}
+              {location === 'Market' && <BloodMarket />}
               {location === 'Basilica' && <Basilica />}
-              {location === 'SteamForge' && <SteamForge />}
-              {location === 'GuildHall' && <GuildHall />}
-              {location === 'LineageHall' && <LineageHall />}
-              {location === 'ThePit' && <ThePit />}
+              {location === 'Forge' && <SteamForge />}
+              {location === 'Guild Hall' && <GuildHall />}
+              {location === 'Lineage' && <LineageHall />}
             </section>
           </div>
         </main>
 
-        {/* RIGHT PANE: ACTION FEED */}
-        <aside className="w-full md:w-[400px] xl:w-[500px] glass border-l border-white/5 flex flex-col">
+        {/* Action Feed Side-Pane */}
+        <aside className="hidden lg:flex w-[400px] bg-[#080808] border-l border-white/10 flex-col overflow-hidden">
           <ActionFeed events={events} onLayToRest={handleLayToRest} />
-          
-          <div className="p-4 bg-black/40 border-t border-white/5">
-             <div className="flex items-center justify-between text-[10px] uppercase font-black tracking-widest text-muted">
-               <span>Current Depth</span>
-               <span className="text-primary-color font-bold">Floor {currentFloor}</span>
-             </div>
-             <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
-               <div className="h-full bg-primary-color" style={{ width: `${(currentFloor % 100)}%` }}></div>
-             </div>
-          </div>
         </aside>
       </div>
 
       {!mainCharacter && <CharacterCreation />}
       {isGameWon && <VictoryScreen />}
 
-      {/* Depth Map Overlay */}
+      {/* Depth Map Modal */}
       {showMap && lastSnapshotData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
           <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
              <DepthMap 
                events={lastSnapshotData.events} 
-               startFloor={currentFloor - (lastSnapshotData.finalFloor - currentFloor)} // Simplified
+               startFloor={currentFloor} 
                finalFloor={lastSnapshotData.finalFloor} 
              />
              <button 
                onClick={() => setShowMap(false)}
-               className="w-full mt-4 py-4 bg-primary-color text-white rounded-xl font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary-color/20"
+               className="w-full mt-6 py-5 bg-primary-color text-white rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] transition-all shadow-xl shadow-primary-color/20"
              >
                Return to Hub
              </button>

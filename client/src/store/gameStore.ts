@@ -228,12 +228,12 @@ export const useGameStore = create<GameState>()(
             }
 
             const data = await response.json();
-            if (!data || !data.result || !data.state) {
+            if (!data || !data.state) {
                 console.error('Invalid response structure from server:', data);
                 throw new Error('Server returned invalid combat data structure');
             }
 
-            const { result, state: updatedState } = data;
+            const { state: updatedState, victory } = data;
             
             // Sync with server state but preserve local-only auth fields
             set({ 
@@ -244,9 +244,9 @@ export const useGameStore = create<GameState>()(
               token: state.token
             });
             
-            const logEntry = result.victory 
+            const logEntry = victory 
                 ? `Cleared Floor ${updatedState.currentFloor - 1}! Gained rewards.`
-                : `Battle ongoing on Floor ${updatedState.currentFloor}...`;
+                : `Retreated from Floor ${updatedState.currentFloor}...`;
                 
             set((s) => ({
                 events: [{
@@ -258,11 +258,11 @@ export const useGameStore = create<GameState>()(
                     isMiss: false,
                     remainingHp: 0,
                     banter: logEntry,
-                    emojiTag: result.victory ? '⚔️' : '🛡️'
+                    emojiTag: victory ? '⚔️' : '🛡️'
                 }, ...s.events]
             }));
 
-            return data; // Return the whole object so components can access result
+            return data;
           } catch (error: any) {
             console.error('Failed to process combat tick:', error);
             throw error; // Rethrow to let the UI component catch it

@@ -36,17 +36,62 @@ export class GameService {
         if (!player) throw new Error('Player not found');
 
         const state = JSON.parse(player.state);
-        const { party, currentFloor } = state;
+        const floorData = DungeonManager.generateFloor(state.currentFloor);
+        const roomResults: any[] = [];
+        
+        let currentParty = [state.mainCharacter, ...state.party].filter(p => p !== null);
+        let floorVictory = true;
 
-        const floorData = DungeonManager.generateFloor(currentFloor);
-        const enemies = floorData.enemies.map(e => ({ ...e, isEnemy: true }));
-        
-        const result = CombatEngine.simulate(party, enemies);
-        
-        if (result.victory) {
-            state.gold += Math.floor(10 * floorData.goldMultiplier);
+        for (const room of floorData.rooms) {
+            if (room.enemies && room.enemies.length > 0) {
+                const combatResult = CombatEngine.simulate(currentParty, room.enemies);
+                roomResults.push({
+                    roomId: room.id,
+                    type: room.type,
+                    description: room.description,
+                    combatResult
+                });
+
+                if (!combatResult.victory) {
+                    floorVictory = false;
+                    // Update current party with the defeated state (HPs will be 0)
+                    // The CombatEngine already returns simulatedParty in its survivingMembers logic? 
+                    // Wait, survivingMembers only filtered p => p.hp > 0.
+                    // We need to keep the defeated ones to update the state correctly.
+                    break;
+                }
+                
+                // Update current party HP for the next room
+                // We need to find the new HP for everyone in currentParty
+                // Note: CombatEngine returns surivivingMembers only. We should probably return all simulated participants.
+                // For now, let's assume survivingMembers is what we want to carry over.
+                currentParty = combatResult.survivingMembers;
+            } else {
+                roomResults.push({
+                    roomId: room.id,
+                    type: room.type,
+                    description: room.description
+                });
+            }
+        }
+
+        // Update state with final HP/Survival
+        if (floorVictory) {
+            state.gold += Math.floor(25 * floorData.goldMultiplier);
             state.currentFloor += 1;
+            
+            // Sync survival back to state
+            // Re-map the results back to the state objects
+            if (state.mainCharacter) {
+                const mc = currentParty.find(p => p.id === state.mainCharacter.id);
+                if (mc) state.mainCharacter.hp = mc.hp;
+            }
+            state.party = state.party.map((p: any) => {
+                const updated = currentParty.find(up => up.id === p.id);
+                return updated ? { ...p, hp: updated.hp } : { ...p, hp: 0 };
+            });
 
+            // Relationships
             if (state.party.length >= 2) {
                 if (!state.relationships) state.relationships = [];
                 for (let i = 0; i < state.party.length; i++) {
@@ -54,7 +99,7 @@ export class GameService {
                         const p1 = state.party[i].id;
                         const p2 = state.party[j].id;
                         let rel = state.relationships.find((r: any) => 
-                            (r.member1Id === p1 && r.member2Id === p2) || (r.member1Id === p2 && r.member2Id === p1)
+                            (r.memberIds.includes(p1) && r.memberIds.includes(p2))
                         );
                         if (!rel) {
                             rel = { memberIds: [p1, p2].sort(), affinity: 0, stage: 'Stranger' };
@@ -65,16 +110,14 @@ export class GameService {
                 }
             }
         } else {
-            // Safety: Auto-heal low-level players to prevent softlocks
+            // Defeated!
+            if (state.mainCharacter) state.mainCharacter.hp = 0;
+            state.party = state.party.map((p: any) => ({ ...p, hp: 0 }));
+
+            // Safety: Auto-heal low-level players
             if (state.currentFloor <= 5) {
-                console.log('Low floor loss: Auto-healing party to 50%');
-                state.party = state.party.map((p: any) => ({
-                    ...p,
-                    hp: Math.max(p.hp, Math.floor(p.maxHp * 0.5))
-                }));
-                if (state.mainCharacter) {
-                    state.mainCharacter.hp = Math.max(state.mainCharacter.hp, Math.floor(state.mainCharacter.maxHp * 0.5));
-                }
+                if (state.mainCharacter) state.mainCharacter.hp = Math.floor(state.mainCharacter.maxHp * 0.5);
+                state.party = state.party.map((p: any) => ({ ...p, hp: Math.floor(p.maxHp * 0.5) }));
             }
         }
 
@@ -83,7 +126,7 @@ export class GameService {
             data: { state: JSON.stringify(state), updatedAt: new Date() }
         });
 
-        return { result, state };
+        return { floorData, roomResults, state, victory: floorVictory };
     }
 
     static async infuseItem(playerId: string, inventoryIndex: number, cost: number) {
