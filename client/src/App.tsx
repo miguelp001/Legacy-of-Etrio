@@ -10,7 +10,8 @@ import {
   Droplets,
   Sparkles,
   Factory,
-  Zap
+  Zap,
+  Cloud
 } from 'lucide-react';
 import { useGameStore } from './store/gameStore';
 import Tavern from './components/Tavern';
@@ -234,6 +235,14 @@ const App: React.FC = () => {
                 <div className="text-xs uppercase tracking-[0.4em] font-black text-primary-color/60">Respite Hub</div>
               </div>
               <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => saveProgress()}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full border bg-white/5 border-white/10 text-muted hover:border-white/20 transition-all font-bold text-xs"
+                  title="Manual State Sync"
+                >
+                  <Cloud size={16} />
+                  <span>SYNC STATE</span>
+                </button>
                 <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
                   <Droplets size={16} className="text-red-500" />
                   <span className="font-bold text-red-500">{Math.floor(bloodRations)}</span>

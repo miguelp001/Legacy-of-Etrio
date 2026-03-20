@@ -1,7 +1,9 @@
 import jwt from 'jsonwebtoken';
 import { prisma } from './db.js';
+import { StateService } from './stateService.js';
 
 export class AuthService {
+    // ... existing hashPassword and verifyPassword methods ...
     private static async hashPassword(password: string): Promise<string> {
         const encoder = new TextEncoder();
         const data = encoder.encode(password);
@@ -91,6 +93,10 @@ export class AuthService {
                     password: hashedPassword
                 }
             });
+
+            // Initialize Player State
+            console.log('[AUTH] Initializing Player State...');
+            await StateService.savePlayerState(user.id, StateService.getInitialState());
 
             console.log('[AUTH] Signing JWT...');
             const token = jwt.sign({ userId: user.id }, jwtSecret, { expiresIn: '7d' });

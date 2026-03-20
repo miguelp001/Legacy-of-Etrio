@@ -88,7 +88,7 @@ interface GameState {
 
 export const useGameStore = create<GameState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       gold: 5000,
       inventory: [],
       party: [],
@@ -126,14 +126,20 @@ export const useGameStore = create<GameState>()(
         inventory: state.inventory.filter(i => i.id !== itemId)
       })),
 
-      addToParty: (member: Combatant) => set((state) => {
-        if (state.party.length >= 4) return state;
-        return { party: [...state.party, member] };
-      }),
+      addToParty: (member: Combatant) => {
+        set((state) => {
+          if (state.party.length >= 4) return state;
+          return { party: [...state.party, member] };
+        });
+        get().saveProgress();
+      },
 
-      removeFromParty: (memberId: string) => set((state) => ({
-        party: state.party.filter(m => m.id !== memberId)
-      })),
+      removeFromParty: (memberId: string) => {
+        set((state) => ({
+          party: state.party.filter(m => m.id !== memberId)
+        }));
+        get().saveProgress();
+      },
 
       updateAffinity: (m1, m2, amt) => set((state) => ({
         relationships: NPCGenerator.updateAffinity(state.relationships, m1, m2, amt)
@@ -249,64 +255,70 @@ export const useGameStore = create<GameState>()(
 
       setAutoSellThreshold: (threshold: string) => set({ autoSellRarityThreshold: threshold }),
 
-      createMainCharacter: (name, baseClass, personality) => set((_state) => {
-        const stats = {
-            strength: 10, agility: 10, intelligence: 10,
-            vitality: 10, spirit: 10, luck: 10
-        };
+      createMainCharacter: (name, baseClass, personality) => {
+        set((_state) => {
+          const stats = {
+              strength: 10, agility: 10, intelligence: 10,
+              vitality: 10, spirit: 10, luck: 10
+          };
 
-        if (personality === 'Aggressive') stats.strength += 5;
-        if (personality === 'Stoic') stats.vitality += 5;
-        if (personality === 'Optimistic') stats.spirit += 5;
-        if (personality === 'Cynical') stats.agility += 5;
+          if (personality === 'Aggressive') stats.strength += 5;
+          if (personality === 'Stoic') stats.vitality += 5;
+          if (personality === 'Optimistic') stats.spirit += 5;
+          if (personality === 'Cynical') stats.agility += 5;
 
-        const mc: Combatant = {
-            id: 'player-mc',
-            name,
-            level: 1,
-            baseClass,
-            generation: 0,
-            stats,
-            hp: stats.vitality * 10,
-            maxHp: stats.vitality * 10,
-            mp: stats.spirit * 8,
-            maxMp: stats.spirit * 8,
-            isEnemy: false,
-            weapon: null,
-            armor: null,
-            accessory: null
-        };
+          const mc: Combatant = {
+              id: 'player-mc',
+              name,
+              level: 1,
+              baseClass,
+              generation: 0,
+              stats,
+              hp: stats.vitality * 10,
+              maxHp: stats.vitality * 10,
+              mp: stats.spirit * 8,
+              maxMp: stats.spirit * 8,
+              isEnemy: false,
+              weapon: null,
+              armor: null,
+              accessory: null
+          };
 
-        return { mainCharacter: mc, mainCharacterPersonality: personality };
-      }),
+          return { mainCharacter: mc, mainCharacterPersonality: personality };
+        });
+        get().saveProgress();
+      },
 
-      equipItem: (targetId, item, slot) => set((state) => {
-        let target: Combatant | null = null;
-        let oldItem: Item | null = null;
+      equipItem: (targetId, item, slot) => {
+        set((state) => {
+          let target: Combatant | null = null;
+          let oldItem: Item | null = null;
 
-        if (targetId === 'player-mc') {
-            target = state.mainCharacter;
-            oldItem = target ? target[slot] : null;
-        } else {
-            target = state.party.find(m => m.id === targetId) || null;
-            oldItem = target ? target[slot] : null;
-        }
+          if (targetId === 'player-mc') {
+              target = state.mainCharacter;
+              oldItem = target ? target[slot] : null;
+          } else {
+              target = state.party.find(m => m.id === targetId) || null;
+              oldItem = target ? target[slot] : null;
+          }
 
-        if (!target) return state;
+          if (!target) return state;
 
-        const updatedTarget = { ...target, [slot]: item };
-        const nextInventory = state.inventory.filter(i => i.id !== item.id);
-        if (oldItem) nextInventory.push(oldItem);
+          const updatedTarget = { ...target, [slot]: item };
+          const nextInventory = state.inventory.filter(i => i.id !== item.id);
+          if (oldItem) nextInventory.push(oldItem);
 
-        if (targetId === 'player-mc') {
-            return { mainCharacter: updatedTarget, inventory: nextInventory };
-        } else {
-            return {
-                party: state.party.map(m => m.id === targetId ? updatedTarget : m),
-                inventory: nextInventory
-            };
-        }
-      }),
+          if (targetId === 'player-mc') {
+              return { mainCharacter: updatedTarget, inventory: nextInventory };
+          } else {
+              return {
+                  party: state.party.map(m => m.id === targetId ? updatedTarget : m),
+                  inventory: nextInventory
+              };
+          }
+        });
+        get().saveProgress();
+      },
 
       healCharacter: async (targetId, cost) => {
         const state = useGameStore.getState();
