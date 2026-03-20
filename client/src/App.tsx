@@ -227,14 +227,14 @@ const App: React.FC = () => {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* LEFT PANE: RESPITE HUB */}
         <main className="flex-1 p-4 md:p-8 overflow-y-auto custom-scrollbar bg-black/40">
-          <div className="whimsical-parchment p-6 md:p-10 min-h-full relative shadow-2xl">
-            <header className="mb-8 flex justify-between items-center">
+          <div className="dark-moody-panel p-6 md:p-12 min-h-full shadow-2xl">
+            <header className="mb-10 flex justify-between items-center relative z-10">
               <div>
-                <h2 className="text-3xl font-black tracking-tight uppercase">{location}</h2>
-                <div className="text-xs uppercase tracking-[0.3em] font-bold opacity-60">Respite Hub</div>
+                <h2 className="text-4xl font-black tracking-tight uppercase text-glow">{location}</h2>
+                <div className="text-xs uppercase tracking-[0.4em] font-black text-primary-color/60">Respite Hub</div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 bg-black/10 px-4 py-2 rounded-full border border-black/5">
+                <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
                   <Droplets size={16} className="text-red-500" />
                   <span className="font-bold text-red-500">{Math.floor(bloodRations)}</span>
                 </div>
@@ -242,17 +242,17 @@ const App: React.FC = () => {
                   onClick={() => setResonatorActive(!isResonatorActive)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
                     isResonatorActive 
-                    ? 'bg-primary-color/20 border-primary-color text-primary-color animate-pulse' 
-                    : 'bg-black/10 border-black/5 text-muted hover:border-white/10'
+                    ? 'bg-primary-color/20 border-primary-color text-primary-color shadow-[0_0_15px_rgba(168,85,247,0.3)]' 
+                    : 'bg-white/5 border-white/10 text-muted hover:border-white/20'
                   }`}
                   title="Aetheric Resonator: +50% Resources on next return"
                 >
                   <Zap size={16} />
                   <span className="font-bold text-xs">{isResonatorActive ? 'RESONATOR ACTIVE' : 'RESONATOR'}</span>
                 </button>
-                <div className="flex items-center gap-2 bg-black/10 px-4 py-2 rounded-full border border-black/5">
+                <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
                   <Coins size={16} className="text-accent-color" />
-                  <span className="font-bold text-accent-color">{gold}g</span>
+                  <span className="font-bold text-accent-color">{gold.toLocaleString()}g</span>
                 </div>
               </div>
             </header>
