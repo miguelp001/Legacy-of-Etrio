@@ -26,13 +26,18 @@ const ThePit: React.FC = () => {
         setLoading(true);
         try {
             const res = await processCombatTick();
-            if (res && res.floorData) {
+            // Defensive: ensure floorData and roomResults exist to prevent crash
+            if (res && res.floorData && Array.isArray(res.roomResults)) {
                 setFloorReport(res);
                 setCurrentRoomIdx(0);
                 setIsActive(true);
+            } else {
+                console.error('Invalid response from server:', res);
+                alert('Descent calculation failed: Invalid response from server.');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Descent failed:', error);
+            alert(`Descent failed: ${error.message || 'Unknown error'}`);
         } finally {
             setLoading(false);
         }
@@ -129,7 +134,7 @@ const ThePit: React.FC = () => {
                     </div>
                     
                     <div className="flex gap-1 md:gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-                        {floorReport.roomResults.map((_: any, i: number) => (
+                        {floorReport?.roomResults?.map((_: any, i: number) => (
                             <div 
                               key={i} 
                               className={`h-1 md:h-1.5 min-w-[12px] md:min-w-[40px] rounded-full transition-all flex-1 md:flex-none ${

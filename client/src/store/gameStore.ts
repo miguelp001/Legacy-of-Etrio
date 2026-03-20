@@ -235,14 +235,16 @@ export const useGameStore = create<GameState>()(
 
             const { state: updatedState, victory } = data;
             
-            // Sync with server state but preserve local-only auth fields
-            set({ 
-              ...updatedState,
-              playerId: state.playerId,
-              isAuthenticated: state.isAuthenticated,
-              user: state.user,
-              token: state.token
-            });
+            if (updatedState) {
+              // Sync with server state but preserve local-only auth fields
+              set({ 
+                ...updatedState,
+                playerId: state.playerId,
+                isAuthenticated: state.isAuthenticated,
+                user: state.user,
+                token: state.token
+              });
+            }
             
             const logEntry = victory 
                 ? `Cleared Floor ${updatedState.currentFloor - 1}! Gained rewards.`
