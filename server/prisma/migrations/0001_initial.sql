@@ -1,3 +1,9 @@
+-- Drop existing tables to ensure a clean slate
+DROP TABLE IF EXISTS "Corpse";
+DROP TABLE IF EXISTS "GuildSettings";
+DROP TABLE IF EXISTS "PlayerState";
+DROP TABLE IF EXISTS "User";
+
 -- CreateTable
 CREATE TABLE IF NOT EXISTS "Corpse" (
     "id" TEXT NOT NULL PRIMARY KEY,
