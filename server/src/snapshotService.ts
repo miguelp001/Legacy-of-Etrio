@@ -83,6 +83,7 @@ export class SnapshotService {
                 party.forEach(m => { if (m.isVampire) m.isStarving = true; });
                 if (i % 30 === 0) { // Log starvation occasionally
                     allEvents.push({
+                        id: `starve-${i}`,
                         turn: i,
                         attackerName: 'SYSTEM',
                         defenderName: 'Party',
@@ -103,6 +104,7 @@ export class SnapshotService {
                     if (Math.random() < miracleChance) {
                         const blessing = member.blessings?.[0] || 'See the Truth';
                         allEvents.push({
+                            id: `miracle-${member.id}-${i}`,
                             turn: i,
                             attackerName: member.name,
                             defenderName: 'THE DEEP',
@@ -131,6 +133,7 @@ export class SnapshotService {
             if (isBreach) {
                 floorMultiplier *= 5;
                 allEvents.push({
+                    id: `breach-${i}`,
                     turn: i,
                     attackerName: 'THE VOID',
                     defenderName: 'Reality',
@@ -148,6 +151,7 @@ export class SnapshotService {
                     const relic = ItemGenerator.generateRelic(currentFloor);
                     foundItems.push(relic);
                     allEvents.push({
+                        id: `relic-${relic.id}-${i}`,
                         turn: i,
                         attackerName: 'THE VOID',
                         defenderName: 'FOUND',
@@ -210,6 +214,7 @@ export class SnapshotService {
 
                         // Add Wipe Event
                         allEvents.push({
+                            id: `wipe-${i}`,
                             turn: i,
                             attackerName: 'SYSTEM',
                             defenderName: party[0]?.name || 'Bondi',

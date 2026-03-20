@@ -23,8 +23,8 @@ const ActionFeed: React.FC<ActionFeedProps> = ({ events, onLayToRest }) => {
         ref={scrollRef}
         className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2"
       >
-        {events.map((event, index) => (
-          <div key={`${event.turn}-${index}`} className="feed-item text-[11px] leading-relaxed">
+        {events.filter(ev => ev && ev.id).map((event) => (
+          <div key={event.id} className="feed-item text-[13px] leading-relaxed py-1 border-b border-white/5 last:border-0">
             <div className="flex items-start gap-2">
               <span className="text-muted opacity-50 font-mono">[{event.turn}]</span>
               

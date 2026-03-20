@@ -4,7 +4,11 @@ import { GateManager } from '../../shared/src/gate.js';
 export class StateService {
     // Player State
     static async getPlayerState(playerId: string) {
-        return await (prisma as any).playerState.findUnique({
+        if (!playerId || playerId === 'undefined' || playerId === 'null') {
+            console.error('StateService.getPlayerState: Invalid playerId:', playerId);
+            return null;
+        }
+        return await (prisma as any).playerState.findFirst({
             where: { id: playerId }
         });
     }
@@ -39,6 +43,9 @@ export class StateService {
     }
 
     static async savePlayerState(playerId: string, state: string) {
+        if (!playerId || playerId === 'undefined' || playerId === 'null') {
+            throw new Error(`Invalid playerId for savePlayerState: ${playerId}`);
+        }
         return await (prisma as any).playerState.upsert({
             where: { id: playerId },
             update: { state, updatedAt: new Date() },

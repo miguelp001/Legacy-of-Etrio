@@ -25,6 +25,7 @@ export interface Combatant extends CharacterStats {
 }
 
 export interface CombatEvent {
+    id: string;
     turn: number;
     attackerName: string;
     defenderName: string;
@@ -139,6 +140,7 @@ export class CombatEngine {
                 }
 
                 events.push({
+                    id: `ev-${turnCount}-${events.length}`,
                     turn: turnCount,
                     attackerName: attacker.name,
                     defenderName: defender.name,

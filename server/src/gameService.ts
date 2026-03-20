@@ -32,7 +32,8 @@ export class GameService {
     }
 
     static async processCombatTick(playerId: string) {
-        const player = await (prisma as any).playerState.findUnique({ where: { id: playerId } });
+        if (!playerId || playerId === 'undefined') throw new Error('Valid playerId required');
+        const player = await (prisma as any).playerState.findFirst({ where: { id: playerId } });
         if (!player) throw new Error('Player not found');
 
         const state = JSON.parse(player.state);

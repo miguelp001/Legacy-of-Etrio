@@ -63,7 +63,7 @@ const ThePit: React.FC = () => {
         }
 
         setIsSimulating(true);
-        const events = activeRoom.combatResult.events;
+        const events = activeRoom?.combatResult?.events || [];
         if (turnIndex < events.length) {
             const timer = setTimeout(() => {
                 const newEvent = events[turnIndex];
@@ -121,10 +121,9 @@ const ThePit: React.FC = () => {
     }
 
     return (
-        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex flex-col p-4 md:p-10 animate-fade-in overflow-hidden">
-            {/* Header / Room Progress */}
-            <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col min-h-0">
-                <header className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 md:mb-10 pb-4 md:pb-6 border-b border-white/10 shrink-0">
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl pt-4 md:pt-10 px-4 md:px-10 animate-fade-in overflow-hidden">
+            <div className="max-w-6xl mx-auto h-full flex flex-col">
+                <div className="flex items-center justify-between mb-4 md:mb-6 pb-2 md:pb-4 border-b border-white/10 shrink-0">
                     <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
                         <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary-color flex items-center justify-center font-black italic text-lg md:text-xl">E</div>
                         <div>
@@ -133,20 +132,20 @@ const ThePit: React.FC = () => {
                         </div>
                     </div>
                     
-                    <div className="flex gap-1 md:gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-                        {floorReport?.roomResults?.map((_: any, i: number) => (
+                    <div className="flex gap-1 md:gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                        {floorReport?.roomResults?.map((room: any, roomIdx: number) => (
                             <div 
-                              key={i} 
+                              key={room.roomId} 
                               className={`h-1 md:h-1.5 min-w-[12px] md:min-w-[40px] rounded-full transition-all flex-1 md:flex-none ${
-                                i === currentRoomIdx ? 'bg-primary-color shadow-[0_0_10px_var(--primary-glow)]' : 
-                                i < currentRoomIdx ? 'bg-primary-color/40' : 'bg-white/10'
+                                roomIdx === currentRoomIdx ? 'bg-primary-color shadow-[0_0_10px_var(--primary-glow)]' : 
+                                roomIdx < currentRoomIdx ? 'bg-primary-color/40' : 'bg-white/10'
                               }`}
                             />
                         ))}
                     </div>
-                </header>
+                </div>
 
-                <div className="flex-1 overflow-y-auto no-scrollbar pb-10 space-y-6">
+                <div className="flex-1 overflow-y-auto custom-scrollbar pb-10 space-y-4">
                     {/* Scene / Description */}
                     <div className="shrink-0">
                         <div className="glass p-6 md:p-12 rounded-3xl md:rounded-[3rem] border border-white/10 relative overflow-hidden bg-gradient-to-br from-primary-color/5 to-transparent">
@@ -155,9 +154,9 @@ const ThePit: React.FC = () => {
                              </div>
                              
                              <div className="relative z-10 max-w-3xl">
-                                <div className="text-[8px] md:text-[10px] font-black uppercase text-primary-color tracking-[0.4em] mb-2 md:mb-4">Location Identified</div>
-                                <h3 className="text-2xl md:text-5xl font-black italic tracking-tighter mb-4 md:mb-6 text-glow">{activeRoom?.type} <span className="text-white/30 ml-2">#{currentRoomIdx + 1}</span></h3>
-                                <p className="text-base md:text-2xl text-muted leading-relaxed font-light italic">"{activeRoom?.description}"</p>
+                                <div className="text-primary-color/60 text-xs uppercase tracking-[0.2em] mb-2 font-bold">Location Identified</div>
+                                <h3 className="text-2xl md:text-4xl font-black italic tracking-tighter mb-4 md:mb-5 text-glow">{activeRoom?.type} <span className="text-white/30 ml-2">#{currentRoomIdx + 1}</span></h3>
+                                <p className="text-base md:text-xl text-muted leading-relaxed font-light italic">"{activeRoom?.description}"</p>
                              </div>
 
                              {!(activeRoom?.combatResult) && !isSimulating && (
@@ -168,11 +167,11 @@ const ThePit: React.FC = () => {
                                 </div>
                              )}
 
-                             {activeRoom?.combatResult && !isSimulating && turnIndex >= activeRoom.combatResult.events.length && (
+                             {activeRoom?.combatResult?.events && !isSimulating && turnIndex >= activeRoom.combatResult.events.length && (
                                 <div className="mt-8 md:mt-12 flex flex-col items-start gap-4 md:gap-6 animate-fade-in">
                                     <div className="flex gap-2">
                                         <div className="px-3 md:px-6 py-1.5 md:py-3 bg-secondary-color/20 border border-secondary-color/40 rounded-xl md:rounded-2xl text-secondary-color font-black uppercase text-[10px] md:text-sm tracking-widest">AREA SECURED</div>
-                                        {activeRoom.combatResult.victory && <div className="px-3 md:px-6 py-1.5 md:py-3 bg-accent-color/20 border border-accent-color/40 rounded-xl md:rounded-2xl text-accent-color font-black uppercase text-[10px] md:text-sm tracking-widest">VICTORY</div>}
+                                         {activeRoom?.combatResult?.victory && <div className="px-3 md:px-6 py-1.5 md:py-3 bg-accent-color/20 border border-accent-color/40 rounded-xl md:rounded-2xl text-accent-color font-black uppercase text-[10px] md:text-sm tracking-widest">VICTORY</div>}
                                     </div>
                                     <button onClick={nextRoom} className="btn-primary w-full md:w-auto px-12 py-4 md:py-5 text-lg md:text-xl flex items-center justify-center gap-2 group">
                                         Press On <ChevronRight className="group-hover:translate-x-1 transition-transform" />
@@ -191,8 +190,8 @@ const ThePit: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
                                     {[mainCharacter, ...party].filter(Boolean).map((member: any) => (
                                         <div key={member.id} className="space-y-1 md:space-y-2">
-                                            <div className="flex justify-between text-[10px] md:text-xs font-bold uppercase tracking-tighter">
-                                                <span>{member.name}</span>
+                                            <div className="flex justify-between text-xs font-bold uppercase tracking-widest mb-1">
+                                                <span className="text-white/40">{member.name}</span>
                                                 <span className={member.hp <= 0 ? 'text-danger-color' : 'text-primary-color'}>{member.hp} HP</span>
                                             </div>
                                             <div className="h-1 md:h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
@@ -212,8 +211,8 @@ const ThePit: React.FC = () => {
                                     <Zap size={10} /> TACTICAL FEED
                                 </h4>
                                 <div className="flex-1 overflow-y-auto mt-3 md:mt-4 space-y-2 custom-scrollbar pr-2">
-                                    {displayedEvents.slice(-5).map((ev, i) => (
-                                        <div key={i} className="text-[10px] md:text-[11px] flex gap-2 animate-slide-right">
+                                    {displayedEvents.slice(-5).map((ev) => (
+                                        <div key={ev.id} className="text-[10px] md:text-[11px] flex gap-2 animate-slide-right">
                                             <span className="text-white/30 font-mono">[{ev.turn}]</span>
                                             <span className="font-bold text-white/90">
                                                 {ev.attackerName} vs {ev.defenderName}:

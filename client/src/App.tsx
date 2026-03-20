@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Users, 
   Sword, 
@@ -45,6 +45,7 @@ const App: React.FC = () => {
   const [isFeedOpen, setIsFeedOpen] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [lastSnapshotData, setLastSnapshotData] = useState<any>(null);
+  const hasHandledSnapshot = useRef(false);
 
   useEffect(() => {
     if (isAuthenticated && playerId) {
@@ -59,11 +60,19 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [isAuthenticated, saveProgress]);
 
+  // Heartbeat for lastLogout
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const interval = setInterval(() => setLastLogout(Date.now()), 60000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, setLastLogout]);
+
   // Snapshot handling (Background progress)
   useEffect(() => {
+    if (!isAuthenticated || !mainCharacter || hasHandledSnapshot.current) return;
+
     const handleSnapshot = async () => {
-      if (!mainCharacter || !isAuthenticated) return;
-      
+      hasHandledSnapshot.current = true;
       const now = Date.now();
       const timeDiff = now - lastLogout;
       
@@ -77,7 +86,7 @@ const App: React.FC = () => {
               currentTime: now,
               party: [mainCharacter, ...party],
               startFloor: currentFloor,
-              playerId: mainCharacter.id,
+              playerId: playerId,
               bloodRations,
               isResonatorActive
             })
@@ -107,9 +116,7 @@ const App: React.FC = () => {
     };
 
     handleSnapshot();
-    const interval = setInterval(() => setLastLogout(Date.now()), 60000);
-    return () => clearInterval(interval);
-  }, [mainCharacter, isAuthenticated, lastLogout, party, currentFloor, addEvents, addGold, setFloor, setLastLogout, bloodRations, isResonatorActive, setBloodRations, setResonatorActive, councilMembers, resonatorMastery, removeItems]);
+  }, [isAuthenticated, mainCharacter, lastLogout, party, currentFloor, addEvents, addGold, setFloor, setLastLogout, bloodRations, isResonatorActive, setBloodRations, setResonatorActive, councilMembers, resonatorMastery, removeItems]);
 
   const handleLayToRest = async (playerId: string) => {
     try {
@@ -121,6 +128,7 @@ const App: React.FC = () => {
       const data = await response.json();
       if (data.success) {
         addEvents([{
+          id: `lay-to-rest-${Date.now()}`,
           turn: 0,
           attackerName: 'SYSTEM',
           defenderName: 'YOU',
@@ -186,12 +194,12 @@ const App: React.FC = () => {
             <span className="font-black text-xs text-accent-color">{gold.toLocaleString()}g</span>
           </div>
 
-          <button 
+          <button
             onClick={() => setIsFeedOpen(true)}
             className={`lg:hidden p-2 rounded-full hover:bg-white/10 text-muted transition-all relative ${events.length > 0 ? 'text-primary-color' : ''}`}
           >
             <History size={20} />
-            {events.length > 0 && <span className="absolute top-0 right-0 w-2 h-2 bg-primary-color rounded-full animate-ping" />}
+            {events.filter(ev => ev && ev.id).length > 0 && <span className="absolute top-0 right-0 w-2 h-2 bg-primary-color rounded-full animate-ping" />}
           </button>
         </div>
       </header>
@@ -281,7 +289,6 @@ const App: React.FC = () => {
                 </div>
               )}
               
-              {location === 'The Pit' && <ThePit />}
               {location === 'Tavern' && <Tavern />}
               {location === 'Hospital' && <Hospital />}
               {location === 'Blacksmith' && <Blacksmith />}
@@ -348,6 +355,8 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+
+      {location === 'The Pit' && <ThePit />}
     </div>
   );
 };
