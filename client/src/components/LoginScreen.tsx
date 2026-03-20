@@ -16,11 +16,13 @@ const LoginScreen: React.FC = () => {
         setLoading(true);
 
         try {
-            const success = isRegistering 
+            const result = isRegistering 
                 ? await register(username, password)
                 : await login(username, password);
             
-            if (!success) {
+            if (typeof result === 'string') {
+                setError(result);
+            } else if (!result) {
                 setError(isRegistering ? 'Registration failed' : 'Invalid credentials');
             }
         } catch (err: any) {

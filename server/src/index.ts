@@ -8,7 +8,7 @@ import { SnapshotService } from './snapshotService.js';
 import { StateService } from './stateService.js';
 import { GameService } from './gameService.js';
 import { AuthService } from './authService.js';
-import { initPrisma } from './db.js';
+import { initPrisma, prisma } from './db.js';
 
 console.log('--- WORKER BOOTING UP: ' + new Date().toISOString() + ' ---');
 
@@ -213,6 +213,15 @@ app.post('/api/game/ascend', async (c) => {
         return c.json(state);
     } catch (e: any) {
         return c.json({ error: e.message }, 400);
+    }
+});
+
+app.get('/api/health', async (c) => {
+    try {
+        const userCount = await (prisma as any).user.count();
+        return c.json({ status: 'ok', database: 'connected', userCount });
+    } catch (e: any) {
+        return c.json({ status: 'error', error: e.message }, 500);
     }
 });
 

@@ -46,8 +46,8 @@ interface GameState {
   token: string | null;
 
   // Actions
-  login: (username: string, password: string) => Promise<boolean>;
-  register: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<boolean | string>;
+  register: (username: string, password: string) => Promise<boolean | string>;
   logout: () => void;
   saveProgress: () => Promise<void>;
   loadProgress: (id: string) => Promise<void>;
@@ -629,9 +629,9 @@ export const useGameStore = create<GameState>()(
           const state = useGameStore.getState();
           await state.loadProgress(user.id);
           return true;
-        } catch (e) {
+        } catch (e: any) {
           console.error('Login error:', e);
-          return false;
+          return e.message || 'Login failed';
         }
       },
 
@@ -644,17 +644,22 @@ export const useGameStore = create<GameState>()(
           });
           
           if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            console.error('SERVER REGISTRATION ERROR:', errorData);
-            return false;
+            const rawBody = await response.text();
+            console.error('SERVER REGISTRATION ERROR (RAW):', rawBody);
+            try {
+              const errorData = JSON.parse(rawBody);
+              return errorData.error || `Error ${response.status}`;
+            } catch {
+              return `Server Error (${response.status})`;
+            }
           }
           
           const { user, token } = await response.json();
           set({ user, token, isAuthenticated: true, playerId: user.id });
           return true;
-        } catch (e) {
+        } catch (e: any) {
           console.error('CLIENT REGISTRATION ERROR:', e);
-          return false;
+          return e.message || 'Network error';
         }
       },
 
