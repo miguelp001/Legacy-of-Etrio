@@ -15,7 +15,13 @@ console.log('--- WORKER BOOTING UP: ' + new Date().toISOString() + ' ---');
 const app = new Hono<{ Bindings: { DB: any, JWT_SECRET: string } }>();
 
 // ROOT check
-app.get('/', (c) => c.text('Hono is up! (' + new Date().toISOString() + ')'));
+app.get('/', (c) => c.html(`
+    <body style="background: #1a1a1a; color: #4ade80; font-family: monospace; padding: 2rem;">
+        <h1>🟢 Hono is Alive!</h1>
+        <p>Worker Boot Time: ${new Date().toISOString()}</p>
+        <p>Environment: Production (Cloudflare Worker)</p>
+    </body>
+`));
 
 // 0. Manual OPTIONS handler (Foolproof CORS)
 app.options('*', (c) => {
