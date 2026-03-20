@@ -266,4 +266,6 @@ app.post('/api/calculate-offline-gains', async (c) => {
     });
 });
 
-export default app;
+export default {
+    fetch: app.fetch
+};
