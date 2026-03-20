@@ -6,13 +6,9 @@
     "build:shared": "cd shared && npm run build || true",
     "build:server": "cd server && npm run build",
     "build:client": "cd client && npm run build",
-    "build": "npm run build:shared && npm run build:server && npm run build:client",
-    "deploy:server": "cd server && npm run deploy",
-    "deploy:client": "cd client && npm run deploy",
-    "deploy": "wrangler deploy",
-    "preview": "wrangler dev"
-  },
-  "devDependencies": {
-    "wrangler": "^4.75.0"
+    "build": "npm run build:shared && npm run build:server",
+    "deploy:server": "cd server && npx wrangler deploy --name=etrio-backend",
+    "deploy:client": "cd client && npx wrangler pages deploy dist --project-name=etrio-web",
+    "deploy": "npm run deploy:server"
   }
 }
