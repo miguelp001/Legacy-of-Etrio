@@ -45,9 +45,16 @@ app.use('*', async (c, next) => {
 // 3. Global Error Handler
 app.onError((err, c) => {
     console.error('GLOBAL ERROR CAUGHT:', err.message, err.stack);
+    
+    // Explicitly add CORS headers because they might be missed in error responses
+    c.header('Access-Control-Allow-Origin', '*');
+    c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
     return c.json({ 
         error: 'Internal Server Error', 
         message: err.message,
+        stack: err.stack, // Optional: useful for debugging 500s directly in the browser
         path: c.req.path 
     }, 500);
 });
@@ -65,6 +72,26 @@ app.use('*', async (c, next) => {
 
 app.get('/api/health', (c) => {
     return c.json({ status: 'ok', message: 'Legacy of Etrio Backend Running on Hono' });
+});
+
+app.get('/api/debug', async (c) => {
+    const status = {
+        prismaInitialized: !!prisma,
+        d1Binding: !!c.env.DB,
+        time: new Date().toISOString(),
+        env: 'production'
+    };
+    
+    try {
+        if (prisma) {
+            const userCount = await (prisma as any).user.count();
+            return c.json({ ...status, database: 'connected', userCount });
+        } else {
+            return c.json({ ...status, database: 'not_initialized' }, 500);
+        }
+    } catch (e: any) {
+        return c.json({ ...status, database: 'error', error: e.message }, 500);
+    }
 });
 
 app.get('/api/generate-npc', (c) => {
