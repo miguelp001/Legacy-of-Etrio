@@ -203,9 +203,13 @@ export const useGameStore = create<GameState>()(
 
       processCombatTick: async () => {
           const state = useGameStore.getState();
-          if (!state.playerId) return;
+          if (!state.playerId) {
+            console.error('Combat tick aborted: Missing playerId');
+            return;
+          }
 
           try {
+            console.log(`[TICK] Contacting engine at: ${API_BASE}/api/game/tick`);
             const response = await fetch(`${API_BASE}/api/game/tick`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -213,15 +217,32 @@ export const useGameStore = create<GameState>()(
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                console.error('Combat tick failed:', error.error);
-                return;
+                const errorText = await response.text();
+                console.error(`Combat tick failed (${response.status}):`, errorText);
+                try {
+                  const errorJson = JSON.parse(errorText);
+                  throw new Error(errorJson.error || 'Server error during combat tick');
+                } catch {
+                  throw new Error(`Server Error ${response.status}: ${errorText.substring(0, 50)}`);
+                }
             }
 
-            const { result, state: updatedState } = await response.json();
+            const data = await response.json();
+            if (!data || !data.result || !data.state) {
+                console.error('Invalid response structure from server:', data);
+                throw new Error('Server returned invalid combat data structure');
+            }
+
+            const { result, state: updatedState } = data;
             
-            // Add rewards and update floor
-            set(updatedState);
+            // Sync with server state but preserve local-only auth fields
+            set({ 
+              ...updatedState,
+              playerId: state.playerId,
+              isAuthenticated: state.isAuthenticated,
+              user: state.user,
+              token: state.token
+            });
             
             const logEntry = result.victory 
                 ? `Cleared Floor ${updatedState.currentFloor - 1}! Gained rewards.`
@@ -241,9 +262,10 @@ export const useGameStore = create<GameState>()(
                 }, ...s.events]
             }));
 
-            return result;
-          } catch (error) {
+            return data; // Return the whole object so components can access result
+          } catch (error: any) {
             console.error('Failed to process combat tick:', error);
+            throw error; // Rethrow to let the UI component catch it
           }
       },
 

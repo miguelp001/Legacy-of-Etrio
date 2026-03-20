@@ -21,8 +21,8 @@ const ThePit: React.FC = () => {
         try {
             const res = await processCombatTick();
             
-            if (res && res.result.victory) {
-                // Biome Shift logic (can stay here for UI feedback)
+            if (res && res.result && res.result.victory) {
+                // Biome Shift logic
                 const nextFloor = currentFloor + 1;
                 if (nextFloor % 10 === 1) {
                     const biomes = ['Frozen Caves', 'Crystalline Peaks', 'Fungal Grotto', 'Volcanic Depths'];
@@ -35,12 +35,15 @@ const ThePit: React.FC = () => {
                     `Floor ${currentFloor} Cleared! Verified on server.`,
                     ...prev.slice(0, 19)
                 ]);
-            } else {
+            } else if (res && res.result) {
                 setCombatLogs(prev => ["Battle in progress...", ...prev]);
+            } else {
+                // Handle cases where res exists but result is missing or res is undefined
+                setCombatLogs(prev => ["Authoritative engine returned invalid data. Check console.", ...prev]);
             }
-        } catch (error) {
-            console.error(error);
-            setCombatLogs(prev => ["Failed to contact authoritative engine...", ...prev]);
+        } catch (error: any) {
+            console.error('SIMULATION ERROR:', error);
+            setCombatLogs(prev => [`Error: ${error.message || 'Failed to contact engine'}`, ...prev]);
         } finally {
             setLoading(false);
         }
