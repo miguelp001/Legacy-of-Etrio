@@ -48,16 +48,16 @@ export class StateService {
 
     // Guild Settings
     static async getGuildSettings() {
-        let settings = await prisma.guildSettings.findUnique({
-            where: { id: 'global' }
-        });
-
-        if (!settings) {
-            settings = await prisma.guildSettings.create({
-                data: { id: 'global', pollutionLevel: 0, masteryLevel: 0 }
+        try {
+            return await (prisma as any).guildSettings.upsert({
+                where: { id: 'global' },
+                update: {}, // No update needed, just ensure it exists
+                create: { id: 'global', pollutionLevel: 0, masteryLevel: 0 }
             });
+        } catch (error: any) {
+            console.error('StateService.getGuildSettings failed:', error.message);
+            throw error;
         }
-        return settings;
     }
 
     static async updateGuildSettings(pollutionLevel: number, masteryLevel: number) {

@@ -163,13 +163,25 @@ app.post('/api/state', async (c) => {
 });
 
 app.get('/api/guild-settings', async (c) => {
-    return c.json(await StateService.getGuildSettings());
+    try {
+        const settings = await StateService.getGuildSettings();
+        return c.json(settings);
+    } catch (e: any) {
+        console.error('GUILD SETTINGS ERROR:', e.message);
+        c.header('Access-Control-Allow-Origin', '*');
+        return c.json({ error: e.message || 'Failed to fetch guild settings' }, 500);
+    }
 });
 
 app.post('/api/guild-settings', async (c) => {
-    const { pollutionLevel, masteryLevel } = await c.req.json();
-    await StateService.updateGuildSettings(pollutionLevel, masteryLevel);
-    return c.json({ success: true });
+    try {
+        const { pollutionLevel, masteryLevel } = await c.req.json();
+        await StateService.updateGuildSettings(pollutionLevel, masteryLevel);
+        return c.json({ success: true });
+    } catch (e: any) {
+        c.header('Access-Control-Allow-Origin', '*');
+        return c.json({ error: e.message || 'Failed to update guild settings' }, 500);
+    }
 });
 
 // Authoritative Actions
