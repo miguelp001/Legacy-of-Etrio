@@ -8,6 +8,11 @@
     "build:client": "cd client && npm run build",
     "build": "npm run build:shared && npm run build:server && npm run build:client",
     "deploy:server": "cd server && npm run deploy",
-    "deploy:client": "cd client && npm run deploy"
+    "deploy:client": "cd client && npm run deploy",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.75.0"
   }
 }
