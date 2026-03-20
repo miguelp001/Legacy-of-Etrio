@@ -14,6 +14,9 @@ console.log('--- WORKER BOOTING UP: ' + new Date().toISOString() + ' ---');
 
 const app = new Hono<{ Bindings: { DB: any, JWT_SECRET: string } }>();
 
+// ROOT check
+app.get('/', (c) => c.text('Hono is up! (' + new Date().toISOString() + ')'));
+
 // 0. Manual OPTIONS handler (Foolproof CORS)
 app.options('*', (c) => {
     console.log('[OPTIONS-PREFLIGHT] ' + c.req.url);
