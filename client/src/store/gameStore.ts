@@ -642,13 +642,18 @@ export const useGameStore = create<GameState>()(
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
           });
-          if (!response.ok) return false;
+          
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('SERVER REGISTRATION ERROR:', errorData);
+            return false;
+          }
           
           const { user, token } = await response.json();
           set({ user, token, isAuthenticated: true, playerId: user.id });
           return true;
         } catch (e) {
-          console.error('Registration error:', e);
+          console.error('CLIENT REGISTRATION ERROR:', e);
           return false;
         }
       },
