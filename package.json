@@ -7,8 +7,8 @@
     "build:server": "cd server && npm run build",
     "build:client": "cd client && npm run build",
     "build": "npm run build:shared && npm run build:server",
-    "deploy:server": "cd server && npx wrangler deploy --name=etrio-backend",
+    "deploy:server": "cd server && npx wrangler deploy --name=etrio-api",
     "deploy:client": "cd client && npx wrangler pages deploy dist --project-name=etrio-web",
-    "deploy": "npm run deploy:server"
+    "deploy": "cd server && npx wrangler deploy src/index.ts --name=etrio-api"
   }
 }

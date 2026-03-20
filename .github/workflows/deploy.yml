@@ -28,7 +28,7 @@ jobs:
             cd shared && npm run build || true
             cd ../client && npm run build
         env:
-          VITE_API_URL: https://etrio-backend.miguelp001.workers.dev
+          VITE_API_URL: https://etrio-api.miguelp001.workers.dev
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
@@ -64,7 +64,7 @@ jobs:
         run: |
             cd server
             npx wrangler whoami
-            npx wrangler deploy --name=etrio-backend
+            npx wrangler deploy --name=etrio-api
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
