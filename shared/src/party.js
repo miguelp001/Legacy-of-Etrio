@@ -1,42 +1,87 @@
 import { BaseClass, StatCalculator } from './stats.js';
-const TRAITS = [
-    { name: 'Brave', description: '+10% Strength', modifiers: { stat: 'strength', multiplier: 1.1 } },
-    { name: 'Nimble', description: '+10% Agility', modifiers: { stat: 'agility', multiplier: 1.1 } },
-    { name: 'Intelligent', description: '+10% Intelligence', modifiers: { stat: 'intelligence', multiplier: 1.1 } },
-    { name: 'Tough', description: '+10% Vitality', modifiers: { stat: 'vitality', multiplier: 1.1 } },
-    { name: 'Lucky', description: '+20% Luck', modifiers: { stat: 'luck', multiplier: 1.2 } },
-    { name: 'Glass Cannon', description: '+20% Strength, -10% Vitality', modifiers: { stat: 'strength', multiplier: 1.2 } }
-];
+const TRAITS = {
+    'Stoic': { name: 'Stoic', description: 'Reduced damage taken, rarely speaks.', modifiers: { stat: 'vitality', multiplier: 1.1 } },
+    'Cheerful': { name: 'Cheerful', description: 'Boosts party morale and luck.', modifiers: { stat: 'luck', multiplier: 1.2 } },
+    'Hot-Headed': { name: 'Hot-Headed', description: 'Increased attack, but lower defense.', modifiers: { stat: 'strength', multiplier: 1.2 } }
+};
 const NAMES = ['Alaric', 'Bryn', 'Caelum', 'Dara', 'Elowen', 'Faelan', 'Gwyneth', 'Harkin', 'Iona', 'Jace'];
+const TRIBES = ['Vinrforad', 'Logi', 'Fridrbjorn', 'Iftiqad', 'Grima', 'Jotunheimr', 'The Frozen', 'The Drowned', 'The Beasts'];
+const BLESSINGS = ['See the Truth', 'Blessing of Blood', 'Saluwan\'s Wrath', 'Cleanse the Mind', 'Walk the Flames', 'Mark the Path'];
 export class NPCGenerator {
     static generateNPC(level, generation) {
         const name = NAMES[Math.floor(Math.random() * NAMES.length)];
         const baseClasses = Object.values(BaseClass);
         const baseClass = baseClasses[Math.floor(Math.random() * baseClasses.length)];
-        const traits = [];
-        if (Math.random() > 0.7) {
-            traits.push(TRAITS[Math.floor(Math.random() * TRAITS.length)]);
-        }
-        const stats = StatCalculator.calculateStats(level, baseClass, generation);
-        traits.forEach(trait => {
-            if (trait.modifiers.stat) {
-                const key = trait.modifiers.stat;
-                if (typeof stats[key] === 'number') {
-                    stats[key] *= trait.modifiers.multiplier;
-                }
+        const classes = [
+            { name: 'Thrall', weight: 40 },
+            { name: 'Bondi', weight: 30 },
+            { name: 'Vardr', weight: 15 },
+            { name: 'Scrifadr', weight: 10 },
+            { name: 'Drengskapr', weight: 5 }
+        ];
+        const roll = Math.random() * 100;
+        let cumulative = 0;
+        let chosenClass = 'Thrall';
+        for (const c of classes) {
+            cumulative += c.weight;
+            if (roll <= cumulative) {
+                chosenClass = c.name;
+                break;
             }
-        });
+        }
+        const traitNames = ['Stoic', 'Cheerful', 'Hot-Headed'];
+        const chosenTraitName = traitNames[Math.floor(Math.random() * traitNames.length)];
+        const traitObj = TRAITS[chosenTraitName];
+        const stats = StatCalculator.calculateStats(level, baseClass, generation);
+        if (traitObj.modifiers.stat) {
+            const key = traitObj.modifiers.stat;
+            if (typeof stats[key] === 'number') {
+                stats[key] *= traitObj.modifiers.multiplier;
+            }
+        }
+        const isVampire = Math.random() < 0.3;
+        const tribe = isVampire ? TRIBES[Math.floor(Math.random() * TRIBES.length)] : undefined;
+        if (tribe) {
+            StatCalculator.applyTribalBonuses(stats, tribe);
+        }
+        let piety = 0;
+        let blessings = [];
+        if (!isVampire) {
+            const pietyRanges = {
+                'Thrall': [0, 40],
+                'Bondi': [20, 60],
+                'Vardr': [40, 80],
+                'Scrifadr': [60, 90],
+                'Drengskapr': [70, 100]
+            };
+            const range = pietyRanges[chosenClass];
+            piety = Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
+            if (piety > 80) {
+                blessings.push(BLESSINGS[Math.floor(Math.random() * BLESSINGS.length)]);
+            }
+        }
         return {
+            id: Math.random().toString(36).substring(2, 11),
             name,
             level,
             baseClass,
             generation,
-            traits,
+            trait: chosenTraitName,
+            socialClass: chosenClass,
+            tribe,
+            isVampire,
+            piety,
+            blessings,
+            affinityLevel: 0,
             stats,
             hp: StatCalculator.calculateHP(stats),
             maxHp: StatCalculator.calculateHP(stats),
             mp: StatCalculator.calculateMP(stats),
-            maxMp: StatCalculator.calculateMP(stats)
+            maxMp: StatCalculator.calculateMP(stats),
+            isEnemy: false,
+            weapon: null,
+            armor: null,
+            accessory: null
         };
     }
     static updateAffinity(relationships, member1Id, member2Id, amount) {

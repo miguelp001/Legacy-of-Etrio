@@ -11,6 +11,7 @@ import { AuthService } from './authService.js';
 import { initPrisma, prisma } from './db.js';
 
 console.log('--- WORKER BOOTING UP: ' + new Date().toISOString() + ' ---');
+// RE-BUNDLE FORCE: 2026-03-20-13-00
 
 const app = new Hono<{ Bindings: { DB: any, JWT_SECRET: string } }>();
 
@@ -266,6 +267,8 @@ app.get('/api/health', async (c) => {
 
 app.post('/api/auth/register', async (c) => {
     try {
+       // Force re-bundle for auto-progression and unique IDs v3
+console.log('[SERVER] Booting Hono application...');
         const body = await c.req.json();
         console.log('[AUTH] Registration request for:', body.username);
         

@@ -1,23 +1,23 @@
-export var Rarity;
-(function (Rarity) {
-    Rarity["Common"] = "Common";
-    Rarity["Uncommon"] = "Uncommon";
-    Rarity["Rare"] = "Rare";
-    Rarity["Epic"] = "Epic";
-    Rarity["Legendary"] = "Legendary";
-    Rarity["Corrupted"] = "Corrupted";
-})(Rarity || (Rarity = {}));
-export var ItemType;
-(function (ItemType) {
-    ItemType["Weapon"] = "Weapon";
-    ItemType["Armor"] = "Armor";
-    ItemType["Accessory"] = "Accessory";
-})(ItemType || (ItemType = {}));
+export const Rarity = {
+    Common: "Common",
+    Uncommon: "Uncommon",
+    Rare: "Rare",
+    Epic: "Epic",
+    Legendary: "Legendary",
+    Corrupted: "Corrupted",
+    Abyssal: "Abyssal"
+};
+export const ItemType = {
+    Weapon: "Weapon",
+    Armor: "Armor",
+    Accessory: "Accessory"
+};
 const PREFIXES = [
     { name: 'Burning', rarity: Rarity.Uncommon, stats: { strength: 2, intelligence: 2 } },
     { name: 'Frozen', rarity: Rarity.Uncommon, stats: { vitality: 2, spirit: 2 } },
     { name: 'Swift', rarity: Rarity.Rare, stats: { agility: 5 } },
     { name: 'Wise', rarity: Rarity.Rare, stats: { intelligence: 5 } },
+    { name: 'Aetheric', rarity: Rarity.Epic, stats: { luck: 15, spirit: 5 } },
     { name: 'Godly', rarity: Rarity.Legendary, stats: { strength: 10, agility: 10, intelligence: 10, vitality: 10, spirit: 10, luck: 10 } },
     { name: 'Corrupted', rarity: Rarity.Corrupted, stats: { strength: 25, intelligence: 25 }, mutation: '-20% healing received' }
 ];
@@ -36,12 +36,21 @@ const SUFFIXES = [
     { name: 'of the Void', rarity: Rarity.Corrupted, stats: { strength: 20, agility: 20 }, mutation: '-10% max HP' }
 ];
 export class ItemGenerator {
-    static generateItem(level) {
+    static generateItem(level, isIndustrial = false) {
         const base = BASE_ITEMS[Math.floor(Math.random() * BASE_ITEMS.length)];
-        const hasPrefix = Math.random() > 0.4;
-        const hasSuffix = Math.random() > 0.6;
-        const prefix = hasPrefix ? PREFIXES[Math.floor(Math.random() * PREFIXES.length)] : null;
-        const suffix = hasSuffix ? SUFFIXES[Math.floor(Math.random() * SUFFIXES.length)] : null;
+        // Industrial items have a 25% chance to be forced Corrupted
+        const forceCorrupted = isIndustrial && Math.random() < 0.25;
+        const hasPrefix = Math.random() > 0.4 || forceCorrupted;
+        const hasSuffix = Math.random() > 0.6 || forceCorrupted;
+        let prefix = hasPrefix ? PREFIXES[Math.floor(Math.random() * PREFIXES.length)] : null;
+        let suffix = hasSuffix ? SUFFIXES[Math.floor(Math.random() * SUFFIXES.length)] : null;
+        if (forceCorrupted) {
+            // Pick at least one corrupted trait if forced
+            if (prefix?.rarity !== Rarity.Corrupted && suffix?.rarity !== Rarity.Corrupted) {
+                const corruptedPrefixes = PREFIXES.filter(p => p.rarity === Rarity.Corrupted);
+                prefix = corruptedPrefixes[Math.floor(Math.random() * corruptedPrefixes.length)] || prefix;
+            }
+        }
         const nameParts = [];
         if (prefix)
             nameParts.push(prefix.name);
@@ -73,14 +82,44 @@ export class ItemGenerator {
         return {
             id: Math.random().toString(36).substring(2, 11),
             name,
+            prefix: prefix?.name,
+            baseName: base.name,
+            suffix: suffix?.name,
             type: base.type,
             rarity,
             stats,
             durability: maxDurability,
             maxDurability,
+            isCorrupted: rarity === Rarity.Corrupted,
+            isIndustrial,
             mutationCost: prefix?.mutation || suffix?.mutation || undefined,
             level
         };
+    }
+    static infuseItem(item) {
+        const isSuccess = Math.random() < 0.9;
+        const result = { ...item, stats: { ...item.stats } }; // Deepish copy stats
+        if (isSuccess) {
+            result.isInfused = true;
+            // Boost all numeric stats by 20%
+            Object.keys(result.stats).forEach(key => {
+                const k = key;
+                if (result.stats[k] !== undefined) {
+                    result.stats[k] = Math.ceil(result.stats[k] * 1.2);
+                }
+            });
+            return { success: true, corrupted: false, result };
+        }
+        else {
+            // Failure: Corrupt the item
+            result.isCorrupted = true;
+            result.rarity = Rarity.Corrupted;
+            // Add corruption suffix stats (generalized)
+            result.stats.strength = (result.stats.strength || 0) + 20;
+            result.stats.intelligence = (result.stats.intelligence || 0) + 20;
+            result.mutationCost = '-15% Healing Received';
+            return { success: false, corrupted: true, result };
+        }
     }
     static getRarityValue(rarity) {
         const values = {
@@ -89,9 +128,24 @@ export class ItemGenerator {
             [Rarity.Rare]: 2,
             [Rarity.Epic]: 3,
             [Rarity.Legendary]: 4,
-            [Rarity.Corrupted]: 5
+            [Rarity.Corrupted]: 5,
+            [Rarity.Abyssal]: 6
         };
         return values[rarity];
+    }
+    static generateRelic(level) {
+        const item = this.generateItem(level);
+        item.rarity = Rarity.Abyssal;
+        item.name = `Abyssal ${item.name} of Convergence`; // Unique relic name pattern
+        item.isSoulBound = true;
+        // Relics have 2x stats of Legendary (Legendary is 5x, so Abyssal is effectively 10x base scaling)
+        Object.keys(item.stats).forEach(key => {
+            const k = key;
+            if (item.stats[k] !== undefined) {
+                item.stats[k] = Math.ceil(item.stats[k] * 2);
+            }
+        });
+        return item;
     }
     static shouldAutoSell(item, threshold) {
         return this.getRarityValue(item.rarity) <= this.getRarityValue(threshold);

@@ -110,8 +110,14 @@ export class CombatEngine {
         const events: CombatEvent[] = [];
         let turnCount = 1;
         
+        console.log(`[SIM] Starting simulation: ${party.length} party vs ${enemies.length} enemies`);
+        
         const simulatedParty = party.map(p => ({ ...p, stats: { ...p.stats } }));
         const simulatedEnemies = enemies.map(e => ({ ...e, stats: { ...e.stats } }));
+        
+        console.log(`[SIM] Party HPs: ${simulatedParty.map(p => p.hp).join(', ')}`);
+        console.log(`[SIM] Enemy HPs: ${simulatedEnemies.map(e => e.hp).join(', ')}`);
+
         const allCombatants = [...simulatedParty, ...simulatedEnemies].sort((a, b) => b.stats.agility - a.stats.agility);
 
         while (simulatedParty.some(p => p.hp > 0) && simulatedEnemies.some(e => e.hp > 0) && turnCount < 200) {
@@ -123,24 +129,30 @@ export class CombatEngine {
 
                 const defender = targets[Math.floor(Math.random() * targets.length)]!;
                 
-                const isMissValue = Math.random() > (0.8 + (attacker.stats.agility - defender.stats.agility) * 0.01);
+                const atkStr = attacker.stats.strength || 10;
+                const defVit = defender.stats.vitality || 10;
+                const atkAgil = attacker.stats.agility || 10;
+                const defAgil = defender.stats.agility || 10;
+                const atkLuck = attacker.stats.luck || 10;
+
+                const isMissValue = Math.random() > (0.8 + (atkAgil - defAgil) * 0.01);
                 let damage = 0;
                 let isCrit = false;
 
                 if (!isMissValue) {
-                    const baseDamage = attacker.stats.strength * 2;
-                    const defense = defender.stats.vitality * 0.5;
+                    const baseDamage = atkStr * 2;
+                    const defense = defVit * 0.5;
                     damage = Math.max(1, baseDamage - defense);
                     
-                    isCrit = Math.random() < (attacker.stats.luck * 0.01);
+                    isCrit = Math.random() < (atkLuck * 0.01);
                     if (isCrit) damage *= 2;
                     
                     damage = Math.floor(damage * (0.9 + Math.random() * 0.2));
-                    defender.hp = Math.max(0, defender.hp - damage);
+                    defender.hp = Math.max(0, (defender.hp || 0) - damage);
                 }
 
                 events.push({
-                    id: `ev-${turnCount}-${events.length}`,
+                    id: `ev-${Date.now()}-${turnCount}-${events.length}-${Math.random().toString(36).substring(2, 7)}`,
                     turn: turnCount,
                     attackerName: attacker.name,
                     defenderName: defender.name,

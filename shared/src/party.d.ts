@@ -1,4 +1,4 @@
-import type { CharacterStats } from './stats.js';
+import type { Combatant } from './combat.js';
 export interface Trait {
     name: string;
     description: string;
@@ -13,10 +13,7 @@ export interface Relationship {
     stage: 'Stranger' | 'Partner' | 'Soulmate';
 }
 export declare class NPCGenerator {
-    static generateNPC(level: number, generation: number): CharacterStats & {
-        name: string;
-        traits: Trait[];
-    };
+    static generateNPC(level: number, generation: number): Combatant;
     static updateAffinity(relationships: Relationship[], member1Id: string, member2Id: string, amount: number): Relationship[];
 }
 //# sourceMappingURL=party.d.ts.map

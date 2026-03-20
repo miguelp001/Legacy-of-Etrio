@@ -38,14 +38,14 @@ const Hospital: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-4 md:px-0">
                 {fullParty.length > 0 ? (
-                    fullParty.map((member: any) => {
+                    fullParty.map((member: any, idx: number) => {
                         const isInjured = member.recoveryUntil && member.recoveryUntil > currentTime;
                         const remainingMs = isInjured ? member.recoveryUntil - currentTime : 0;
                         const remainingSecs = Math.ceil(remainingMs / 1000);
                         const hpPercent = (member.hp / member.maxHp) * 100;
 
                         return (
-                            <div key={member.id} className={`glass p-5 md:p-6 rounded-2xl border transition-all flex flex-col ${isInjured ? 'border-danger-color/50 bg-danger-color/5' : 'border-white/5'}`}>
+                            <div key={member.id || idx} className={`glass p-5 md:p-6 rounded-2xl border transition-all flex flex-col ${isInjured ? 'border-danger-color/50 bg-danger-color/5' : 'border-white/5'}`}>
                                 <div className="flex justify-between items-start mb-6">
                                     <div>
                                         <div className="font-black text-lg md:text-xl tracking-tight leading-none mb-1">{member.name}</div>

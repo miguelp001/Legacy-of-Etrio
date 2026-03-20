@@ -111,7 +111,7 @@ const LineageHall: React.FC = () => {
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {party.map((member, idx) => (
-                                <div key={member.id} className="glass p-5 md:p-6 rounded-2xl border border-white/5 flex flex-col">
+                                <div key={member.id || idx} className="glass p-5 md:p-6 rounded-2xl border border-white/5 flex flex-col">
                                     <div className="flex justify-between items-start mb-6">
                                         <div>
                                             <div className="font-black text-base md:text-lg tracking-tight leading-none mb-1">{member.name}</div>
@@ -129,10 +129,10 @@ const LineageHall: React.FC = () => {
                                     </div>
                                     
                                     <div className="space-y-4 flex-1">
-                                        {party.slice(idx + 1).map(other => {
+                                        {party.slice(idx + 1).map((other, otherIdx) => {
                                             const rel = getRelationship(member.id, other.id);
                                             return (
-                                                <div key={other.id} className="space-y-2 border-t border-white/5 pt-4">
+                                                <div key={other.id || (idx + '-' + otherIdx)} className="space-y-2 border-t border-white/5 pt-4">
                                                     <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter">
                                                         <span className="text-white/30">With {other.name.split(' ')[0]}</span>
                                                         <span className={rel?.stage === 'Soulmate' ? 'text-secondary-color' : 'text-white/50'}>
@@ -170,12 +170,12 @@ const LineageHall: React.FC = () => {
                         <p className="text-[10px] md:text-sm text-muted italic leading-relaxed opacity-50">Anchor an item's essence to the lineage. Soul-bound items are returned to the vault even if the bearer falls.</p>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {[mainCharacter, ...party].filter((m): m is any => m !== null).map((member) => (
-                                <div key={member.id + '-bind'} className="glass p-5 md:p-6 rounded-2xl border border-primary-color/10 bg-primary-color/5">
+                            {[mainCharacter, ...party].filter((m): m is any => m !== null).map((member, idx) => (
+                                <div key={(member.id || idx) + '-bind'} className="glass p-5 md:p-6 rounded-2xl border border-primary-color/10 bg-primary-color/5">
                                     <div className="text-[8px] md:text-[10px] font-black text-primary-color mb-4 uppercase tracking-[0.2em]">{member.name}'s Gear</div>
                                     <div className="space-y-3">
                                         {[member.weapon, member.armor, member.accessory].map((item, i) => item && (
-                                            <div key={item.id} className="flex justify-between items-center p-3 bg-black/40 rounded-xl border border-white/5">
+                                            <div key={item.id || i} className="flex justify-between items-center p-3 bg-black/40 rounded-xl border border-white/5">
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-[10px] font-mono opacity-30">[{['W', 'A', 'X'][i]}]</span>
                                                     <div className="flex flex-col">
@@ -221,9 +221,9 @@ const LineageHall: React.FC = () => {
                         </p>
 
                         <div className="space-y-3 mb-8 relative z-10">
-                            {party.map(member => (
+                            {party.map((member, idx) => (
                                 <button 
-                                    key={member.id}
+                                    key={member.id || idx}
                                     onClick={() => handleParentToggle(member.id)}
                                     className={`w-full p-4 rounded-xl border transition-all flex justify-between items-center group active:scale-95 ${
                                         selectedParents.includes(member.id) 

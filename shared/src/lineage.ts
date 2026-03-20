@@ -7,7 +7,8 @@ export class LineageManager {
     static createHeir(
         parent1: CharacterStats & { name: string; traits: Trait[]; socialClass: SocialClass }, 
         parent2: CharacterStats & { name: string; traits: Trait[]; socialClass: SocialClass }
-    ): CharacterStats & { name: string; traits: Trait[]; socialClass: SocialClass } {
+    ): CharacterStats & { id: string; name: string; traits: Trait[]; socialClass: SocialClass } {
+        const id = Math.random().toString(36).substring(2, 11);
         const generation = Math.max(parent1.generation, parent2.generation) + 1;
         const level = 1;
 
@@ -43,6 +44,7 @@ export class LineageManager {
         const name = `${parent1.name.split(' ')[0]}'s Heir`;
 
         return {
+            id,
             name,
             level,
             baseClass,

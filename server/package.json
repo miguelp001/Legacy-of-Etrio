@@ -15,11 +15,11 @@
   "description": "",
   "dependencies": {
     "@prisma/adapter-d1": "^7.5.0",
+    "@prisma/client": "^7.5.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.3.1",
     "hono": "^4.12.8",
-    "jsonwebtoken": "^9.0.3",
-    "@prisma/client": "^7.5.0"
+    "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260317.1",

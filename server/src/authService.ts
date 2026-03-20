@@ -80,7 +80,7 @@ export class AuthService {
     static async register(username: string, password: string, jwtSecret: string) {
         try {
             console.log('[AUTH] Registering user:', username);
-            const existing = await (prisma as any).user.findUnique({ where: { username } });
+            const existing = await (prisma as any).user.findFirst({ where: { username } });
             if (existing) throw new Error('Username already taken');
 
             console.log('[AUTH] Hashing password (Native Web Crypto)...');
@@ -108,7 +108,7 @@ export class AuthService {
     }
 
     static async login(username: string, password: string, jwtSecret: string) {
-        const user = await (prisma as any).user.findUnique({ where: { username } });
+        const user = await (prisma as any).user.findFirst({ where: { username } });
         if (!user) throw new Error('Invalid credentials');
 
         console.log('[AUTH] Verifying password (Native Web Crypto)...');

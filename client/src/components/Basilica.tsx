@@ -50,10 +50,10 @@ const Basilica: React.FC = () => {
                             </p>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {candidates.map((member: any) => {
+                                {candidates.map((member: any, idx: number) => {
                                     const isEligible = member.level >= 20 && member.socialClass === 'Drengskapr';
                                     return (
-                                        <div key={member.id} className={`p-5 rounded-2xl border transition-all flex flex-col ${
+                                        <div key={member.id || idx} className={`p-5 rounded-2xl border transition-all flex flex-col ${
                                             isEligible ? 'bg-white/5 border-primary-color/30 hover:border-primary-color' : 'bg-black/20 border-white/5 opacity-40'
                                         }`}>
                                             <div className="flex justify-between items-start mb-4">
@@ -106,8 +106,8 @@ const Basilica: React.FC = () => {
                             Active Guild Council <span className="text-white/30 ml-auto">({councilMembers.length})</span>
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                            {councilMembers.map(member => (
-                                <div key={member.id} className="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center gap-4 transition-all hover:bg-white/10">
+                            {councilMembers.map((member, idx) => (
+                                <div key={member.id || idx} className="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center gap-4 transition-all hover:bg-white/10">
                                     <div className="w-10 h-10 md:w-12 md:h-12 bg-primary-color/20 rounded-full flex items-center justify-center text-primary-color font-black text-lg">
                                         {member.name[0]}
                                     </div>
