@@ -65,4 +65,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy server/src/index.ts --config server/wrangler.toml --name etrio-api --compatibility-date=2024-05-18
+          command: deploy server/src/index.ts --name=etrio-api --compatibility-date=2024-05-18 --compatibility-flag=nodejs_compat
