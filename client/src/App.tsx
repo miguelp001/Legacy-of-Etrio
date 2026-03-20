@@ -9,14 +9,11 @@ import {
   Coins,
   Droplets,
   Sparkles,
-  Factory,
   Zap,
   Cloud,
-  Menu,
   X,
   Castle,
-  History,
-  Info
+  History
 } from 'lucide-react';
 import { useGameStore } from './store/gameStore';
 import Tavern from './components/Tavern';
@@ -45,7 +42,7 @@ const App: React.FC = () => {
   } = useGameStore();
 
   const [location, setLocation] = useState('Respite');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isFeedOpen, setIsFeedOpen] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [lastSnapshotData, setLastSnapshotData] = useState<any>(null);
 
@@ -142,160 +139,143 @@ const App: React.FC = () => {
 
   if (!isAuthenticated) return <LoginScreen />;
 
-  const NavGroup = ({ title, children }: { title: string, children: React.ReactNode }) => (
-    <div className="space-y-1 mb-6">
-      <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2">{title}</h3>
-      {children}
-    </div>
-  );
-
-  const NavItem = ({ id, icon: Icon, label }: { id: string, icon: any, label: string }) => (
+  const NavItem = ({ id, icon: Icon, label, mobileOnly = false }: { id: string, icon: any, label: string, mobileOnly?: boolean }) => (
     <button
-      onClick={() => {
-        setLocation(id);
-        setIsMobileMenuOpen(false);
-      }}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${
+      onClick={() => setLocation(id)}
+      className={`flex flex-col md:flex-row items-center gap-1 md:gap-3 px-2 md:px-4 py-2 md:py-3 rounded-xl transition-all group ${
         location === id 
-        ? 'bg-primary-color text-white shadow-lg shadow-primary-color/20' 
+        ? 'text-primary-color md:bg-primary-color md:text-white shadow-lg shadow-primary-color/20' 
         : 'text-muted hover:bg-white/5 hover:text-white'
-      }`}
+      } ${mobileOnly ? 'md:hidden' : ''}`}
     >
-      <Icon size={18} className={location === id ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'} />
-      <span className="font-bold text-sm tracking-tight">{label}</span>
+      <Icon size={20} className={location === id ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'} />
+      <span className="font-bold text-[10px] md:text-sm tracking-tight uppercase md:capitalize">{label}</span>
     </button>
   );
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col md:flex-row font-sans selection:bg-primary-color selection:text-white overflow-hidden">
-      {/* Mobile Header */}
-      <div className="md:hidden flex justify-between items-center p-4 border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary-color flex items-center justify-center font-black italic">E</div>
-          <span className="font-black tracking-tighter text-xl text-gradient">ETRIO</span>
-        </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-muted hover:text-white">
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      {/* Sidebar / Mobile Menu */}
-      <aside className={`
-        fixed inset-0 z-40 md:relative md:flex flex-col w-full md:w-72 bg-[#0a0a0a] border-r border-white/10 transition-transform duration-300
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      `}>
-        <div className="p-8 hidden md:block">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-color to-secondary-color flex items-center justify-center font-black italic text-xl shadow-lg shadow-primary-color/20">E</div>
-            <div>
-              <h1 className="text-2xl font-black tracking-tighter leading-none">LEGACY</h1>
-              <span className="text-[10px] font-bold text-primary-color tracking-[0.3em] uppercase opacity-80">OF ETRIO</span>
-            </div>
+    <div className="h-screen bg-[#050505] text-white flex flex-col md:flex-row font-sans selection:bg-primary-color selection:text-white overflow-hidden relative">
+      {/* 1. TOP HEADER (Mobile & Desktop) */}
+      <header className="z-50 shrink-0 border-b border-white/10 bg-black/50 backdrop-blur-xl px-4 py-3 md:px-8 md:py-4 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gradient-to-br from-primary-color to-secondary-color flex items-center justify-center font-black italic shadow-lg shadow-primary-color/20">E</div>
+          <div className="hidden sm:block">
+            <h1 className="text-lg md:text-2xl font-black tracking-tighter leading-none uppercase">ETRIO</h1>
+            <span className="text-[8px] md:text-[10px] font-bold text-primary-color tracking-[0.3em] uppercase opacity-80">LEADERSHIP</span>
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-4 py-4 md:py-0 custom-scrollbar">
-          <NavGroup title="Command">
-            <NavItem id="Respite" icon={LayoutDashboard} label="State Overview" />
-            <NavItem id="The Pit" icon={Sword} label="The Descent" />
-          </NavGroup>
+        <div className="flex items-center gap-2 md:gap-4 lg:gap-6">
+          <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full border border-white/10 glass">
+            <Droplets size={14} className="text-red-500" />
+            <span className="font-black text-xs text-red-500">{Math.floor(bloodRations)}</span>
+          </div>
+          
+          <button 
+            onClick={() => setResonatorActive(!isResonatorActive)}
+            className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all glass ${
+              isResonatorActive ? 'bg-primary-color/20 border-primary-color text-primary-color shadow-lg' : 'bg-white/5 border-white/10 text-muted'
+            }`}
+          >
+            <Zap size={14} />
+            <span className="font-black text-[10px] uppercase tracking-tighter">{isResonatorActive ? 'Resonator On' : 'Resonator'}</span>
+          </button>
 
-          <NavGroup title="The Hub">
+          <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full border border-white/10 glass">
+            <Coins size={14} className="text-accent-color" />
+            <span className="font-black text-xs text-accent-color">{gold.toLocaleString()}g</span>
+          </div>
+
+          <button 
+            onClick={() => setIsFeedOpen(true)}
+            className={`lg:hidden p-2 rounded-full hover:bg-white/10 text-muted transition-all relative ${events.length > 0 ? 'text-primary-color' : ''}`}
+          >
+            <History size={20} />
+            {events.length > 0 && <span className="absolute top-0 right-0 w-2 h-2 bg-primary-color rounded-full animate-ping" />}
+          </button>
+        </div>
+      </header>
+
+      {/* 2. SIDEBAR (Desktop Only) */}
+      <aside className="hidden md:flex flex-col w-64 lg:w-72 bg-[#0a0a0a] border-r border-white/10 shrink-0">
+        <nav className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar space-y-8">
+          <div className="space-y-1">
+            <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2">Command</h3>
+            <NavItem id="Respite" icon={LayoutDashboard} label="Overview" />
+            <NavItem id="The Pit" icon={Sword} label="The Pit" />
+          </div>
+
+          <div className="space-y-1">
+            <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2">The Hub</h3>
             <NavItem id="Tavern" icon={Users} label="Tavern" />
             <NavItem id="Hospital" icon={HeartPulse} label="Infirmary" />
-            <NavItem id="Blacksmith" icon={Shield} label="Blacksmith" />
+            <NavItem id="Blacksmith" icon={Shield} label="Forge" />
             <NavItem id="Market" icon={Droplets} label="Blood Market" />
-          </NavGroup>
+          </div>
 
-          <NavGroup title="Sanctified Wing">
+          <div className="space-y-1">
+            <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2">Legacy</h3>
             <NavItem id="Basilica" icon={Sparkles} label="Basilica" />
-            <NavItem id="Forge" icon={Factory} label="Steam Forge" />
-          </NavGroup>
-
-          <NavGroup title="Legacy Archive">
             <NavItem id="Guild Hall" icon={Castle} label="Guild Hall" />
             <NavItem id="Lineage" icon={History} label="Lineage Hall" />
-          </NavGroup>
+          </div>
         </nav>
 
         <div className="p-4 border-t border-white/5 m-4 glass rounded-2xl bg-primary-color/5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Aether Sync</span>
-              <span className="text-xs font-bold text-primary-color uppercase">Verified</span>
-            </div>
-            <button onClick={() => saveProgress()} className="p-2 rounded-lg bg-white/5 text-muted hover:text-white transition-colors" title="Manual Sync">
-              <Cloud size={16} />
-            </button>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Aether Sync</span>
+            <Cloud size={12} className="text-primary-color opacity-50" />
           </div>
-          <p className="text-[10px] text-muted leading-tight">Your lineage is preserved in the eternal archives.</p>
+          <p className="text-[10px] text-muted leading-tight line-clamp-2">Your lineage is preserved in the eternal archives.</p>
         </div>
       </aside>
 
-      {/* Main Content Pane */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto custom-scrollbar bg-black/20">
-          <div className="max-w-4xl mx-auto">
-            <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-white/5">
+      {/* 3. MAIN CONTENT AREA */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[radial-gradient(circle_at_50%_0%,rgba(168,85,247,0.05)_0%,transparent_50%)]">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 lg:p-12 pb-32 md:pb-8">
+          <div className="max-w-4xl mx-auto space-y-8">
+            <header className="flex items-center justify-between">
               <div>
-                <h2 className="text-4xl font-black tracking-tight uppercase text-glow">{location}</h2>
-                <div className="text-[10px] uppercase tracking-[0.4em] font-black text-primary-color/60 mt-1">Vanguard Authorized</div>
-              </div>
-              
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 glass">
-                  <Droplets size={16} className="text-red-500" />
-                  <span className="font-black text-sm text-red-500">{Math.floor(bloodRations)}</span>
-                </div>
-                
-                <button 
-                  onClick={() => setResonatorActive(!isResonatorActive)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all glass ${
-                    isResonatorActive ? 'bg-primary-color/20 border-primary-color text-primary-color shadow-lg' : 'bg-white/5 border-white/10 text-muted'
-                  }`}
-                >
-                  <Zap size={16} />
-                  <span className="font-black text-[10px] uppercase tracking-tighter">{isResonatorActive ? 'Resonator On' : 'Resonator'}</span>
-                </button>
-
-                <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 glass">
-                  <Coins size={16} className="text-accent-color" />
-                  <span className="font-black text-sm text-accent-color">{gold.toLocaleString()}g</span>
-                </div>
+                <h2 className="text-2xl md:text-5xl font-black italic tracking-tighter uppercase text-glow">{location}</h2>
+                <div className="text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-black text-primary-color/60 mt-1">Operational Module</div>
               </div>
             </header>
 
-            <section className="animate-fade-in pb-20">
+            <section className="animate-fade-in">
               {location === 'Respite' && (
-                <div className="space-y-8">
-                  <div className="glass p-10 rounded-[2rem] border border-white/5 relative overflow-hidden group">
-                    <div className="absolute -top-10 -right-10 opacity-5 group-hover:opacity-10 transition-opacity">
+                <div className="space-y-6">
+                  <div className="glass p-6 md:p-10 rounded-[2rem] border border-white/5 relative overflow-hidden group">
+                    <div className="absolute -top-10 -right-10 opacity-[0.03] group-hover:opacity-10 transition-opacity">
                       <Castle size={200} />
                     </div>
-                    <h3 className="text-3xl font-black mb-4 italic tracking-tighter">THE COMMAND HUB</h3>
-                    <p className="text-muted leading-relaxed mb-8 text-lg">The Depths are quiet for now. Manage your guild, restore your party at the Infirmary, or forge new destiny in the Sanctified Wing. When ready, the Pit awaits.</p>
-                    <div className="flex gap-4">
-                      <button onClick={() => setLocation('The Pit')} className="btn-primary px-10 py-4 text-lg">Enter the Pit</button>
-                      <button onClick={() => setLocation('Tavern')} className="btn-outline px-10 py-4 text-lg">Visit Tavern</button>
+                    <h3 className="text-xl md:text-3xl font-black mb-2 md:mb-4 italic tracking-tighter">VANGUARD STATUS</h3>
+                    <p className="text-muted leading-relaxed mb-6 md:mb-8 text-sm md:text-lg max-w-2xl">All systems operational. The Depths hum with ancient resonance. Monitor your party's vitality at the Infirmary or expand the guild's reach through the Guild Hall.</p>
+                    <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+                      <button onClick={() => setLocation('The Pit')} className="btn-primary w-full sm:w-auto px-8 py-3 md:py-4 text-base md:text-lg flex justify-center">Enter The Pit</button>
+                      <button onClick={() => setLocation('Tavern')} className="btn-outline w-full sm:w-auto px-8 py-3 md:py-4 text-base md:text-lg flex justify-center">Visit Tavern</button>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="glass p-6 rounded-2xl border border-white/5">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Info className="text-primary-color" size={20} />
-                        <h4 className="font-bold text-sm uppercase tracking-widest">Active Party</h4>
+                  <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6">
+                    <div className="glass p-4 md:p-6 rounded-2xl border border-white/5 flex flex-col justify-between h-32 md:h-40">
+                      <div className="flex items-center gap-2 md:gap-3 text-primary-color">
+                        <Users size={18} />
+                        <h4 className="font-bold text-[10px] md:text-xs uppercase tracking-widest opacity-50">Active Party</h4>
                       </div>
-                      <div className="text-2xl font-black">{party.length + (mainCharacter ? 1 : 0)} / 4</div>
-                      <div className="text-xs text-muted mt-1 uppercase tracking-tighter font-bold">Vanguard Members</div>
+                      <div>
+                        <div className="text-3xl md:text-5xl font-black tracking-tighter italic">{party.length + (mainCharacter ? 1 : 0)}<span className="text-xl md:text-2xl opacity-20 ml-1">/ 4</span></div>
+                        <div className="text-[10px] text-muted mt-1 uppercase tracking-tighter font-bold">Vanguard Deployed</div>
+                      </div>
                     </div>
-                    <div className="glass p-6 rounded-2xl border border-white/5">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Mountain className="text-secondary-color" size={20} />
-                        <h4 className="font-bold text-sm uppercase tracking-widest">Current Depth</h4>
+                    <div className="glass p-4 md:p-6 rounded-2xl border border-white/5 flex flex-col justify-between h-32 md:h-40">
+                      <div className="flex items-center gap-2 md:gap-3 text-secondary-color">
+                        <Mountain size={18} />
+                        <h4 className="font-bold text-[10px] md:text-xs uppercase tracking-widest opacity-50">Penetration</h4>
                       </div>
-                      <div className="text-2xl font-black">Floor {currentFloor}</div>
-                      <div className="text-xs text-muted mt-1 uppercase tracking-tighter font-bold">Maximum Pentration</div>
+                      <div>
+                        <div className="text-3xl md:text-5xl font-black tracking-tighter italic">{currentFloor}<span className="text-xl md:text-2xl opacity-20 ml-1">F</span></div>
+                        <div className="text-[10px] text-muted mt-1 uppercase tracking-tighter font-bold">Maximum Reached</div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -312,13 +292,40 @@ const App: React.FC = () => {
               {location === 'Lineage' && <LineageHall />}
             </section>
           </div>
-        </main>
+        </div>
+      </main>
 
-        {/* Action Feed Side-Pane */}
-        <aside className="hidden lg:flex w-[400px] bg-[#080808] border-l border-white/10 flex-col overflow-hidden">
-          <ActionFeed events={events} onLayToRest={handleLayToRest} />
-        </aside>
-      </div>
+      {/* 4. ACTION FEED (Drawer for Mobile, Side Panel for Desktop) */}
+      <aside className={`
+        fixed inset-y-0 right-0 z-[60] w-full sm:w-[400px] lg:relative lg:flex lg:w-[400px] bg-[#080808] border-l border-white/10 flex-col overflow-hidden transition-transform duration-500
+        ${isFeedOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+      `}>
+        <div className="lg:hidden flex items-center justify-between p-6 border-b border-white/10 bg-black/30 backdrop-blur-xl">
+           <h3 className="text-xl font-black italic tracking-tighter uppercase">Tactical Feed</h3>
+           <button onClick={() => setIsFeedOpen(false)} className="p-2 text-muted hover:text-white transition-colors">
+              <X size={24} />
+           </button>
+        </div>
+        <ActionFeed events={events} onLayToRest={handleLayToRest} />
+      </aside>
+
+      {/* 5. BOTTOM NAVIGATION (Mobile Only) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-t border-white/10 px-2 py-3 pb-8 flex justify-around items-center">
+        <NavItem id="Respite" icon={LayoutDashboard} label="Home" />
+        <NavItem id="The Pit" icon={Sword} label="The Pit" />
+        <NavItem id="Tavern" icon={Users} label="Tavern" />
+        <NavItem id="Guild Hall" icon={Castle} label="Guild" />
+        <button 
+          onClick={() => {
+            const nextLocation = location === 'Market' ? 'Respite' : 'Market';
+            setLocation(nextLocation);
+          }}
+          className={`flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-all ${location === 'Market' ? 'text-primary-color' : 'text-muted'}`}
+        >
+          <Droplets size={20} />
+          <span className="font-bold text-[10px] uppercase tracking-tight">Market</span>
+        </button>
+      </nav>
 
       {!mainCharacter && <CharacterCreation />}
       {isGameWon && <VictoryScreen />}

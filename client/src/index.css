@@ -26,6 +26,8 @@
   --text-main: #f9fafb;
   --text-muted: #94a3b8;
   --glass-blur: blur(16px);
+  --mobile-nav-height: 80px;
+  --mobile-header-height: 64px;
 }
 
 * {

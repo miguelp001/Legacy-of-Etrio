@@ -162,29 +162,76 @@ export class SnapshotService {
             }
 
             const floorData = DungeonManager.generateFloor(currentFloor);
-            // If breach, enemies are significantly stronger (simulated via level boost)
-            const effectiveLevel = isBreach ? floorData.floorNumber + 10 : floorData.floorNumber;
-            const enemies = floorData.enemies.map(e => ({ ...e, level: effectiveLevel, isEnemy: true } as Combatant));
+            floorMultiplier = (isResonatorActive ? 1.5 : 1.0) * (1 + resonatorMastery * 0.1);
             
-            const result = CombatEngine.simulate(party, enemies);
-            
-            // Add GDD-compliant metadata to events
-            result.events.forEach(event => {
-                if (Math.random() > 0.8) {
-                    const speaker = party[Math.floor(Math.random() * party.length)];
-                    if (speaker?.trait) {
-                        const banterPool = BANTER[speaker.trait];
-                        const banter = banterPool[Math.floor(Math.random() * banterPool.length)];
-                        if (banter) event.banter = banter;
+            for (const room of floorData.rooms) {
+                if (wiped) break;
+
+                const effectiveLevel = isBreach ? floorData.floorNumber + 10 : floorData.floorNumber;
+                const enemies = (room.enemies || []).map(e => ({ ...e, level: effectiveLevel, isEnemy: true } as Combatant));
+                
+                if (enemies.length > 0) {
+                    const result = CombatEngine.simulate(party, enemies);
+                    
+                    // Add GDD-compliant metadata to events
+                    result.events.forEach(event => {
+                        if (Math.random() > 0.8) {
+                            const speaker = party[Math.floor(Math.random() * party.length)];
+                            if (speaker?.trait) {
+                                const banterPool = BANTER[speaker.trait];
+                                const banter = banterPool[Math.floor(Math.random() * banterPool.length)];
+                                if (banter) event.banter = banter;
+                            }
+                            const tag = EMOJI_TAGS[Math.floor(Math.random() * EMOJI_TAGS.length)];
+                            if (tag) event.emojiTag = tag;
+                        }
+                    });
+
+                    allEvents.push(...result.events);
+
+                    if (!result.victory) {
+                        wiped = true;
+                        await this.handleWipe(playerId, party[0]?.name || 'Bondi', currentFloor);
+                        
+                        // Calculate Bloodprice for companions
+                        const companions = party.filter(p => p.id !== 'player-mc');
+                        companions.forEach(c => {
+                            bloodpricePenalty += this.calculateBloodprice(c);
+                        });
+
+                        // Gear loss logic: Non-soulbound gear on all fallen members is lost
+                        party.forEach(member => {
+                            [member.weapon, member.armor, member.accessory].forEach(item => {
+                                if (item && !item.isSoulBound) {
+                                    lostGear.push(item);
+                                }
+                            });
+                        });
+
+                        // Add Wipe Event
+                        allEvents.push({
+                            turn: i,
+                            attackerName: 'SYSTEM',
+                            defenderName: party[0]?.name || 'Bondi',
+                            damage: 0,
+                            isCrit: false,
+                            isMiss: false,
+                            remainingHp: 0,
+                            banter: "The party has fallen into the darkness of The Deep...",
+                            corpseData: { playerId, floor: currentFloor },
+                            emojiTag: '💀'
+                        });
+                        break;
                     }
-                    const tag = EMOJI_TAGS[Math.floor(Math.random() * EMOJI_TAGS.length)];
-                    if (tag) event.emojiTag = tag;
                 }
-            });
 
-            allEvents.push(...result.events);
+                // If room cleared (even if no combat)
+                if (room.type === 'Cache' || room.type === 'Rest') {
+                    // Caches and Rests could have special logic, for now just log exploration
+                }
+            }
 
-            if (result.victory) {
+            if (!wiped) {
                 currentGold += Math.floor(10 * floorData.goldMultiplier * floorMultiplier);
                 currentFloor++;
                 
@@ -192,39 +239,6 @@ export class SnapshotService {
                 party.forEach(member => {
                     this.degradeGear(member, 1);
                 });
-            } else {
-                wiped = true;
-                await this.handleWipe(playerId, party[0]?.name || 'Bondi', currentFloor);
-                
-                // Calculate Bloodprice for companions
-                const companions = party.filter(p => p.id !== 'player-mc');
-                companions.forEach(c => {
-                    bloodpricePenalty += this.calculateBloodprice(c);
-                });
-
-                // Gear loss logic: Non-soulbound gear on all fallen members is lost
-                party.forEach(member => {
-                    [member.weapon, member.armor, member.accessory].forEach(item => {
-                        if (item && !item.isSoulBound) {
-                            lostGear.push(item);
-                        }
-                    });
-                });
-
-                // Add Wipe Event
-                allEvents.push({
-                    turn: i,
-                    attackerName: 'SYSTEM',
-                    defenderName: party[0]?.name || 'Bondi',
-                    damage: 0,
-                    isCrit: false,
-                    isMiss: false,
-                    remainingHp: 0,
-                    banter: "The party has fallen into the darkness of The Deep...",
-                    corpseData: { playerId, floor: currentFloor },
-                    emojiTag: '💀'
-                });
-                break;
             }
         }
 

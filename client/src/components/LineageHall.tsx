@@ -87,161 +87,173 @@ const LineageHall: React.FC = () => {
     };
 
     return (
-        <div className="space-y-8 animate-fade-in pb-20">
-            <div className="flex justify-between items-start">
-                <div>
-                    <h2 className="text-2xl font-bold">Lineage Hall</h2>
-                    <p className="text-muted">Where bonds ignite and legends are inherited.</p>
-                </div>
-                <div className="p-3 bg-secondary-color/20 rounded-xl text-secondary-color">
-                    <History size={24} />
+        <div className="space-y-6 md:space-y-8 animate-fade-in pb-10">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 px-4 md:px-0">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-secondary-color/20 rounded-xl text-secondary-color shrink-0">
+                        <History size={24} className="md:w-8 md:h-8" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl md:text-3xl font-black tracking-tighter uppercase italic">Lineage Hall</h2>
+                        <p className="text-muted text-[10px] md:text-sm uppercase font-bold tracking-tight opacity-50">Where bonds ignite and legends are inherited.</p>
+                    </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 px-4 md:px-0">
                 {/* Active Party & Affinity */}
-                <div className="lg:col-span-2 space-y-6">
-                    <h3 className="text-lg font-bold flex items-center gap-2">
-                        <Users size={20} className="text-primary-color" />
-                        Current Party Bonds
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {party.map((member, idx) => (
-                            <div key={member.id} className="glass p-4 rounded-xl border border-white/10">
-                                <div className="flex justify-between items-center mb-4">
-                                    <div>
-                                        <div className="font-bold">{member.name}</div>
-                                        <div className="text-[10px] text-muted uppercase">Lvl {member.level} {member.baseClass}</div>
+                <div className="lg:col-span-2 space-y-8">
+                    <div className="space-y-4">
+                        <h3 className="text-sm md:text-lg font-black uppercase tracking-widest flex items-center gap-2 border-b border-white/5 pb-2">
+                            <Users size={18} className="text-primary-color" />
+                            Current Party Bonds
+                        </h3>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {party.map((member, idx) => (
+                                <div key={member.id} className="glass p-5 md:p-6 rounded-2xl border border-white/5 flex flex-col">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div>
+                                            <div className="font-black text-base md:text-lg tracking-tight leading-none mb-1">{member.name}</div>
+                                            <div className="text-[8px] md:text-[10px] text-muted uppercase font-black tracking-widest">Lvl {member.level} {member.baseClass}</div>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-2">
+                                            <div className="text-[8px] px-2 py-0.5 bg-white/5 rounded-lg text-white/30 font-black uppercase tracking-widest">Gen {member.generation}</div>
+                                            <button 
+                                                onClick={() => handleRetire(member.id, member.name)}
+                                                className="text-[10px] text-danger-color font-black uppercase tracking-widest hover:opacity-70 transition-opacity"
+                                            >
+                                                Retire
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-1">
-                                        <div className="text-[10px] px-2 py-0.5 bg-white/5 rounded text-muted">Gen {member.generation}</div>
-                                        <button 
-                                            onClick={() => handleRetire(member.id, member.name)}
-                                            className="text-[10px] text-danger-color hover:underline"
-                                        >
-                                            Retire
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div className="space-y-3">
-                                    {party.slice(idx + 1).map(other => {
-                                        const rel = getRelationship(member.id, other.id);
-                                        return (
-                                            <div key={other.id} className="flex items-center justify-between text-sm">
-                                                <div className="text-muted flex items-center gap-2">
-                                                    with <span className="text-white">{other.name}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                    
+                                    <div className="space-y-4 flex-1">
+                                        {party.slice(idx + 1).map(other => {
+                                            const rel = getRelationship(member.id, other.id);
+                                            return (
+                                                <div key={other.id} className="space-y-2 border-t border-white/5 pt-4">
+                                                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter">
+                                                        <span className="text-white/30">With {other.name.split(' ')[0]}</span>
+                                                        <span className={rel?.stage === 'Soulmate' ? 'text-secondary-color' : 'text-white/50'}>
+                                                            {rel?.stage || 'Stranger'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
                                                         <div 
-                                                            className="h-full bg-secondary-color transition-all duration-500" 
+                                                            className={`h-full transition-all duration-1000 ${rel?.stage === 'Soulmate' ? 'bg-secondary-color shadow-[0_0_10px_var(--secondary-glow)]' : 'bg-white/20'}`} 
                                                             style={{ width: `${rel?.affinity || 0}%` }}
                                                         ></div>
                                                     </div>
-                                                    <span className={`font-bold ${rel?.stage === 'Soulmate' ? 'text-secondary-color' : 'text-muted'}`}>
-                                                        {rel?.stage || 'Stranger'}
-                                                    </span>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                        {idx === party.length - 1 && party.length > 1 && (
+                                            <div className="text-[10px] text-muted text-center italic opacity-30 py-2">End of Bonds</div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                        {party.length < 2 && (
-                            <div className="col-span-full py-12 text-center text-muted glass rounded-xl border-dashed border-white/10 border-2">
-                                Recruit at least 2 members to begin tracking Affinity.
-                            </div>
-                        )}
+                            ))}
+                            {party.length < 2 && (
+                                <div className="col-span-full py-20 text-center text-muted glass rounded-3xl border-dashed border-white/10 border-2">
+                                    <p className="text-[10px] uppercase font-black tracking-widest">Recruit at least 2 members to begin tracking Affinity.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <h3 className="text-lg font-bold flex items-center gap-2 mt-12 mb-6">
-                        <Zap size={20} className="text-primary-color" />
-                        Soul-Binding Ritual
-                    </h3>
-                    <p className="text-sm text-muted mb-6 italic">Anchor an item's essence to the lineage. Soul-bound items are returned to the vault even if the bearer falls.</p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {[mainCharacter, ...party].filter((m): m is any => m !== null).map((member) => (
-                            <div key={member.id + '-bind'} className="glass p-4 rounded-xl border border-primary-color/10 bg-primary-color/5">
-                                <div className="text-xs font-bold text-primary-color mb-3 uppercase tracking-widest">{member.name}'s Gear</div>
-                                <div className="space-y-2">
-                                    {[member.weapon, member.armor, member.accessory].map((item, i) => item && (
-                                        <div key={item.id} className="flex justify-between items-center text-sm p-2 bg-black/20 rounded-lg">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs opacity-50">[{['W', 'A', 'X'][i]}]</span>
-                                                <span className={item.isSoulBound ? 'text-primary-color font-bold' : ''}>{item.name}</span>
-                                                {item.isSoulBound && <ShieldCheck size={14} className="text-primary-color" />}
+                    <div className="space-y-4">
+                        <h3 className="text-sm md:text-lg font-black uppercase tracking-widest flex items-center gap-2 border-b border-white/5 pb-2">
+                            <Zap size={18} className="text-primary-color" />
+                            Soul-Binding Ritual
+                        </h3>
+                        <p className="text-[10px] md:text-sm text-muted italic leading-relaxed opacity-50">Anchor an item's essence to the lineage. Soul-bound items are returned to the vault even if the bearer falls.</p>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {[mainCharacter, ...party].filter((m): m is any => m !== null).map((member) => (
+                                <div key={member.id + '-bind'} className="glass p-5 md:p-6 rounded-2xl border border-primary-color/10 bg-primary-color/5">
+                                    <div className="text-[8px] md:text-[10px] font-black text-primary-color mb-4 uppercase tracking-[0.2em]">{member.name}'s Gear</div>
+                                    <div className="space-y-3">
+                                        {[member.weapon, member.armor, member.accessory].map((item, i) => item && (
+                                            <div key={item.id} className="flex justify-between items-center p-3 bg-black/40 rounded-xl border border-white/5">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-[10px] font-mono opacity-30">[{['W', 'A', 'X'][i]}]</span>
+                                                    <div className="flex flex-col">
+                                                        <span className={`text-[10px] font-black uppercase tracking-tight ${item.isSoulBound ? 'text-primary-color' : 'text-white/80'}`}>{item.name}</span>
+                                                        {item.isSoulBound && <span className="text-[8px] text-primary-color uppercase font-black tracking-widest">Soul Bound</span>}
+                                                    </div>
+                                                </div>
+                                                {!item.isSoulBound && (
+                                                    <button 
+                                                        onClick={() => handleBind(item.id)}
+                                                        disabled={gold < 2500}
+                                                        className="px-4 py-2 bg-primary-color/10 hover:bg-primary-color/20 border border-primary-color/30 rounded-lg text-[8px] font-black uppercase tracking-widest text-primary-color transition-all active:scale-95 disabled:opacity-20"
+                                                    >
+                                                        BIND (2.5k)
+                                                    </button>
+                                                )}
+                                                {item.isSoulBound && <ShieldCheck size={16} className="text-primary-color" />}
                                             </div>
-                                            {!item.isSoulBound && (
-                                                <button 
-                                                    onClick={() => handleBind(item.id)}
-                                                    disabled={gold < 2500}
-                                                    className="px-3 py-1 bg-primary-color/20 hover:bg-primary-color/40 border border-primary-color/20 rounded text-[10px] font-bold transition-all disabled:opacity-50"
-                                                >
-                                                    BIND (2500g)
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    {![member.weapon, member.armor, member.accessory].some(Boolean) && (
-                                        <div className="text-[10px] text-muted text-center py-2">No gear equipped to bind.</div>
-                                    )}
+                                        ))}
+                                        {![member.weapon, member.armor, member.accessory].some(Boolean) && (
+                                            <div className="text-[10px] text-muted text-center py-4 border border-dashed border-white/5 rounded-xl uppercase font-bold tracking-tighter opacity-30 italic">No gear equipped to bind.</div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
 
                 {/* Succession Ritual */}
-                <div className="glass p-8 rounded-2xl border border-white/10 bg-secondary-color/5 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <Sparkles size={120} />
-                    </div>
-                    
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2 relative z-10">
-                        <Heart size={20} className="text-secondary-color" />
-                        Succession Ritual
+                <div className="space-y-4">
+                    <h3 className="text-sm md:text-lg font-black uppercase tracking-widest flex items-center gap-2 border-b border-white/5 pb-2">
+                        <Heart size={18} className="text-secondary-color" />
+                        Succession
                     </h3>
-                    <p className="text-sm text-muted mb-8 relative z-10">
-                        Select two Soulmate parents to produce an Heir. The Heir will inherit base stats plus a cumulative +10% stackable bonus.
-                    </p>
+                    <div className="glass p-6 md:p-8 rounded-3xl border border-white/10 bg-secondary-color/5 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12 pointer-events-none">
+                            <Sparkles size={120} />
+                        </div>
+                        
+                        <p className="text-[10px] md:text-sm text-muted mb-8 relative z-10 italic leading-relaxed">
+                            Select two <span className="text-secondary-color font-black">Soulmate</span> parents to produce an Heir. The Heir inherits base stats plus a cumulative +10% stackable legacy bonus.
+                        </p>
 
-                    <div className="space-y-4 mb-8 relative z-10">
-                        {party.map(member => (
-                            <button 
-                                key={member.id}
-                                onClick={() => handleParentToggle(member.id)}
-                                className={`w-full p-4 rounded-xl border transition-all flex justify-between items-center ${
-                                    selectedParents.includes(member.id) 
-                                    ? 'bg-secondary-color/20 border-secondary-color shadow-[0_0_15px_rgba(244,63,94,0.2)]' 
-                                    : 'bg-white/5 border-white/10 hover:border-white/20'
-                                }`}
-                            >
-                                <span className="font-bold">{member.name}</span>
-                                {selectedParents.includes(member.id) && <Sparkles size={16} className="text-secondary-color" />}
-                            </button>
-                        ))}
-                    </div>
+                        <div className="space-y-3 mb-8 relative z-10">
+                            {party.map(member => (
+                                <button 
+                                    key={member.id}
+                                    onClick={() => handleParentToggle(member.id)}
+                                    className={`w-full p-4 rounded-xl border transition-all flex justify-between items-center group active:scale-95 ${
+                                        selectedParents.includes(member.id) 
+                                        ? 'bg-secondary-color/20 border-secondary-color shadow-[0_0_15px_rgba(244,63,94,0.2)]' 
+                                        : 'bg-white/5 border-white/10 hover:border-white/20'
+                                    }`}
+                                >
+                                    <span className={`text-[10px] md:text-xs font-black uppercase tracking-widest ${selectedParents.includes(member.id) ? 'text-white' : 'text-white/50 group-hover:text-white'}`}>{member.name}</span>
+                                    {selectedParents.includes(member.id) && <Sparkles size={16} className="text-secondary-color animate-pulse" />}
+                                </button>
+                            ))}
+                        </div>
 
-                    <button 
-                        disabled={selectedParents.length !== 2}
-                        onClick={performRitual}
-                        className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
-                            selectedParents.length === 2 
-                            ? 'bg-secondary-color text-white shadow-lg shadow-secondary-color/20' 
-                            : 'bg-white/10 text-muted cursor-not-allowed'
-                        }`}
-                    >
-                        <UserPlus size={20} />
-                        Produce Legacy Heir ({getRitualCost()}g)
-                    </button>
-                    
-                    <div className="mt-6 flex items-start gap-2 text-xs text-muted leading-relaxed">
-                        <ShieldAlert size={14} className="flex-shrink-0 mt-0.5" />
-                        <span>Performing the ritual consumes significant spiritual energy and requires Soulmate status (100 Affinity).</span>
+                        <button 
+                            disabled={selectedParents.length !== 2}
+                            onClick={performRitual}
+                            className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-[10px] md:text-xs flex items-center justify-center gap-3 transition-all shadow-xl active:scale-95 ${
+                                selectedParents.length === 2 
+                                ? 'bg-secondary-color text-white shadow-secondary-color/30' 
+                                : 'bg-white/5 text-muted cursor-not-allowed opacity-20'
+                            }`}
+                        >
+                            <UserPlus size={18} />
+                            Produce Legacy Heir ({getRitualCost().toLocaleString()}g)
+                        </button>
+                        
+                        <div className="mt-8 flex items-start gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 opacity-60">
+                            <ShieldAlert size={14} className="flex-shrink-0 mt-0.5 text-secondary-color" />
+                            <p className="text-[10px] leading-relaxed italic">The ritual consumes significant spiritual energy and requires Soulmate status (100 Affinity).</p>
+                        </div>
                     </div>
                 </div>
             </div>
