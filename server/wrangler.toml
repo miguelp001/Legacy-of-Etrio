@@ -1,4 +1,4 @@
-name = "etrio-api"
+name = "etrio-backend"
 main = "src/index.ts"
 compatibility_date = "2024-05-18"
 compatibility_flags = ["nodejs_compat"]
