@@ -4,7 +4,7 @@ compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-# Add and override variables in the Cloudflare dashboard for production
+JWT_SECRET = "legacy-of-etrio-super-secret-key-change-this-in-dashboard"
 
 [[d1_databases]]
 binding = "DB"

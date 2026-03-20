@@ -4,8 +4,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "wrangler dev src/index.ts",
-    "deploy": "wrangler deploy src/index.ts",
+    "dev": "npx wrangler dev src/index.ts",
+    "deploy": "npx wrangler deploy src/index.ts",
     "build": "npm install @prisma/client && ./node_modules/.bin/prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
