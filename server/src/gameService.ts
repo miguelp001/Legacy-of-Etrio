@@ -202,14 +202,16 @@ export class GameService {
             }
         } else {
             // Defeated!
-            if (state.mainCharacter) state.mainCharacter.hp = 0;
-            state.party = state.party.map((p: any) => ({ ...p, hp: 0 }));
-
-            // Safety: Auto-heal low-level players
-            if (state.currentFloor <= 5) {
-                if (state.mainCharacter) state.mainCharacter.hp = Math.floor(state.mainCharacter.maxHp * 0.5);
-                state.party = state.party.map((p: any) => ({ ...p, hp: Math.floor(p.maxHp * 0.5) }));
+            const recoveryTime = Date.now() + (5 * 60 * 1000); // 5 minutes recovery
+            if (state.mainCharacter) {
+                state.mainCharacter.hp = 0;
+                state.mainCharacter.recoveryUntil = recoveryTime;
             }
+            state.party = state.party.map((p: any) => ({ 
+                ...p, 
+                hp: 0,
+                recoveryUntil: recoveryTime
+            }));
         }
 
         await (prisma as any).playerState.update({
@@ -290,8 +292,18 @@ export class GameService {
         const state = JSON.parse(player.state);
         if (state.gold < cost) throw new Error('Insufficient gold');
         state.gold -= cost;
-        if (targetId === 'player-mc' && state.mainCharacter) state.mainCharacter.hp = state.mainCharacter.maxHp;
-        else state.party = state.party.map((m: any) => m.id === targetId ? { ...m, hp: m.maxHp } : m);
+        if (targetId === 'player-mc' && state.mainCharacter) {
+            state.mainCharacter.hp = state.mainCharacter.maxHp;
+            state.mainCharacter.recoveryUntil = 0;
+        }
+        else {
+            state.party = state.party.map((m: any) => {
+                if (m.id === targetId) {
+                    return { ...m, hp: m.maxHp, recoveryUntil: 0 };
+                }
+                return m;
+            });
+        }
         await (prisma as any).playerState.update({
             where: { id: playerId },
             data: { state: JSON.stringify(state), updatedAt: new Date() }

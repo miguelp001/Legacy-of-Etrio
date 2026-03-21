@@ -38,10 +38,10 @@ const App: React.FC = () => {
     gold, party, currentFloor, mainCharacter, 
     events, bloodRations, isResonatorActive, setResonatorActive,
     isGameWon, playerId, isAuthenticated, loadProgress, saveProgress, syncGuildSettings,
-    addEvents, addGold, setFloor, setLastLogout, setBloodRations, councilMembers, resonatorMastery, removeItems, lastLogout
+    addEvents, addGold, setFloor, setLastLogout, setBloodRations, councilMembers, resonatorMastery, removeItems, lastLogout,
+    location, setLocation
   } = useGameStore();
 
-  const [location, setLocation] = useState('Respite');
   const [isFeedOpen, setIsFeedOpen] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [lastSnapshotData, setLastSnapshotData] = useState<any>(null);

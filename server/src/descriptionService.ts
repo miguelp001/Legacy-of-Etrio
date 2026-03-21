@@ -106,13 +106,23 @@ export class DescriptionService {
             .replace(/\${value}/g, context.value?.toString() || '0');
     }
 
-    private static formatName(name: string): string {
-        let house = 'none';
-        if (name.includes('Eklund')) house = 'Eklund';
-        else if (name.includes('Valerius')) house = 'Valerius';
-        else if (name.includes('Draden')) house = 'Draden';
+    private static formatName(name: any): string {
+        if (!name) return 'the void';
         
-        return `[[NAME:${house}:${name}]]`;
+        let safeName = 'Unknown';
+        if (typeof name === 'string') {
+            safeName = name;
+        } else if (typeof name === 'object') {
+            safeName = name.name || JSON.stringify(name);
+            console.error('[DESC] Object passed as name:', name);
+        }
+
+        let house = 'none';
+        if (safeName.includes('Eklund')) house = 'Eklund';
+        else if (safeName.includes('Valerius')) house = 'Valerius';
+        else if (safeName.includes('Draden')) house = 'Draden';
+        
+        return `[[NAME:${house}:${safeName}]]`;
     }
 
     private static getVerb(context: DescriptionContext): string {

@@ -22,6 +22,7 @@ export interface Combatant extends CharacterStats {
     armor: Item | null;
     accessory: Item | null;
     isAscended?: boolean | undefined;
+    recoveryUntil?: number | undefined;
 }
 
 export interface CombatEvent {

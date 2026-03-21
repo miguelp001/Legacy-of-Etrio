@@ -39,6 +39,7 @@ interface GameState {
   resonatorMastery: number;
   isGameWon: boolean;
   playerId: string | null;
+  location: string;
   
   // Auth
   isAuthenticated: boolean;
@@ -49,6 +50,7 @@ interface GameState {
   login: (username: string, password: string) => Promise<boolean | string>;
   register: (username: string, password: string) => Promise<boolean | string>;
   logout: () => void;
+  setLocation: (loc: string) => void;
   saveProgress: () => Promise<void>;
   loadProgress: (id: string) => Promise<void>;
   syncGuildSettings: () => Promise<void>;
@@ -117,6 +119,9 @@ export const useGameStore = create<GameState>()(
       isAuthenticated: false,
       user: null,
       token: null,
+      location: 'Respite',
+
+      setLocation: (loc: string) => set({ location: loc }),
 
       addGold: (amount: number) => set((state) => ({ gold: state.gold + amount })),
       
@@ -252,6 +257,7 @@ export const useGameStore = create<GameState>()(
                 
             set((s) => ({
                 events: [{
+                    id: `sys-tick-${Date.now()}`,
                     turn: 0,
                     attackerName: 'SYSTEM',
                     defenderName: 'THE PIT',
@@ -415,7 +421,8 @@ export const useGameStore = create<GameState>()(
           const { result, state: updatedState } = await response.json();
           set(updatedState);
 
-          const event = {
+          const event: CombatEvent = {
+            id: `infuse-${Date.now()}`,
             turn: 0,
             attackerName: 'BLACKSMITH',
             defenderName: updatedState.inventory[inventoryIndex].name,
@@ -507,7 +514,8 @@ export const useGameStore = create<GameState>()(
           const updatedState = await response.json();
           set(updatedState);
           
-          const event = {
+          const event: CombatEvent = {
+            id: `ascend-${Date.now()}`,
             turn: 0,
             attackerName: 'THE BLOOD THRONE',
             defenderName: memberId, // Name would be better but we only have ID here for simple log
@@ -528,7 +536,8 @@ export const useGameStore = create<GameState>()(
         const cost = 10000 * Math.pow(2, state.resonatorMastery);
         if (state.gold < cost || state.resonatorMastery >= 10) return state;
 
-        const event = {
+        const event: CombatEvent = {
+          id: `resonator-${Date.now()}`,
           turn: 0,
           attackerName: 'STEAM FORGE',
           defenderName: 'RESONATOR',
@@ -549,7 +558,8 @@ export const useGameStore = create<GameState>()(
       confrontHeart: () => set((state) => {
         if (state.currentFloor < 1000 || state.councilMembers.length < 4 || state.isGameWon) return state;
 
-        const event = {
+        const event: CombatEvent = {
+          id: `heart-${Date.now()}`,
           turn: 1000,
           attackerName: 'COMMANDER',
           defenderName: 'THE HEART OF ETRIO',

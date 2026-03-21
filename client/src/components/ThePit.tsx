@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import * as Lucide from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
-// Defensive interface for local type safety
 interface PitCombatEvent {
     id: string;
     turn: number;
@@ -16,11 +15,11 @@ interface PitCombatEvent {
     emojiTag?: string;
 }
 
+const EVENT_TICK_MS = 600;
+const AUTO_PROGRESS_MS = 2000;
+
 const ThePit: React.FC = () => {
-    const { 
-        currentFloor, biome, party, mainCharacter,
-        processCombatTick, addEvents
-    } = useGameStore();
+    const { currentFloor, biome, party, mainCharacter, processCombatTick, addEvents, setLocation } = useGameStore();
 
     const [isActive, setIsActive] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -29,43 +28,53 @@ const ThePit: React.FC = () => {
     const [displayedEvents, setDisplayedEvents] = useState<PitCombatEvent[]>([]);
     const [turnIndex, setTurnIndex] = useState(0);
     const [isSimulating, setIsSimulating] = useState(false);
-    const [localPartyHP, setLocalPartyHP] = useState<Record<string, number>>({});
 
-    const activeRoom = useMemo(() => {
-        const room = floorReport?.roomResults?.[currentRoomIdx];
-        if (room) {
-            console.log('[PIT] Room Data:', room);
-        }
-        return room;
-    }, [floorReport, currentRoomIdx]);
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const activeRoom = floorReport?.roomResults?.[currentRoomIdx];
+    const roomEvents = activeRoom?.combatResult?.events || [];
+    const hasCombat = activeRoom?.combatResult != null;
+    const totalRooms = floorReport?.roomResults?.length || 0;
+    const isLastRoom = currentRoomIdx >= totalRooms - 1;
+    const isBossRoom = activeRoom?.type === 'Boss';
+    const isVictory = activeRoom?.combatResult?.victory ?? true;
+    const combatDone = !isSimulating && turnIndex >= roomEvents.length;
+
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+            if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+        };
+    }, []);
+
+    const clearTimers = useCallback(() => {
+        if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+        if (autoTimerRef.current) { clearTimeout(autoTimerRef.current); autoTimerRef.current = null; }
+    }, []);
 
     const startDescent = async () => {
         setLoading(true);
-        const initialHPs: Record<string, number> = {};
-        if (mainCharacter) initialHPs[mainCharacter.id] = mainCharacter.hp;
-        party.forEach(m => { initialHPs[m.id] = m.hp; });
-        setLocalPartyHP(initialHPs);
-
+        clearTimers();
         try {
             const res = await processCombatTick();
-            if (res && res.floorData && Array.isArray(res.roomResults)) {
+            if (res?.floorData?.rooms?.length) {
                 setFloorReport(res);
                 setCurrentRoomIdx(0);
-                setTurnIndex(0);
                 setDisplayedEvents([]);
+                setTurnIndex(0);
                 setIsSimulating(false);
                 setIsActive(true);
-            } else {
-                alert('Descent calculation failed: Invalid response from server.');
             }
-        } catch (error: any) {
-            alert(`Descent failed: ${error.message || 'Unknown error'}`);
+        } catch (err: any) {
+            console.error('[PIT] Descent failed:', err.message);
         } finally {
             setLoading(false);
         }
     };
 
     const nextRoom = useCallback(() => {
+        clearTimers();
         if (!floorReport) return;
         if (currentRoomIdx < floorReport.roomResults.length - 1) {
             setCurrentRoomIdx(prev => prev + 1);
@@ -76,285 +85,312 @@ const ThePit: React.FC = () => {
             setIsActive(false);
             setFloorReport(null);
         }
-    }, [currentRoomIdx, floorReport]);
+    }, [currentRoomIdx, floorReport, clearTimers]);
+
+    const exitPit = useCallback(() => {
+        clearTimers();
+        setIsActive(false);
+        setFloorReport(null);
+        setDisplayedEvents([]);
+        setTurnIndex(0);
+    }, [clearTimers]);
 
     useEffect(() => {
-        if (!activeRoom) {
+        clearTimers();
+        setDisplayedEvents([]);
+        setTurnIndex(0);
+
+        if (!hasCombat || roomEvents.length === 0) {
             setIsSimulating(false);
             return;
         }
 
-        const events = activeRoom.combatResult?.events || [];
-        if (events.length === 0) {
-            setIsSimulating(false);
-            if (displayedEvents.length === 0) {
-                setDisplayedEvents([{
-                    id: `system-${currentRoomIdx}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-                    turn: 0,
-                    attackerName: 'SYSTEM',
-                    defenderName: 'AREA',
-                    damage: 0,
-                    isCrit: false,
-                    isMiss: true,
-                    remainingHp: 0,
-                    banter: activeRoom?.description || 'EXPLORATION IN PROGRESS.',
-                    emojiTag: '🔍'
-                } as any]);
-            }
-            return;
-        }
+        setIsSimulating(true);
 
-        if (turnIndex < events.length) {
-            setIsSimulating(true);
-            const timer = setTimeout(() => {
-                const newEvent = events[turnIndex];
-                if (!newEvent || turnIndex >= events.length) {
+        const tick = () => {
+            setTurnIndex(prev => {
+                if (prev >= roomEvents.length) {
                     setIsSimulating(false);
-                    return;
+                    if (timerRef.current) clearInterval(timerRef.current);
+                    return prev;
                 }
-
-                setDisplayedEvents(prev => {
-                    if (prev.some(e => e.id === newEvent.id)) return prev;
-                    return [...prev, newEvent];
-                });
-
-                if (turnIndex === events.length - 1) {
-                    addEvents(events);
+                const event = roomEvents[prev];
+                if (event) {
+                    setDisplayedEvents(cur => {
+                        if (cur.some(e => e.id === event.id)) return cur;
+                        return [...cur.slice(-20), event];
+                    });
+                    if (prev === roomEvents.length - 1) {
+                        addEvents(roomEvents);
+                    }
                 }
+                return prev + 1;
+            });
+        };
 
-                setTurnIndex(prev => prev + 1);
-            }, 800);
-            return () => clearTimeout(timer);
-        } else {
-            setIsSimulating(false);
-        }
-    }, [activeRoom, turnIndex, currentRoomIdx, party.length, addEvents]);
+        timerRef.current = setInterval(tick, EVENT_TICK_MS);
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [currentRoomIdx, activeRoom?.roomId, clearTimers, addEvents, hasCombat, roomEvents.length]);
 
     useEffect(() => {
-        if (!isActive || isSimulating || !floorReport || !activeRoom) return;
+        if (!isActive || isSimulating || !activeRoom || !floorReport) return;
 
-        const events = activeRoom.combatResult?.events || [];
-        const isCombatRoom = activeRoom.type === 'Encounter';
-        const combatFinished = isCombatRoom && events.length > 0 && turnIndex >= events.length;
-        const noCombatEvents = (events.length === 0 || !activeRoom.combatResult) && displayedEvents.length > 0;
-        const victory = activeRoom.combatResult?.victory ?? true;
+        const shouldProgress = hasCombat 
+            ? (roomEvents.length > 0 && turnIndex >= roomEvents.length && isVictory)
+            : displayedEvents.length > 0;
 
-        if ((combatFinished && victory) || noCombatEvents) {
-            if (currentRoomIdx < floorReport.roomResults.length - 1) {
-                const timer = setTimeout(() => {
-                    nextRoom();
-                }, isCombatRoom ? 3000 : 2000);
-                return () => clearTimeout(timer);
-            }
+        if (shouldProgress && !isLastRoom) {
+            autoTimerRef.current = setTimeout(nextRoom, AUTO_PROGRESS_MS);
+            return () => {
+                if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+            };
         }
-    }, [isActive, isSimulating, activeRoom, currentRoomIdx, floorReport, nextRoom, turnIndex, displayedEvents.length]);
+
+        // Handle Defeat
+        if (!isSimulating && hasCombat && !isVictory && turnIndex >= roomEvents.length) {
+            autoTimerRef.current = setTimeout(() => {
+                setLocation('Hospital');
+                exitPit();
+            }, 3000); // Wait 3s so they see the defeat
+            return () => {
+                if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+            };
+        }
+    }, [isActive, isSimulating, turnIndex, displayedEvents.length, hasCombat, isVictory, isLastRoom, nextRoom, roomEvents.length, activeRoom, floorReport, setLocation, exitPit]);
+
+    const getHP = useCallback((name: string, maxHp: number) => {
+        const lastEvent = [...displayedEvents].reverse().find(e => e.defenderName === name);
+        return lastEvent ? Math.max(0, lastEvent.remainingHp) : maxHp;
+    }, [displayedEvents]);
 
     if (!isActive) {
         return (
-            <div className="space-y-6 md:space-y-8 animate-fade-in max-w-2xl mx-auto py-6 md:py-10">
-                <div className="text-center space-y-4">
-                    <div className="w-16 h-16 md:w-24 md:h-24 bg-primary-color/10 border-2 border-primary-color/30 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-2xl shadow-primary-color/20">
-                        <Lucide.Skull size={40} className="text-primary-color animate-pulse hidden md:block" />
-                        <Lucide.Skull size={32} className="text-primary-color animate-pulse md:hidden" />
-                    </div>
-                    <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase text-gradient">The Pit</h2>
-                    <p className="text-muted text-sm md:text-lg max-w-md mx-auto px-4">Abyssal depths await. Secure every sector.</p>
-                </div>
+            <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl overflow-auto">
+                <div className="min-h-full min-h-screen flex items-center justify-center p-4 sm:p-6">
+                    <div className="w-full max-w-md space-y-6 text-center">
+                        <div className="space-y-3">
+                            <div className="w-16 h-16 bg-primary-color/10 border-2 border-primary-color/30 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-primary-color/10">
+                                <Lucide.Skull size={28} className="text-primary-color" />
+                            </div>
+                            <h2 className="text-2xl font-black italic tracking-tighter uppercase text-gradient">The Pit</h2>
+                            <p className="text-muted text-sm">Abyssal depths await.</p>
+                        </div>
 
-                <div className="grid grid-cols-2 gap-4 px-4">
-                    <div className="glass p-4 md:p-6 rounded-2xl border border-white/5 text-center">
-                        <Lucide.MapPin className="mx-auto mb-2 text-primary-color" size={16} />
-                        <div className="text-xs font-black uppercase text-white/30 tracking-widest">Active Biome</div>
-                        <div className="text-sm md:text-xl font-black">{biome}</div>
-                    </div>
-                    <div className="glass p-4 md:p-6 rounded-2xl border border-white/5 text-center">
-                        <Lucide.Skull className="mx-auto mb-2 text-danger-color" size={16} />
-                        <div className="text-xs font-black uppercase text-white/30 tracking-widest">Target Floor</div>
-                        <div className="text-sm md:text-xl font-black">{currentFloor}</div>
-                    </div>
-                </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="glass p-3 rounded-xl border border-white/5 text-center">
+                                <Lucide.MapPin className="mx-auto mb-1 text-primary-color" size={14} />
+                                <div className="text-[10px] font-black uppercase text-white/30 tracking-wider">Biome</div>
+                                <div className="text-sm font-bold truncate">{biome}</div>
+                            </div>
+                            <div className="glass p-3 rounded-xl border border-white/5 text-center">
+                                <Lucide.Layers className="mx-auto mb-1 text-danger-color" size={14} />
+                                <div className="text-[10px] font-black uppercase text-white/30 tracking-wider">Floor</div>
+                                <div className="text-sm font-bold">{currentFloor}</div>
+                            </div>
+                        </div>
 
-                <div className="px-4">
-                    <button 
-                      onClick={startDescent} 
-                      disabled={loading || party.length === 0}
-                      className="w-full py-6 bg-primary-color hover:bg-primary-color/80 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-4"
-                    >
-                        {loading ? <Lucide.Loader2 className="animate-spin" /> : <Lucide.Play fill="currentColor" />}
-                        {party.length === 0 ? "No Party Assigned" : "COMMENCE DESCENT"}
-                    </button>
+                        <button
+                            onClick={startDescent}
+                            disabled={loading || party.length === 0}
+                            className="w-full py-4 bg-primary-color hover:bg-primary-color/80 text-white rounded-2xl font-black uppercase tracking-wider shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95"
+                        >
+                            {loading ? (
+                                <Lucide.Loader2 size={18} className="animate-spin" />
+                            ) : (
+                                <Lucide.Play size={18} fill="currentColor" />
+                            )}
+                            {party.length === 0 ? "No Party" : "Descend"}
+                        </button>
+                    </div>
                 </div>
             </div>
         );
     }
 
+    const partyMembers = [mainCharacter, ...party].filter(Boolean);
+    const enemies = activeRoom?.enemies || [];
+    const showCombat = hasCombat || isSimulating;
+
     return (
-        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl pt-10 px-10 animate-fade-in overflow-hidden flex flex-col">
-            <div className="max-w-6xl mx-auto w-full h-full flex flex-col">
-                <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10 shrink-0">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-primary-color flex items-center justify-center font-black italic text-xl">E</div>
-                        <div>
-                           <h2 className="text-2xl font-black tracking-tighter uppercase">Floor {currentFloor}</h2>
-                           <span className="text-[10px] font-black text-primary-color uppercase tracking-widest">Descent Sequence</span>
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col">
+            <header className="flex items-center justify-between px-3 py-2 border-b border-white/10 shrink-0">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary-color flex items-center justify-center font-black text-sm">E</div>
+                    <div>
+                        <div className="text-sm font-bold">Floor {currentFloor}</div>
+                        <div className="text-[9px] text-primary-color font-black uppercase tracking-widest">Descent</div>
+                    </div>
+                </div>
+
+                <div className="flex-1 mx-3 flex gap-1.5 justify-center">
+                    {(floorReport?.roomResults || []).map((_: any, idx: number) => (
+                        <div
+                            key={idx}
+                            className={`h-1 rounded-full transition-all ${
+                                idx === currentRoomIdx 
+                                    ? 'w-8 bg-primary-color' 
+                                    : idx < currentRoomIdx 
+                                        ? 'w-3 bg-primary-color/40' 
+                                        : 'w-3 bg-white/10'
+                            }`}
+                        />
+                    ))}
+                </div>
+
+                <button onClick={exitPit} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                    <Lucide.X size={18} className="text-white/50" />
+                </button>
+            </header>
+
+            <main className="flex-1 overflow-hidden flex flex-col">
+                <div className="px-3 py-3 shrink-0">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                            activeRoom?.type === 'Boss' ? 'bg-danger-color/20 text-danger-color' :
+                            activeRoom?.type === 'Encounter' ? 'bg-warning-color/20 text-warning-color' :
+                            'bg-primary-color/20 text-primary-color'
+                        }`}>
+                            {activeRoom?.type}
+                        </span>
+                        <span className="text-[10px] text-white/30 font-mono">
+                            Room {currentRoomIdx + 1}/{totalRooms}
+                        </span>
+                        {isBossRoom && <Lucide.Skull size={12} className="text-danger-color" />}
+                    </div>
+                    <p className="text-sm text-muted italic leading-snug line-clamp-2">
+                        "{activeRoom?.description || '...'}"
+                    </p>
+                </div>
+
+                {showCombat && (
+                    <div className="px-3 shrink-0 space-y-2">
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-wider text-white/30 mb-1">
+                            <span>Party</span>
+                            <span>Enemies</span>
+                        </div>
+                        <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory">
+                            {partyMembers.map((m: any) => {
+                                const hp = getHP(m.name, m.maxHp);
+                                const pct = Math.max(0, (hp / m.maxHp) * 100);
+                                return (
+                                    <div key={m.id} className="shrink-0 w-24 snap-start">
+                                        <div className="flex justify-between text-[10px] font-bold mb-0.5">
+                                            <span className="text-white/50 truncate">{m.name.split(' ')[0]}</span>
+                                            <span className={hp <= 0 ? 'text-danger-color' : 'text-primary-color'}>
+                                                {Math.floor(hp)}
+                                            </span>
+                                        </div>
+                                        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full transition-all ${hp <= 0 ? 'bg-danger-color' : 'bg-primary-color'}`}
+                                                style={{ width: `${pct}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            <div className="w-px bg-white/10 shrink-0" />
+
+                            {enemies.map((e: any, i: number) => {
+                                const hp = getHP(e.name, e.maxHp);
+                                const pct = Math.max(0, (hp / e.maxHp) * 100);
+                                return (
+                                    <div key={i} className="shrink-0 w-24 snap-start">
+                                        <div className="flex justify-between text-[10px] font-bold mb-0.5">
+                                            <span className="text-white/50 truncate">{e.name.split(' ')[0]}</span>
+                                            <span className={hp <= 0 ? 'text-white/30' : 'text-danger-color'}>
+                                                {Math.floor(hp)}
+                                            </span>
+                                        </div>
+                                        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full transition-all ${hp <= 0 ? 'bg-white/20' : 'bg-danger-color/80'}`}
+                                                style={{ width: `${pct}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
-                    
-                    <div className="flex gap-2 flex-1 mx-8 overflow-x-auto justify-center">
-                        {(floorReport?.roomResults || []).map((room: any, idx: number) => (
-                            <div 
-                              key={room.roomId || `room-${idx}`} 
-                              className={`h-1.5 min-w-[30px] rounded-full transition-all ${
-                                idx === currentRoomIdx ? 'bg-primary-color shadow-[0_0_10px_var(--primary-glow)] w-[60px]' : 
-                                idx < currentRoomIdx ? 'bg-primary-color/40' : 'bg-white/10'
-                              }`}
-                            />
+                )}
+
+                <div className="flex-1 overflow-hidden flex flex-col px-3 pb-3">
+                    <div className="flex items-center justify-between shrink-0 mb-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-white/30">Combat Log</span>
+                        {isSimulating && (
+                            <span className="text-[9px] text-primary-color font-black animate-pulse uppercase tracking-wider flex items-center gap-1">
+                                <Lucide.Loader2 size={10} className="animate-spin" /> Live
+                            </span>
+                        )}
+                        {!isSimulating && combatDone && (
+                            <span className="text-[9px] text-white/30 font-black uppercase tracking-wider">
+                                {isVictory ? 'Victory' : 'Defeat'}
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-1.5 custom-scrollbar">
+                        {displayedEvents.length === 0 && !isSimulating && (
+                            <div className="text-center py-8 text-white/30 text-sm">
+                                {hasCombat ? 'Awaiting combat...' : 'Exploring...'}
+                            </div>
+                        )}
+                        {displayedEvents.map((ev) => (
+                            <div key={ev.id} className="text-[11px] animate-fade-in">
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-white/20 font-mono text-[9px] w-5">{ev.turn}</span>
+                                    <span className="text-white/60 truncate flex-1">{ev.attackerName}</span>
+                                    {ev.damage > 0 && (
+                                        <span className="text-danger-color font-bold shrink-0">
+                                            -{ev.damage}{ev.isCrit && ' 💥'}
+                                        </span>
+                                    )}
+                                    {ev.isMiss && (
+                                        <span className="text-white/30 font-mono text-[9px] shrink-0">MISS</span>
+                                    )}
+                                </div>
+                                {ev.banter && (
+                                    <p className="text-white/40 text-[10px] leading-snug mt-0.5 pl-7 line-clamp-2">
+                                        {ev.banter.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '$1')}
+                                    </p>
+                                )}
+                            </div>
                         ))}
                     </div>
-
-                    <button 
-                        onClick={() => { setIsActive(false); setFloorReport(null); }}
-                        className="p-3 hover:bg-white/10 rounded-xl text-muted hover:text-white transition-all flex items-center gap-2"
-                    >
-                        <span className="text-[10px] font-black uppercase tracking-widest text-primary-color">Retreat</span>
-                        <Lucide.X size={20} />
-                    </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar pb-10 space-y-6">
-                    <div className="glass p-10 rounded-3xl border border-white/10 relative overflow-hidden bg-gradient-to-br from-primary-color/5 to-transparent shrink-0">
-                         <div className="absolute top-0 right-0 p-8 opacity-5">
-                             {activeRoom?.type === 'Encounter' ? <Lucide.Swords size={150} /> : <Lucide.MapPin size={150} />}
-                         </div>
-                         <div className="relative z-10 max-w-3xl">
-                            <h3 className="text-4xl font-black italic tracking-tighter mb-4 text-glow">{activeRoom?.type} <span className="text-white/30 ml-2">#{currentRoomIdx + 1}</span></h3>
-                            <p className="text-xl text-muted leading-relaxed font-light italic">"{activeRoom?.description}"</p>
-                            
-                            {!isSimulating && (
-                                <div className="mt-8 flex flex-col items-start gap-4">
-                                    {( !activeRoom?.combatResult || turnIndex >= (activeRoom.combatResult.events?.length ?? 0)) && (
-                                        <button 
-                                            onClick={nextRoom} 
-                                            className="btn-primary px-10 py-4 text-lg flex items-center gap-2 group shadow-xl shadow-primary-color/20"
-                                        >
-                                            {currentRoomIdx < (floorReport?.roomResults?.length || 0) - 1 ? 'Press On' : 'Surface / Return'} 
-                                            <Lucide.ChevronRight className="group-hover:translate-x-1 transition-transform" />
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-                         </div>
-                    </div>
-
-                    {(activeRoom?.combatResult || isSimulating) && (
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-slide-up">
-                            <div className="glass p-6 rounded-2xl border border-white/5 space-y-4">
-                                <h4 className="text-[10px] font-black uppercase tracking-widest text-primary-color border-b border-white/5 pb-2 flex items-center gap-2">
-                                    <Lucide.Zap size={10} /> THE VANGUARD
-                                </h4>
-                                <div className="space-y-4">
-                                    {[mainCharacter, ...party].filter(Boolean).map((member: any, i: number) => {
-                                        const currentHP = localPartyHP[member.id] ?? member.hp;
-                                        return (
-                                            <div key={member.id || `member-${i}`} className="space-y-1">
-                                                <div className="flex justify-between text-[11px] font-bold uppercase tracking-widest">
-                                                    <span className="text-white/40">{member.name}</span>
-                                                    <span className={currentHP <= 0 ? 'text-danger-color' : 'text-primary-color'}>{Math.max(0, Math.floor(currentHP || 0))} HP</span>
-                                                </div>
-                                                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                                    <div 
-                                                    className={`h-full transition-all duration-500 ${currentHP <= 0 ? 'bg-danger-color' : 'bg-primary-color'}`}
-                                                    style={{ width: `${(Math.max(0, currentHP || 0) / (member.maxHp || 100)) * 100}%` }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <div className="glass p-6 rounded-2xl border border-white/5 space-y-4">
-                                <h4 className="text-[10px] font-black uppercase tracking-widest text-danger-color border-b border-white/5 pb-2 flex items-center gap-2">
-                                    <Lucide.Skull size={10} /> HOSTILES DETECTED
-                                </h4>
-                                <div className="space-y-4">
-                                    {(activeRoom?.enemies || activeRoom?.combatResult?.enemies || []).map((enemy: any, i: number) => {
-                                        const lastEvent = [...displayedEvents].reverse().find(ev => ev.defenderName === enemy.name);
-                                        const currentHP = lastEvent ? lastEvent.remainingHp : (enemy.hp || 0);
-
-                                        return (
-                                            <div key={enemy.id || `enemy-${i}`} className="space-y-1">
-                                                <div className="flex justify-between text-[11px] font-bold uppercase tracking-widest">
-                                                    <span className="text-white/40">{enemy.name}</span>
-                                                    <span className={currentHP <= 0 ? 'text-danger-color/50' : 'text-danger-color'}>{Math.max(0, Math.floor(currentHP || 0))} HP</span>
-                                                </div>
-                                                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                                    <div 
-                                                      className={`h-full transition-all duration-500 ${currentHP <= 0 ? 'bg-white/10' : 'bg-danger-color/60'}`}
-                                                      style={{ width: `${(Math.max(0, currentHP || 0) / (enemy.maxHp || 100)) * 100}%` }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <div className="glass p-6 rounded-2xl border border-white/5 flex flex-col h-full min-h-[250px]">
-                                <h4 className="text-[10px] font-black uppercase tracking-widest text-warning-color/50 border-b border-white/5 pb-2 flex items-center gap-2">
-                                    <Lucide.Zap size={10} /> TACTICAL LOG
-                                </h4>
-                                <div className="flex-1 overflow-y-auto mt-4 space-y-3 custom-scrollbar pr-2">
-                                    {(displayedEvents || []).slice(-10).map((ev, i) => {
-                                        const getName = (marker: string) => {
-                                            const match = marker.match(/\[\[NAME:([^:]+):([^\]]+)\]\]/);
-                                            return match ? match[2] : marker;
-                                        };
-                                        const getHouse = (marker: string) => {
-                                            const match = marker.match(/\[\[NAME:([^:]+):([^\]]+)\]\]/);
-                                            return match ? match[1].toLowerCase() : 'none';
-                                        };
-
-                                        const attackerName = getName(ev.attackerName);
-                                        const attackerHouse = getHouse(ev.attackerName);
-                                        const attackerClass = attackerHouse === 'none' ? 'noble-default' : `house-${attackerHouse}`;
-                                        const defenderName = getName(ev.defenderName);
-
-                                        const cleanBanter = ev.banter?.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '$1');
-                                        
-                                        const fallbacks = ev.damage > 0 
-                                            ? ["launches a fierce assault against", "presses forward with a strike upon", "finds an opening and attacks", "advances with a heavy blow to"]
-                                            : ["overextends a wild swing at", "misses the mark against", "fails to connect with", "swings blindly and misses"];
-                                        const fallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
-
-                                        return (
-                                            <div key={ev.id || `ev-${i}`} className="text-[11px] flex flex-col gap-1 animate-slide-right opacity-90 hover:opacity-100 transition-opacity">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-white/20 font-mono text-[9px]">[{ev.turn}]</span>
-                                                    <span className={`px-1.5 py-0.5 rounded-[2px] font-black uppercase text-[9px] border border-white/5 ${attackerClass} bg-white/5`}>
-                                                        {attackerName}
-                                                    </span>
-                                                </div>
-                                                <div className="pl-6 text-white/70 leading-relaxed border-l border-white/5 py-1">
-                                                    {cleanBanter || `${fallback} ${defenderName}`}
-                                                    {ev.damage > 0 && <span className="text-danger-color font-bold ml-1">-{ev.damage} {ev.isCrit && "💥"}</span>}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                    {isSimulating && (
-                                        <div className="flex items-center gap-2 text-[10px] text-primary-color font-black animate-pulse opacity-50 mt-4 uppercase tracking-widest">
-                                            <Lucide.Loader2 size={12} className="animate-spin" /> Battle Raging...
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                {combatDone && !isLastRoom && (
+                    <div className="px-3 pb-3 shrink-0">
+                        <div className="text-[10px] text-center text-white/30 mb-2 animate-pulse">
+                            Next room in {AUTO_PROGRESS_MS / 1000}s...
                         </div>
-                    )}
-                </div>
-            </div>
-            <div className="absolute inset-0 z-[-1] opacity-20 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary-color/20 rounded-full blur-[200px] animate-pulse"></div>
+                        <button
+                            onClick={nextRoom}
+                            className="w-full py-3 bg-primary-color hover:bg-primary-color/80 text-white rounded-xl font-bold uppercase tracking-wider text-sm transition-all active:scale-98 flex items-center justify-center gap-2"
+                        >
+                            Press On <Lucide.ChevronRight size={16} />
+                        </button>
+                    </div>
+                )}
+
+                {combatDone && isLastRoom && (
+                    <div className="px-3 pb-3 shrink-0">
+                        <button
+                            onClick={exitPit}
+                            className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold uppercase tracking-wider text-sm transition-all active:scale-98 flex items-center justify-center gap-2"
+                        >
+                            Surface <Lucide.ArrowUp size={16} />
+                        </button>
+                    </div>
+                )}
+            </main>
+
+            <div className="absolute inset-0 z-[-1] pointer-events-none overflow-hidden">
+                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary-color/10 rounded-full blur-[150px]" />
             </div>
         </div>
     );
