@@ -141,8 +141,12 @@ const ThePit: React.FC = () => {
             ? (roomEvents.length > 0 && turnIndex >= roomEvents.length && isVictory)
             : true;
 
-        if (shouldProgress && !isLastRoom) {
-            autoTimerRef.current = setTimeout(nextRoom, AUTO_PROGRESS_MS);
+        if (shouldProgress) {
+            if (!isLastRoom) {
+                autoTimerRef.current = setTimeout(nextRoom, AUTO_PROGRESS_MS);
+            } else {
+                autoTimerRef.current = setTimeout(exitPit, AUTO_PROGRESS_MS + 1000);
+            }
             return () => {
                 if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
             };
@@ -167,39 +171,37 @@ const ThePit: React.FC = () => {
 
     if (!isActive) {
         return (
-            <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-3xl overflow-auto pb-32">
-                <div className="min-h-full flex items-center justify-center p-6">
-                    <div className="w-full max-w-md space-y-8 text-center animate-fade-in">
-                        <div className="space-y-4">
-                            <div className="w-20 h-20 bg-primary-color/10 border-2 border-primary-color/30 rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-primary-color/20">
-                                <Lucide.Skull size={32} className="text-primary-color" />
-                            </div>
-                            <h2 className="text-4xl font-black italic tracking-tighter uppercase text-gradient">The Pit</h2>
-                            <p className="text-muted text-sm uppercase tracking-widest font-bold opacity-60">Floor {currentFloor} • {biome}</p>
+            <div className="w-full h-full min-h-[60vh] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm overflow-auto rounded-[2rem] border border-white/5">
+                <div className="w-full max-w-md space-y-8 text-center animate-fade-in py-10">
+                    <div className="space-y-4">
+                        <div className="w-20 h-20 bg-primary-color/10 border-2 border-primary-color/30 rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-primary-color/20">
+                            <Lucide.Skull size={32} className="text-primary-color" />
                         </div>
+                        <h2 className="text-4xl font-black italic tracking-tighter uppercase text-gradient">The Pit</h2>
+                        <p className="text-muted text-sm uppercase tracking-widest font-bold opacity-60">Floor {currentFloor} • {biome}</p>
+                    </div>
 
-                        <div className="glass p-6 rounded-3xl border-white/5 space-y-6">
-                           <div className="flex justify-around">
-                              <div className="text-center">
-                                 <div className="text-[10px] uppercase font-black text-white/30 mb-1">Dread Level</div>
-                                 <div className="text-2xl font-black">{currentFloor * 10}</div>
-                              </div>
-                              <div className="w-px bg-white/10" />
-                              <div className="text-center">
-                                 <div className="text-[10px] uppercase font-black text-white/30 mb-1">Party Size</div>
-                                 <div className="text-2xl font-black">{party.length + (mainCharacter ? 1 : 0)}</div>
-                              </div>
-                           </div>
-                           
-                           <button
-                               onClick={startDescent}
-                               disabled={loading || party.length === 0}
-                               className="w-full py-5 bg-primary-color hover:bg-primary-color/80 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95"
-                           >
-                               {loading ? <Lucide.Loader2 size={20} className="animate-spin" /> : <Lucide.Play size={20} fill="currentColor" />}
-                               {party.length === 0 ? "Empty Party" : "Initiate descent"}
-                           </button>
+                    <div className="glass p-6 rounded-3xl border-white/5 space-y-6">
+                        <div className="flex justify-around">
+                            <div className="text-center">
+                                <div className="text-[10px] uppercase font-black text-white/30 mb-1">Dread Level</div>
+                                <div className="text-2xl font-black">{currentFloor * 10}</div>
+                            </div>
+                            <div className="w-px bg-white/10" />
+                            <div className="text-center">
+                                <div className="text-[10px] uppercase font-black text-white/30 mb-1">Party Size</div>
+                                <div className="text-2xl font-black">{party.length + (mainCharacter ? 1 : 0)}</div>
+                            </div>
                         </div>
+                        
+                        <button
+                            onClick={startDescent}
+                            disabled={loading || party.length === 0}
+                            className="w-full py-5 bg-primary-color hover:bg-primary-color/80 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95"
+                        >
+                            {loading ? <Lucide.Loader2 size={20} className="animate-spin" /> : <Lucide.Play size={20} fill="currentColor" />}
+                            {party.length === 0 ? "Empty Party" : "Initiate descent"}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -210,26 +212,38 @@ const ThePit: React.FC = () => {
     const enemies = activeRoom?.enemies || [];
 
     return (
-        <div className="fixed inset-0 z-[200] bg-[#050505] flex flex-col pt-safe-top pb-safe-bottom">
-            {/* Minimal Mobile Header */}
-            <header className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0 bg-black/30 backdrop-blur-xl">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary-color flex items-center justify-center font-black">P</div>
+        <div className="w-full bg-[#050505] flex flex-col min-h-[85vh] rounded-[2rem] border border-white/5 overflow-hidden animate-fade-in">
+            {/* Unified Mobile & Desktop Active Header */}
+            <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-white/10 shrink-0 bg-black/30 backdrop-blur-xl gap-4">
+                {/* Column 1: Identity */}
+                <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary-color flex items-center justify-center font-black italic text-xl shadow-[0_0_15px_rgba(168,85,247,0.4)]">P</div>
                     <div>
-                        <div className="text-xs font-black uppercase tracking-tighter">Floor {currentFloor}</div>
-                        <div className="text-[8px] text-white/30 font-bold uppercase tracking-widest">{activeRoom?.type}</div>
+                        <h2 className="text-xl sm:text-2xl font-black italic tracking-tighter uppercase text-gradient leading-none">The Pit</h2>
+                        <div className="hidden sm:block text-[10px] text-primary-color font-bold uppercase tracking-[0.3em] mt-1 space-x-1">
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary-color animate-pulse"/>
+                            <span>Active Operation</span>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex-1 px-6 flex gap-1 justify-center">
-                    {(floorReport?.roomResults || []).map((_: any, idx: number) => (
-                        <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentRoomIdx ? 'w-6 bg-primary-color' : idx < currentRoomIdx ? 'w-2 bg-primary-color/40' : 'w-2 bg-white/10'}`} />
-                    ))}
-                </div>
+                {/* Column 2: Tactical Info & Controls */}
+                <div className="flex flex-1 sm:flex-none items-center justify-end gap-3 sm:gap-6">
+                    <div className="text-right flex flex-col items-end">
+                        <div className="text-[10px] sm:text-sm font-black uppercase tracking-tighter leading-none">Floor {currentFloor}</div>
+                        <div className="text-[8px] sm:text-[9px] text-white/40 font-bold uppercase tracking-widest mt-0.5">{activeRoom?.type}</div>
+                    </div>
 
-                <button onClick={exitPit} className="p-2 bg-white/5 rounded-full border border-white/10 active:scale-90 transition-transform">
-                    <Lucide.X size={16} className="text-white/60" />
-                </button>
+                    <div className="flex gap-1 justify-center items-center">
+                        {(floorReport?.roomResults || []).map((_: any, idx: number) => (
+                            <div key={idx} className={`h-1.5 sm:h-2 rounded-full transition-all ${idx === currentRoomIdx ? 'w-4 sm:w-8 bg-primary-color shadow-[0_0_10px_rgba(168,85,247,0.5)]' : idx < currentRoomIdx ? 'w-2 sm:w-3 bg-primary-color/30' : 'w-2 sm:w-3 bg-white/10'}`} />
+                        ))}
+                    </div>
+
+                    <button onClick={exitPit} className="p-2 sm:p-2.5 bg-white/5 rounded-full border border-white/10 active:scale-90 transition-transform hover:bg-white/10 hover:text-white text-white/50 ml-1 sm:ml-2">
+                        <Lucide.X size={16} />
+                    </button>
+                </div>
             </header>
 
             <main className="flex-1 flex flex-col overflow-hidden">
@@ -313,9 +327,8 @@ const ThePit: React.FC = () => {
             {/* Bottom Primary Controls - Thumb Zone Fixed */}
             <footer className="px-4 py-6 border-t border-white/10 bg-black/60 backdrop-blur-2xl shrink-0">
                 {!combatDone ? (
-                    <div className="flex items-center justify-center gap-2 h-14">
-                        <Lucide.Loader2 className="animate-spin text-primary-color" size={20} />
-                        <span className="text-xs font-black uppercase tracking-[0.2em] text-primary-color/60">Simulating Conflict</span>
+                    <div className="h-14 flex items-center justify-center">
+                        <div className="w-1 h-1 rounded-full bg-primary-color/20 animate-pulse" />
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -327,12 +340,12 @@ const ThePit: React.FC = () => {
                                 Press On <Lucide.ChevronRight size={20} />
                             </button>
                         )}
-                        {(isLastRoom || !isVictory) && (
+                        {!isVictory && (
                             <button
                                 onClick={exitPit}
                                 className="w-full py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-transform"
                             >
-                                {isVictory ? 'Surface' : 'Flee'} <Lucide.ArrowUp size={20} />
+                                Flee <Lucide.ArrowUp size={20} />
                             </button>
                         )}
                         {!isVictory && !isSimulating && (

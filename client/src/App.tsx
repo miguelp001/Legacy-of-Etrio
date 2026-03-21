@@ -10,12 +10,12 @@ import {
   Droplets,
   Sparkles,
   Zap,
-  Cloud,
-  X,
   Castle,
-  History,
   ChevronUp,
-  Plus
+  Activity,
+  LogOut,
+  User,
+  HelpCircle
 } from 'lucide-react';
 import { useGameStore } from './store/gameStore';
 import Tavern from './components/Tavern';
@@ -28,23 +28,22 @@ import BloodMarket from './components/BloodMarket';
 import Basilica from './components/Basilica';
 import SteamForge from './components/SteamForge';
 import CharacterCreation from './components/CharacterCreation';
-import ActionFeed from './components/ActionFeed';
 import DepthMap from './components/DepthMap';
 import VictoryScreen from './components/VictoryScreen';
 import LoginScreen from './components/LoginScreen';
+import VanguardMonitor from './components/VanguardMonitor';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
 const App: React.FC = () => {
   const { 
     gold, party, currentFloor, mainCharacter, 
-    events, bloodRations, isResonatorActive, setResonatorActive,
-    isGameWon, playerId, isAuthenticated, loadProgress, saveProgress, syncGuildSettings,
+    bloodRations, isResonatorActive, setResonatorActive, biome,
+    isGameWon, playerId, isAuthenticated, user, loadProgress, saveProgress, syncGuildSettings,
     addEvents, addGold, setFloor, setLastLogout, setBloodRations, councilMembers, resonatorMastery, removeItems, lastLogout,
-    location, setLocation
+    location, setLocation, logout
   } = useGameStore();
 
-  const [isFeedOpen, setIsFeedOpen] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [lastSnapshotData, setLastSnapshotData] = useState<any>(null);
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
@@ -120,33 +119,6 @@ const App: React.FC = () => {
     handleSnapshot();
   }, [isAuthenticated, mainCharacter, lastLogout, party, currentFloor, addEvents, addGold, setFloor, setLastLogout, bloodRations, isResonatorActive, setBloodRations, setResonatorActive, councilMembers, resonatorMastery, removeItems]);
 
-  const handleLayToRest = async (playerId: string) => {
-    try {
-      const response = await fetch(`${API_BASE}/api/lay-to-rest`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ corpseId: playerId })
-      });
-      const data = await response.json();
-      if (data.success) {
-        addEvents([{
-          id: `lay-to-rest-${Date.now()}`,
-          turn: 0,
-          attackerName: 'SYSTEM',
-          defenderName: 'YOU',
-          damage: 0,
-          isCrit: false,
-          isMiss: false,
-          remainingHp: 0,
-          banter: "You laid the fallen Bondi to rest. A warm light fills your heart (+5% Luck buff).",
-          emojiTag: '✨'
-        }]);
-      }
-    } catch (err) {
-      console.error('Lay to Rest failed:', err);
-    }
-  };
-
   if (!isAuthenticated) return <LoginScreen />;
 
   const NavItem = ({ id, icon: Icon, label, mobileOnly = false }: { id: string, icon: any, label: string, mobileOnly?: boolean }) => (
@@ -156,46 +128,34 @@ const App: React.FC = () => {
         location === id 
         ? 'text-primary-color' 
         : 'text-muted hover:text-white'
-      } ${mobileOnly ? 'md:hidden' : ''} flex-1`}
+      } ${mobileOnly ? 'md:hidden' : ''} xl:flex-row xl:justify-start xl:px-4 xl:gap-4 xl:w-full`}
     >
-      <Icon size={24} className={location === id ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'} />
-      <span className="font-black text-[8px] uppercase tracking-tighter">{label}</span>
+      <Icon size={20} className={location === id ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'} />
+      <span className="font-black text-[8px] uppercase tracking-tighter xl:text-[10px] xl:tracking-[0.1em]">{label}</span>
       {location === id && (
-        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-primary-color rounded-full shadow-[0_0_8px_var(--primary-glow)]" />
+        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-primary-color rounded-full shadow-[0_0_8px_var(--primary-glow)] xl:left-0 xl:translate-x-0 xl:w-1 xl:h-6 xl:top-1/2 xl:-translate-y-1/2" />
       )}
     </button>
   );
 
-  // Master Action Button Logic
-  const getMABAction = () => {
-    switch(location) {
-      case 'The Pit': return { label: 'Descend', icon: Sword, action: () => null /* Handled by Pit state */ };
-      case 'Hospital': return { label: 'Heal All', icon: HeartPulse, action: () => null /* Inject via ref or state */ };
-      case 'Tavern': return { label: 'Recruit', icon: Users, action: () => null };
-      default: return null;
-    }
-  };
-
-  const mab = getMABAction();
-
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col md:flex-row font-sans selection:bg-primary-color selection:text-white overflow-hidden relative">
+    <div className="h-screen bg-[#050505] text-white flex flex-col font-sans selection:bg-primary-color selection:text-white overflow-hidden relative">
       
-      {/* 1. TOP HEADER (Mobile Compact / Desktop Full) */}
+      {/* MOBILE HEADER (Visible only on mobile/md) */}
       <header className={`
-        z-50 shrink-0 border-b border-white/10 bg-black/50 backdrop-blur-xl px-4 transition-all duration-300
-        ${isHeaderExpanded ? 'h-32' : 'h-14 md:h-16'}
+        xl:hidden z-50 shrink-0 border-b border-white/10 bg-black/50 backdrop-blur-xl px-4 transition-all duration-300
+        ${isHeaderExpanded ? 'h-32' : 'h-14'}
       `}>
-        <div className="h-14 md:h-16 flex justify-between items-center">
+        <div className="h-14 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-color to-secondary-color flex items-center justify-center font-black italic shadow-lg">E</div>
             <h1 className="text-sm font-black tracking-tighter uppercase sm:text-lg">Legacy</h1>
           </div>
 
           <div className="flex items-center gap-2">
-             <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-full border border-white/5 md:px-4">
+             <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-full border border-white/5">
                 <Coins size={14} className="text-accent-color" />
-                <span className="font-black text-[10px] md:text-sm text-accent-color">{gold.toLocaleString()}</span>
+                <span className="font-black text-[10px] text-accent-color">{gold.toLocaleString()}</span>
              </div>
              
              <button 
@@ -220,129 +180,222 @@ const App: React.FC = () => {
               <Zap size={12} className={isResonatorActive ? 'text-primary-color' : 'text-muted'} />
               <span className="font-black text-[8px] uppercase mt-1">Resonator</span>
            </button>
-           <button 
-             onClick={() => setIsFeedOpen(true)}
-             className="flex-1 glass p-2 flex flex-col justify-center items-center border-white/5"
-           >
-              <History size={12} className="text-muted" />
-              <span className="font-black text-[8px] uppercase mt-1">Logs</span>
-           </button>
+           <div className="flex-1 flex gap-2">
+             <button className="flex-1 glass p-2 flex flex-col justify-center items-center border-white/5 active:bg-white/10" title="Help">
+               <HelpCircle size={12} className="text-muted" />
+               <span className="font-black text-[8px] uppercase mt-1 text-muted">Help</span>
+             </button>
+             <button className="flex-1 glass p-2 flex flex-col justify-center items-center border-white/5 active:bg-white/10" title="Profile">
+               <User size={12} className="text-muted" />
+               <span className="font-black text-[8px] uppercase mt-1 text-muted">User</span>
+             </button>
+             <button onClick={() => logout()} className="flex-1 glass p-2 flex flex-col justify-center items-center border-red-500/20 active:bg-red-500/10" title="Logout">
+               <LogOut size={12} className="text-red-500" />
+               <span className="font-black text-[8px] uppercase mt-1 text-red-500">Exit</span>
+             </button>
+           </div>
         </div>
       </header>
 
-      {/* 2. SIDEBAR (Desktop Only) */}
-      <aside className="hidden md:flex flex-col w-64 lg:w-72 bg-[#0a0a0a] border-r border-white/10 shrink-0">
-        <nav className="flex-1 overflow-y-auto px-4 py-8 space-y-8">
-            <div className="space-y-1">
-              <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2">Command</h3>
-              <NavItem id="Respite" icon={LayoutDashboard} label="Overview" />
-              <NavItem id="The Pit" icon={Sword} label="The Pit" />
+      {/* THREE-COLUMN GRID CONTAINER */}
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* 1. LEFT COLUMN: Command Sidebar (Persistent on Desktop) */}
+        <aside className="hidden xl:flex flex-col w-72 bg-[#080808] border-r border-white/10 shrink-0 overflow-hidden">
+          {/* Guild Brand */}
+          <div className="p-8 border-b border-white/5">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-color to-secondary-color flex items-center justify-center font-black italic text-xl shadow-2xl">E</div>
+              <div>
+                <h1 className="text-lg font-black tracking-tighter uppercase leading-none">Etrio</h1>
+                <span className="text-[10px] text-primary-color font-bold uppercase tracking-[0.3em]">Guild Prime</span>
+              </div>
             </div>
-            <div className="space-y-1">
-              <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2">Hub</h3>
-              <NavItem id="Tavern" icon={Users} label="Tavern" />
-              <NavItem id="Hospital" icon={HeartPulse} label="Infirmary" />
-              <NavItem id="Blacksmith" icon={Shield} label="Forge" />
-              <NavItem id="Market" icon={Droplets} label="Market" />
-            </div>
-        </nav>
-      </aside>
 
-      {/* 3. MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <div className="flex-1 overflow-y-auto custom-scrollbar thumb-scroll">
-          <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
-            <header className="md:mb-8">
-              <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase text-glow">{location}</h2>
-              <div className="text-[9px] uppercase tracking-[0.4em] font-black text-primary-color/60 mt-1">Operational Module</div>
-            </header>
-
-            <section className="animate-fade-in">
-              {location === 'Respite' && (
-                <div className="space-y-6">
-                  <div className="glass p-6 md:p-10 rounded-[2rem] border border-white/5 relative overflow-hidden group">
-                    <h3 className="text-xl md:text-3xl font-black mb-2 italic tracking-tighter">VANGUARD STATUS</h3>
-                    <p className="text-muted leading-relaxed mb-6 text-sm md:text-lg">The Depths hum with ancient resonance. Monitor your party's vitality or expand your reach.</p>
-                    <div className="flex gap-3">
-                      <button onClick={() => setLocation('The Pit')} className="btn-primary flex-1 py-4 justify-center">Enter The Pit</button>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="glass p-4 rounded-2xl border border-white/5 flex flex-col justify-between h-32">
-                      <Users size={18} className="text-primary-color" />
-                      <div>
-                        <div className="text-3xl font-black italic">{party.length + (mainCharacter ? 1 : 0)}<span className="text-lg opacity-20 ml-1">/4</span></div>
-                        <div className="text-[9px] text-muted uppercase font-bold tracking-tighter">Vanguard</div>
-                      </div>
-                    </div>
-                    <div className="glass p-4 rounded-2xl border border-white/5 flex flex-col justify-between h-32">
-                      <Mountain size={18} className="text-secondary-color" />
-                      <div>
-                        <div className="text-3xl font-black italic">{currentFloor}F</div>
-                        <div className="text-[9px] text-muted uppercase font-bold tracking-tighter">Penetration</div>
-                      </div>
-                    </div>
-                  </div>
+            {/* Core Stats Overview */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 glass border-white/5 bg-white/[0.02]">
+                <div className="flex items-center gap-2">
+                  <Coins size={14} className="text-accent-color" />
+                  <span className="text-[10px] font-black uppercase text-white/40">Gold</span>
                 </div>
-              )}
-              
-              {location === 'Tavern' && <Tavern />}
-              {location === 'Hospital' && <Hospital />}
-              {location === 'Blacksmith' && <Blacksmith />}
-              {location === 'Market' && <BloodMarket />}
-              {location === 'Basilica' && <Basilica />}
-              {location === 'Forge' && <SteamForge />}
-              {location === 'Guild Hall' && <GuildHall />}
-              {location === 'Lineage' && <LineageHall />}
-            </section>
-          </div>
-        </div>
-
-        {/* Master Action Button (MAB) - Only on Mobile */}
-        {mab && (
-          <div className="md:hidden mab-container">
-            <button 
-              onClick={mab.action}
-              className="mab-primary flex items-center justify-center p-0 transition-transform active:rotate-12"
-            >
-              <mab.icon size={28} />
-            </button>
-            <div className="bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest shadow-xl">
-              {mab.label}
+                <span className="font-black text-accent-color">{gold.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 glass border-white/5 bg-white/[0.02]">
+                <div className="flex items-center gap-2">
+                  <Droplets size={14} className="text-red-500" />
+                  <span className="text-[10px] font-black uppercase text-white/40">Rations</span>
+                </div>
+                <span className="font-black text-red-500">{Math.floor(bloodRations)}</span>
+              </div>
             </div>
           </div>
-        )}
-      </main>
 
-      {/* 4. ACTION FEED DRAWER */}
-       <aside className={`
-        fixed inset-y-0 right-0 z-[100] w-full sm:w-[400px] bg-[#080808]/95 backdrop-blur-2xl border-l border-white/10 flex flex-col transition-transform duration-500
-        ${isFeedOpen ? 'translate-x-0' : 'translate-x-full'}
-      `}>
-        <div className="flex items-center justify-between p-6 border-b border-white/10 bg-black/30">
-           <h3 className="text-xl font-black italic tracking-tighter uppercase">Tactical Feed</h3>
-           <button onClick={() => setIsFeedOpen(false)} className="p-2 text-muted hover:text-white transition-colors">
-              <X size={24} />
-           </button>
+          <nav className="flex-1 overflow-y-auto py-6 space-y-8 custom-scrollbar">
+              <div className="space-y-1">
+                <h3 className="px-8 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-3">Expedition</h3>
+                <NavItem id="Respite" icon={LayoutDashboard} label="Overview" />
+                <NavItem id="The Pit" icon={Sword} label="The Pit" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="px-8 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-3">Operational Hubs</h3>
+                <NavItem id="Tavern" icon={Users} label="Tavern" />
+                <NavItem id="Hospital" icon={HeartPulse} label="Infirmary" />
+                <NavItem id="Blacksmith" icon={Shield} label="Forge" />
+                <NavItem id="Market" icon={Droplets} label="Blood Market" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="px-8 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-3">Ancient Tech</h3>
+                <NavItem id="Forge" icon={Zap} label="Steam Forge" />
+                <NavItem id="Basilica" icon={Sparkles} label="Basilica" />
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="px-8 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-3">System</h3>
+                <button className="w-full flex items-center gap-4 px-8 py-3.5 text-muted hover:text-white hover:bg-white/5 transition-all group">
+                  <HelpCircle size={18} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+                  <span className="text-xs font-black uppercase tracking-widest">Help Center</span>
+                </button>
+                <button className="w-full flex items-center gap-4 px-8 py-3.5 text-muted hover:text-white hover:bg-white/5 transition-all group">
+                  <User size={18} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+                  <span className="text-xs font-black uppercase tracking-widest">{user?.username || 'Profile'}</span>
+                </button>
+                <button onClick={() => logout()} className="w-full flex items-center gap-4 px-8 py-3.5 text-red-500/50 hover:text-red-500 hover:bg-red-500/5 transition-all group">
+                  <LogOut size={18} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+                  <span className="text-xs font-black uppercase tracking-widest">Terminate Session</span>
+                </button>
+              </div>
+          </nav>
+
+          {/* Resonator Desktop Toggle */}
+          <div className="p-6 mt-auto border-t border-white/5">
+            <button 
+              onClick={() => setResonatorActive(!isResonatorActive)}
+              className={`w-full p-4 glass rounded-2xl flex items-center justify-between transition-all group ${isResonatorActive ? 'border-primary-color/50 bg-primary-color/10 shadow-[0_0_20px_rgba(168,85,247,0.1)]' : 'border-white/5 hover:bg-white/5'}`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${isResonatorActive ? 'bg-primary-color' : 'bg-white/5'}`}>
+                  <Zap size={16} className={isResonatorActive ? 'text-white' : 'text-muted'} />
+                </div>
+                <div className="text-left">
+                  <div className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Resonator</div>
+                  <div className="text-[8px] text-muted font-bold uppercase tracking-tighter">Level {resonatorMastery + 1}</div>
+                </div>
+              </div>
+              <div className={`w-8 h-4 rounded-full relative transition-colors ${isResonatorActive ? 'bg-primary-color' : 'bg-white/10'}`}>
+                <div className={`absolute top-1 w-2 h-2 rounded-full bg-white transition-all ${isResonatorActive ? 'left-5' : 'left-1'}`} />
+              </div>
+            </button>
+          </div>
+        </aside>
+
+        {/* 2. CENTER COLUMN: Active Content */}
+        <main className="flex-1 flex flex-col min-w-0 bg-[#050505] relative overflow-hidden">
+          <div className="flex-1 overflow-y-auto custom-scrollbar thumb-scroll scroll-smooth">
+            <div className="max-w-4xl mx-auto p-4 md:p-10 space-y-10">
+              {location !== 'The Pit' && (
+                <header className="flex items-end justify-between border-b border-white/5 pb-6">
+                  <div>
+                    <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase text-gradient leading-none">{location}</h2>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary-color animate-pulse" />
+                      <span className="text-[10px] uppercase font-black tracking-[0.3em] text-white/30">Module Synchronized</span>
+                    </div>
+                  </div>
+                  <div className="hidden md:block text-right pb-1">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-white/20">Floor Depth</div>
+                    <div className="text-2xl font-black italic">{currentFloor}F</div>
+                  </div>
+                </header>
+              )}
+
+              <section className="animate-fade-in relative">
+                {location === 'Respite' && (
+                  <div className="space-y-8">
+                    <div className="glass p-10 md:p-16 rounded-[3rem] border border-white/5 relative overflow-hidden group bg-gradient-to-br from-white/[0.03] to-transparent">
+                      <div className="relative z-10 max-w-lg">
+                        <h3 className="text-3xl md:text-5xl font-black mb-4 italic tracking-tighter leading-tight uppercase">The Depths <br/>Await Your Will</h3>
+                        <p className="text-muted leading-relaxed mb-10 text-lg opacity-80 font-medium">Monitoring aetheric levels... Your vanguard is primed for the next expedition. Shall we descend?</p>
+                        <div className="flex flex-wrap gap-4">
+                          <button onClick={() => setLocation('The Pit')} className="btn-primary py-5 px-10 text-lg justify-center flex-1 sm:flex-none">Initiate Expedition</button>
+                        </div>
+                      </div>
+                      
+                      {/* Decorative Element */}
+                      <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/4 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
+                        <Mountain size={400} />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2 md:gap-6">
+                      <div className="glass p-3 md:p-6 rounded-2xl md:rounded-[2rem] border border-white/5 flex flex-col justify-between h-32 md:h-44 hover:border-primary-color/40 transition-colors group">
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-primary-color/10 flex items-center justify-center text-primary-color transition-transform group-hover:scale-110">
+                          <Users size={16} className="md:w-5 md:h-5" />
+                        </div>
+                        <div>
+                          <div className="text-xl md:text-4xl font-black italic tracking-tighter">{party.length + (mainCharacter ? 1 : 0)}<span className="text-xs md:text-xl opacity-20 ml-0.5 md:ml-1">/4</span></div>
+                          <div className="text-[7px] md:text-[10px] text-muted uppercase font-black tracking-[0.1em] md:tracking-[0.2em] mt-0.5 md:mt-1">Vanguard</div>
+                        </div>
+                      </div>
+                      <div className="glass p-3 md:p-6 rounded-2xl md:rounded-[2rem] border border-white/5 flex flex-col justify-between h-32 md:h-44 hover:border-secondary-color/40 transition-colors group">
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-secondary-color/10 flex items-center justify-center text-secondary-color transition-transform group-hover:scale-110">
+                          <Activity size={16} className="md:w-5 md:h-5" />
+                        </div>
+                        <div>
+                          <div className="text-xl md:text-4xl font-black italic tracking-tighter truncate">{biome.split(' ')[0]}</div>
+                          <div className="text-[7px] md:text-[10px] text-muted uppercase font-black tracking-[0.1em] md:tracking-[0.2em] mt-0.5 md:mt-1">Biome</div>
+                        </div>
+                      </div>
+                      <div className="glass p-3 md:p-6 rounded-2xl md:rounded-[2rem] border border-white/5 flex flex-col justify-between h-32 md:h-44 hover:border-accent-color/40 transition-colors group">
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-accent-color/10 flex items-center justify-center text-accent-color transition-transform group-hover:scale-110">
+                          <Castle size={16} className="md:w-5 md:h-5" />
+                        </div>
+                        <div>
+                          <div className="text-xl md:text-4xl font-black italic tracking-tighter">{councilMembers.length}</div>
+                          <div className="text-[7px] md:text-[10px] text-muted uppercase font-black tracking-[0.1em] md:tracking-[0.2em] mt-0.5 md:mt-1">Council</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {location === 'The Pit' && <ThePit />}
+                {location === 'Tavern' && <Tavern />}
+                {location === 'Hospital' && <Hospital />}
+                {location === 'Blacksmith' && <Blacksmith />}
+                {location === 'Market' && <BloodMarket />}
+                {location === 'Basilica' && <Basilica />}
+                {location === 'Forge' && <SteamForge />}
+                {location === 'Guild Hall' && <GuildHall />}
+                {location === 'Lineage' && <LineageHall />}
+              </section>
+            </div>
+          </div>
+        </main>
+
+        {/* 3. RIGHT COLUMN: Tactical Intel (Persistent on Widescreen) */}
+        <aside className="hidden xl:flex flex-col xl:w-72 2xl:w-80 lg:w-96 border-l border-white/10 bg-[#080808] shrink-0 overflow-hidden">
+             <VanguardMonitor />
+        </aside>
+      </div>
+
+      {/* BOTTOM NAVIGATION (Mobile Only) */}
+      <nav className="xl:hidden fixed bottom-0 left-0 right-0 z-[110] bg-black/60 backdrop-blur-3xl border-t border-white/10 px-2 h-20 flex items-center pb-safe-bottom overflow-x-auto hide-scrollbar touch-pan-x snap-x snap-mandatory">
+        <div className="flex px-2 gap-2 min-w-max items-center justify-between mx-auto w-full md:justify-center md:gap-6">
+          <div className="snap-start shrink-0"><NavItem id="Respite" icon={LayoutDashboard} label="Home" /></div>
+          <div className="snap-start shrink-0"><NavItem id="The Pit" icon={Sword} label="The Pit" /></div>
+          <div className="snap-start shrink-0"><NavItem id="Tavern" icon={Users} label="Tavern" /></div>
+          <div className="snap-start shrink-0"><NavItem id="Hospital" icon={HeartPulse} label="Med" /></div>
+          <div className="snap-start shrink-0"><NavItem id="Blacksmith" icon={Shield} label="Smith" /></div>
+          <div className="snap-start shrink-0"><NavItem id="Market" icon={Droplets} label="Blood" /></div>
+          <div className="snap-start shrink-0"><NavItem id="Forge" icon={Zap} label="Steam" /></div>
+          <div className="snap-start shrink-0"><NavItem id="Basilica" icon={Sparkles} label="Basilica" /></div>
         </div>
-        <ActionFeed events={events} onLayToRest={handleLayToRest} floor={currentFloor} />
-      </aside>
-
-      {/* 5. BOTTOM NAVIGATION (Mobile Only - Thumb Zone) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[110] bg-black/60 backdrop-blur-3xl border-t border-white/10 px-2 h-20 flex justify-around items-center pb-safe-bottom">
-        <NavItem id="Respite" icon={LayoutDashboard} label="Home" />
-        <NavItem id="The Pit" icon={Sword} label="The Pit" />
-        <NavItem id="Tavern" icon={Users} label="Tavern" />
-        <NavItem id="Hospital" icon={HeartPulse} label="Med" />
-        <NavItem id="Blacksmith" icon={Shield} label="Forge" />
-        <NavItem id="Market" icon={Droplets} label="Blood" />
       </nav>
 
+      {/* Overlays / Modals */}
       {!mainCharacter && <CharacterCreation />}
       {isGameWon && <VictoryScreen />}
-
-      {/* Depth Map Modal */}
+      
       {showMap && lastSnapshotData && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in">
           <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar p-6 glass border-primary-color/20">
@@ -360,8 +413,6 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
-
-      {location === 'The Pit' && <ThePit />}
     </div>
   );
 };
