@@ -52,23 +52,52 @@ export interface CombatResult {
 
 
 import type { EventType } from './descriptionTypes';
+import type { BaseClass } from './stats';
 
 export interface DescriptorContext {
     eventType: EventType;
     speaker: {
         name: string;
+        level: number;
+        baseClass: BaseClass;
         trait?: NightsdeepTrait | undefined;
         socialClass?: SocialClass | undefined;
+        tribe?: string | undefined;
         weapon?: string | undefined;
+        weaponType?: string | undefined;
+        stats: {
+            strength: number;
+            agility: number;
+            vitality: number;
+            spirit: number;
+            luck: number;
+        };
+        isEnemy: boolean;
+        isVampire?: boolean | undefined;
+        isAscended?: boolean | undefined;
+        blessings?: string[] | undefined;
     };
-    target?: {
+    target: {
         name: string;
-    } | undefined;
+        level: number;
+        baseClass: BaseClass;
+        trait?: NightsdeepTrait | undefined;
+        stats: {
+            strength: number;
+            agility: number;
+            vitality: number;
+            spirit: number;
+            luck: number;
+        };
+        hp: number;
+        maxHp: number;
+        isEnemy: boolean;
+    };
     biome?: any | undefined;
-    hitQuality?: 'CRIT' | 'NORMAL' | 'MISS' | undefined;
-    affinity?: number | undefined;
+    hitQuality: 'CRIT' | 'NORMAL' | 'MISS';
     dreadLevel: number;
-    value?: number | undefined;
+    damage: number;
+    isKill: boolean;
 }
 
 export type DescriptorGenerator = (context: DescriptorContext) => string;
@@ -125,24 +154,41 @@ export class CombatEngine {
 
                 const hitQuality = isMissValue ? 'MISS' : (isCrit ? 'CRIT' : 'NORMAL');
                 let banter: string | undefined = "";
+                const isKill = defender.hp <= 0;
 
                 if (options.generator) {
                     banter = options.generator({
                         eventType: 'COMBAT_ATTACK',
                         speaker: {
                             name: attacker.name,
+                            level: attacker.level,
+                            baseClass: attacker.baseClass,
                             trait: attacker.trait,
                             socialClass: attacker.socialClass,
-                            weapon: attacker.weapon?.name
+                            tribe: attacker.tribe,
+                            weapon: attacker.weapon?.name,
+                            weaponType: attacker.weapon?.type?.toLowerCase(),
+                            stats: attacker.stats,
+                            isEnemy: attacker.isEnemy,
+                            isVampire: attacker.isVampire || undefined,
+                            isAscended: attacker.isAscended || undefined,
+                            blessings: attacker.blessings?.map(b => b.toString())
                         },
                         target: {
-                            name: defender.name
+                            name: defender.name,
+                            level: defender.level,
+                            baseClass: defender.baseClass,
+                            trait: defender.trait,
+                            stats: defender.stats,
+                            hp: defender.hp,
+                            maxHp: defender.maxHp,
+                            isEnemy: defender.isEnemy
                         },
                         biome: options.biome,
                         hitQuality,
-                        affinity: attacker.affinityLevel || 0,
                         dreadLevel,
-                        value: damage
+                        damage,
+                        isKill
                     });
                 } else {
                     const fallbacks = isMissValue 
