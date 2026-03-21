@@ -131,16 +131,15 @@ export class GameService {
 
         for (const room of floorData.rooms) {
             if (room.enemies && room.enemies.length > 0) {
-                // Defensive HP check for generated enemies - MAKE THEM TOUGHER
-                room.enemies.forEach((e: any, i: number) => {
-                    const hpFloor = 250 + Math.floor(Math.random() * 100);
-                    if (!e.hp || e.hp < 50) {
-                        console.log(`[BATTLE] BUFFING: Enemy ${e.name} HP from ${e.hp} to ${hpFloor}`);
-                        e.hp = Math.max(e.hp || 0, hpFloor);
-                        e.maxHp = Math.max(e.maxHp || 0, hpFloor);
-                        // Also buff defense to avoid 1-turn battles
-                        if (!e.stats) e.stats = { vitality: 20 };
-                        e.stats.vitality = Math.max(e.stats.vitality || 0, 25);
+                // Scale enemy HP based on floor level for consistent difficulty
+                const hpMultiplier = 1 + (state.currentFloor * 0.15);
+                room.enemies.forEach((e: any) => {
+                    const baseHp = Math.max(e.hp || 100, 50);
+                    e.hp = Math.floor(baseHp * hpMultiplier);
+                    e.maxHp = Math.floor((e.maxHp || baseHp) * hpMultiplier);
+                    // Scale defense to avoid 1-turn battles
+                    if (e.stats) {
+                        e.stats.vitality = Math.max(e.stats.vitality || 10, 10 + state.currentFloor);
                     }
                 });
 
