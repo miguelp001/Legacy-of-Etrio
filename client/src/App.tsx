@@ -10,6 +10,7 @@ import {
   Droplets,
   Sparkles,
   Zap,
+  Castle,
   ChevronUp,
   Activity,
   LogOut,
