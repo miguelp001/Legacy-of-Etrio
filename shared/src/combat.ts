@@ -1,5 +1,5 @@
-import type { CharacterStats } from './stats.js';
-import type { Item } from './items.js';
+import type { CharacterStats } from './stats';
+import type { Item } from './items';
 
 export type NightsdeepTrait = 'Stoic' | 'Cheerful' | 'Hot-Headed';
 export type SocialClass = 'Thrall' | 'Bondi' | 'Vardr' | 'Scrifadr' | 'Drengskapr';
@@ -51,7 +51,7 @@ export interface CombatResult {
 
 
 
-import type { EventType } from './descriptionTypes.js';
+import type { EventType } from './descriptionTypes';
 
 export interface DescriptorContext {
     eventType: EventType;
@@ -162,7 +162,7 @@ export class CombatEngine {
                     isCrit,
                     isMiss: isMissValue,
                     remainingHp: defender.hp,
-                    banter,
+                    banter: banter || "",
                     emojiTag: isMissValue ? "💨" : (isCrit ? "🔥" : "⚔️")
                 });
 

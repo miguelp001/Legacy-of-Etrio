@@ -1,7 +1,6 @@
-import { BaseClass } from './stats.js';
-import { NPCGenerator } from './party.js';
-import { EnemyGenerator } from './enemyGenerator.js';
-import type { Combatant } from './combat.js';
+import { BaseClass } from './stats';
+import { EnemyGenerator } from './enemyGenerator';
+import type { Combatant } from './combat';
 
 export const BiomeType = {
     Frozen: 'Frozen Caves',

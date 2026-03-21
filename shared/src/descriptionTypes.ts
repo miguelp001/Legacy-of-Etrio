@@ -1,5 +1,5 @@
-import type { NightsdeepTrait, SocialClass } from './combat.js';
-import type { BiomeType } from './dungeon.js';
+import type { NightsdeepTrait, SocialClass } from './combat';
+import type { BiomeType } from './dungeon';
 
 export type EventType = 'COMBAT_ATTACK' | 'COMBAT_DEFEND' | 'BANTER_IDLE' | 'WORLD_EVENT';
 export type HitQuality = 'CRIT' | 'NORMAL' | 'MISS';

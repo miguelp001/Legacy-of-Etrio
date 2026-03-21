@@ -1,4 +1,4 @@
-import type { Stats } from './stats.js';
+import type { Stats } from './stats';
 
 export const Rarity = {
     Common: "Common",

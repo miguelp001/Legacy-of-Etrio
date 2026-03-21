@@ -1,5 +1,5 @@
-import { BaseClass, StatCalculator } from './stats.js';
-import type { Combatant, NightsdeepTrait, SaluwanBlessing, SocialClass, Tribe } from './combat.js';
+import { BaseClass, StatCalculator } from './stats';
+import type { Combatant, NightsdeepTrait, SaluwanBlessing, SocialClass, Tribe } from './combat';
 
 export interface Trait {
     name: string;

@@ -47,6 +47,7 @@ export class LineageManager {
             id,
             name,
             level,
+            xp: 0,
             baseClass,
             generation,
             traits: heirTraits,
