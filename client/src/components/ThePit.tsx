@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import * as Lucide from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
@@ -19,6 +19,66 @@ interface PitCombatEvent {
 
 const EVENT_TICK_MS = 600;
 const AUTO_PROGRESS_MS = 2000;
+
+const MISS_PHRASES = [
+    "lunges through shadow",
+    "swings at phantom air",
+    "stumbles in the dark",
+    "finds only empty void",
+    "strikes at fading echoes",
+    "whips through darkness",
+    "thrusts into nothing",
+    "slashes at dancing shadows"
+];
+
+const CRIT_PHRASES = [
+    "rips through armor like parchment",
+    "tears flesh with vicious abandon",
+    "shatters bone with terrible force",
+    "buries steel deep within",
+    "delivers a devastating blow",
+    "splinters ribs on impact",
+    "drives the enemy back",
+    "opens a grievous wound"
+];
+
+const NORMAL_PHRASES = [
+    "finds an opening",
+    "presses the attack",
+    "lands a solid strike",
+    "cuts through the defense",
+    "delivers a decisive blow",
+    "thrusts with purpose",
+    "swings with precision",
+    "chops with savage intent",
+    "slashes across the body",
+    "punches through guard"
+];
+
+function generateCombatText(ev: PitCombatEvent): string {
+    const attacker = ev.attackerName.split(' ')[0];
+    const defender = ev.defenderName.split(' ')[0];
+    const isEnemyAttacking = ev.attackerId?.includes('enemy') || ev.attackerId?.includes('Boss') || ev.attackerId?.includes('Floor');
+    
+    if (ev.isMiss) {
+        const phrase = MISS_PHRASES[Math.floor(Math.random() * MISS_PHRASES.length)];
+        return `${attacker} ${phrase}.`;
+    }
+    
+    if (ev.isCrit) {
+        const phrase = CRIT_PHRASES[Math.floor(Math.random() * CRIT_PHRASES.length)];
+        if (isEnemyAttacking) {
+            return `The ${attacker.toLowerCase()} ${phrase}, dealing ${ev.damage}!`;
+        }
+        return `${attacker} ${phrase}, dealing ${ev.damage}!`;
+    }
+    
+    const phrase = NORMAL_PHRASES[Math.floor(Math.random() * NORMAL_PHRASES.length)];
+    if (isEnemyAttacking) {
+        return `The ${attacker.toLowerCase()} ${phrase}, dealing ${ev.damage}.`;
+    }
+    return `${attacker} ${phrase} for ${ev.damage}.`;
+}
 
 const ThePit: React.FC = () => {
     const { currentFloor, biome, party, mainCharacter, processCombatTick, addEvents, setLocation } = useGameStore();
@@ -310,14 +370,19 @@ const ThePit: React.FC = () => {
                             {isSimulating && <span className="w-1.5 h-1.5 bg-primary-color rounded-full animate-ping" />}
                         </div>
                         <div className="space-y-2">
-                            {displayedEvents.slice(-5).map((ev) => (
-                                <div key={ev.id} className="animate-fade-in flex gap-3 text-[11px] leading-tight">
-                                    <span className="text-white/20 font-mono text-[9px] mt-0.5">{ev.turn}</span>
-                                    <p className="text-white/60">
-                                        <span dangerouslySetInnerHTML={{ __html: ev.banter?.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '<span class="text-white/90 font-bold">$1</span>').replace(/\*\*([^*]+)\*\*/g, '<span class="text-danger-color font-bold tracking-widest">$1</span>') || `${ev.attackerName.split(' ')[0]} acts.` }} />
-                                    </p>
-                                </div>
-                            ))}
+                             {displayedEvents.slice(-5).map((ev) => {
+                                const rawText = ev.banter?.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '$1') || generateCombatText(ev);
+                                return (
+                                    <div key={ev.id} className="animate-fade-in flex gap-3 text-[11px] leading-tight">
+                                        <span className="text-white/20 font-mono text-[9px] mt-0.5">{ev.turn}</span>
+                                        <p className="text-white/60">
+                                            <span className={ev.isCrit ? 'text-danger-color font-bold' : ev.isMiss ? 'text-white/40 italic' : ''}>
+                                                {rawText}
+                                            </span>
+                                        </p>
+                                    </div>
+                                );
+                            })}
                             {displayedEvents.length === 0 && <div className="text-center py-4 text-white/10 text-xs italic tracking-widest">Shadows stir...</div>}
                         </div>
                     </div>
@@ -328,26 +393,32 @@ const ThePit: React.FC = () => {
             {combatDone && (
                 <footer className="px-4 py-6 border-t border-white/10 bg-black/60 backdrop-blur-2xl shrink-0">
                     <div className="space-y-4">
-                        {!isLastRoom && isVictory && (
+                        {!isVictory ? (
+                            <>
+                                <p className="text-center text-[10px] text-danger-color font-black uppercase tracking-widest animate-pulse">
+                                    Defeat Imminent... Relocating to Infirmary
+                                </p>
+                                <button
+                                    onClick={exitPit}
+                                    className="w-full py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-transform"
+                                >
+                                    Flee <Lucide.ArrowUp size={20} />
+                                </button>
+                            </>
+                        ) : isLastRoom ? (
+                            <button
+                                onClick={exitPit}
+                                className="w-full py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-transform"
+                            >
+                                Surface <Lucide.ArrowUp size={20} />
+                            </button>
+                        ) : (
                             <button
                                 onClick={nextRoom}
                                 className="w-full py-5 bg-primary-color text-white rounded-2xl font-black uppercase tracking-widest shadow-2xl shadow-primary-color/30 flex items-center justify-center gap-3 active:scale-95 transition-transform"
                             >
                                 Press On <Lucide.ChevronRight size={20} />
                             </button>
-                        )}
-                        {!isVictory && (
-                            <button
-                                onClick={exitPit}
-                                className="w-full py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-transform"
-                            >
-                                Flee <Lucide.ArrowUp size={20} />
-                            </button>
-                        )}
-                        {!isVictory && !isSimulating && (
-                            <p className="text-center text-[10px] text-danger-color font-black uppercase tracking-widest animate-pulse">
-                                Defeat Imminent... Relocating to Infirmary
-                            </p>
                         )}
                     </div>
                 </footer>

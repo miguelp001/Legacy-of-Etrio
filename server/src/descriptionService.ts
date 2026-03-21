@@ -4,7 +4,6 @@ import type { NightsdeepTrait, SocialClass } from '../../shared/src/combat.js';
 import { BiomeType } from '../../shared/src/dungeon.js';
 import descriptionLibrary from '../../shared/src/descriptionLibrary.json' with { type: 'json' };
 
-// Force HMR reload
 export interface DescriptionContext {
     eventType: EventType;
     speaker: {
@@ -23,118 +22,172 @@ export interface DescriptionContext {
     value?: number;
 }
 
+const BIOME_ALIASES: Record<string, string[]> = {
+    'Frozen Caves': ['The Frozen Wastes', 'Frozen Wastes'],
+    'Crystalline Peaks': ['Crystalline Caverns', 'Crystal Caverns'],
+    'Fungal Grotto': ['Fungal Depths', 'Mushroom Caves'],
+    'Volcanic Depths': ['Molten Core', 'Volcanic Core']
+};
+
+const GENERIC_ATTACK_TEMPLATES = [
+    "${speaker} lunges forward, striking ${target} with fierce determination.",
+    "${speaker} delivers a crushing blow to ${target}.",
+    "${speaker} presses the attack against ${target}.",
+    "${speaker} finds an opening and strikes ${target}.",
+    "${speaker} swings with brutal efficiency at ${target}.",
+    "${speaker} cuts deep into ${target}.",
+    "${speaker} drives ${target} back with a vicious strike.",
+    "${speaker} lands a solid hit on ${target}.",
+    "${speaker} carves through ${target}'s defenses.",
+    "${speaker} thrusts toward ${target} with deadly intent.",
+    "${speaker} hacks at ${target} with savage force.",
+    "${speaker} delivers a punishing blow to ${target}.",
+    "${speaker} smashes into ${target} with overwhelming strength.",
+    "${speaker} cleaves toward ${target}.",
+    "${speaker} unleashes a fury of strikes against ${target}.",
+    "${speaker} strikes true, hitting ${target} hard.",
+    "${speaker} catches ${target} off-guard with a quick jab.",
+    "${speaker} slashes ${target} across the body.",
+    "${speaker} hits ${target} with a bone-crushing impact.",
+    "${speaker} overwhelms ${target} with relentless assault."
+];
+
+const GENERIC_CRIT_TEMPLATES = [
+    "${speaker} obliterates ${target} with a devastating critical strike!",
+    "${speaker} shatters ${target}'s defense with a CRITICAL HIT!",
+    "${speaker} tears through ${target} like paper!",
+    "${speaker} delivers a soul-crushing blow to ${target}!",
+    "${speaker} annihilates ${target} with a devastating strike!",
+    "${speaker} bisects ${target} with a perfectly aimed attack!",
+    "${speaker} reduces ${target} to a bleeding ruin!",
+    "${speaker} executes a flawless strike that cleaves ${target}!",
+    "${speaker}'s blow echoes through the chamber as ${target} reels!",
+    "${speaker} unleashes holy fury upon ${target}!"
+];
+
+const GENERIC_MISS_TEMPLATES = [
+    "${speaker} swings wildly but hits only air.",
+    "${speaker} stumbles and misses ${target} entirely.",
+    "${speaker}'s attack goes wide, finding nothing.",
+    "${speaker} overextends and strikes empty void.",
+    "${speaker} fails to connect with ${target}.",
+    "${speaker}'s blow whistles past ${target}'s ear.",
+    "${speaker} hesitates and misses the mark.",
+    "${speaker} loses balance and strikes nothing.",
+    "${speaker} lunges at shadow, not ${target}.",
+    "${speaker}'s weapon finds only darkness."
+];
+
+const TRAIT_BANTER: Record<string, string[]> = {
+    'Stoic': [
+        "${speaker} remains impassive, coldly striking ${target}.",
+        "${speaker} shows no emotion as they hit ${target}.",
+        "${speaker} acts with mechanical precision against ${target}."
+    ],
+    'Hot-Headed': [
+        "${speaker} SCREAMS with rage, savage strikes raining on ${target}!",
+        "${speaker} flies into a frenzy, battering ${target}!",
+        "${speaker}'s fury manifests as brutal force against ${target}!"
+    ],
+    'Cheerful': [
+        "${speaker} giggles maniacally while striking ${target}.",
+        "${speaker} hums a dark tune, hitting ${target} with joy.",
+        "${speaker} grins wickedly, relishing the violence against ${target}."
+    ]
+};
+
+const CLASS_BANTER: Record<string, string[]> = {
+    'Thrall': [
+        "${speaker} fights with desperate, feral intensity against ${target}.",
+        "${speaker} bites and claws at ${target} in wild abandon.",
+        "${speaker} attacks with nothing but survival instinct against ${target}."
+    ],
+    'Bondi': [
+        "${speaker} swings a heavy blow at ${target} with farming strength.",
+        "${speaker} brings brute force to bear against ${target}.",
+        "${speaker} overwhelms ${target} with sheer, stubborn might."
+    ],
+    'Vardr': [
+        "${speaker} executes a textbook maneuver against ${target}.",
+        "${speaker} strikes with military precision at ${target}.",
+        "${speaker} channels discipline into a decisive blow against ${target}."
+    ],
+    'Scrifadr': [
+        "${speaker} calculates the perfect angle to strike ${target}.",
+        "${speaker} analyzes ${target}'s weakness and exploits it.",
+        "${speaker} strikes with intellectual fury at ${target}."
+    ],
+    'Drengskapr': [
+        "${speaker} delivers an elegant, aristocratic strike against ${target}.",
+        "${speaker} moves with noble grace, cutting ${target}.",
+        "${speaker} strikes ${target} with dignified savagery."
+    ]
+};
+
 export class DescriptionService {
     private static templates: DescriptorTemplate[] = descriptionLibrary as DescriptorTemplate[];
 
-    static generateDescriptor(context: DescriptionContext): string {
-        const filteredTemplates = this.filterTemplates(context);
-        const scoredTemplates = filteredTemplates.map(t => ({
-            template: t,
-            score: this.calculateScore(t, context)
-        }));
+    private static pickRandom<T>(arr: T[]): T {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
 
-        // Sort by score descending and pick the best one
-        scoredTemplates.sort((a, b) => b.score - a.score);
-        const bestTemplate = scoredTemplates[0]?.template;
-
-        if (!bestTemplate) {
-            const verb = this.getVerb(context);
-            const targetName = this.formatName(context.target?.name || 'the void');
-            const speakerName = this.formatName(context.speaker.name);
-            
-            // Richer fallback prose
-            const flourishes = [
-                `with a frantic motion`,
-                `without hesitation`,
-                `finding a brief opening`,
-                `driven by pure instinct`,
-                `in the heat of the fray`
-            ];
-            const flourish = flourishes[Math.floor(Math.random() * flourishes.length)];
-            
-            return `${speakerName} ${verb} ${targetName} ${flourish}.`;
+    private static formatSpeaker(name: string): string {
+        if (!name) return 'The warrior';
+        const parts = name.split(' ');
+        if (parts.length > 1) {
+            return parts[0];
         }
-
-        return this.interpolate(bestTemplate.text, context);
+        return name.length > 12 ? name.substring(0, 12) : name;
     }
 
-    private static filterTemplates(context: DescriptionContext): DescriptorTemplate[] {
-        return this.templates.filter(t => {
-            // Must match event type
-            if (t.tags.eventType !== context.eventType) return false;
-
-            // If template specifies ranks, context must match one
-            if (t.tags.ranks && (!context.speaker.socialClass || !t.tags.ranks.includes(context.speaker.socialClass))) return false;
-
-            // If template specifies traits, context must match one
-            if (t.tags.traits && (!context.speaker.trait || !t.tags.traits.includes(context.speaker.trait))) return false;
-
-            // If template specifies biomes, context must match one
-            if (t.tags.biomes && (!context.biome || !t.tags.biomes.includes(context.biome))) return false;
-
-            // If template specifies hit quality, context must match
-            if (t.tags.hitQuality && t.tags.hitQuality !== context.hitQuality) return false;
-
-            // If template specifies min affinity, context must be >=
-            if (t.tags.minAffinity && (context.affinity ?? 0) < t.tags.minAffinity) return false;
-
-            return true;
-        });
+    private static formatTarget(name: string): string {
+        if (!name) return 'the enemy';
+        const parts = name.split(' ');
+        if (parts.length > 1) {
+            return parts[0];
+        }
+        return name.length > 12 ? name.substring(0, 12) : name;
     }
 
-    private static calculateScore(template: DescriptorTemplate, context: DescriptionContext): number {
-        let score = 1; // Base score for matching eventType
-
-        if (template.tags.ranks?.includes(context.speaker.socialClass!)) score++;
-        if (template.tags.traits?.includes(context.speaker.trait!)) score++;
-        if (template.tags.biomes?.includes(context.biome!)) score++;
-        if (template.tags.hitQuality === context.hitQuality) score++;
-        if (template.tags.minAffinity) score++;
-
-        return score;
-    }
-
-    private static interpolate(text: string, context: DescriptionContext): string {
-        const verb = this.getVerb(context);
-        const speakerName = this.formatName(context.speaker.name);
-        const targetName = this.formatName(context.target?.name || 'the void');
-        
+    private static interpolate(text: string, speaker: string, target: string): string {
         return text
-            .replace(/\${speaker}/g, speakerName)
-            .replace(/\${target}/g, targetName)
-            .replace(/\${verb}/g, verb)
-            .replace(/\${weapon}/g, context.speaker.weapon || 'bare hands')
-            .replace(/\${value}/g, context.value?.toString() || '0');
+            .replace(/\${speaker}/g, speaker)
+            .replace(/\${target}/g, target)
+            .replace(/\*\*([^*]+)\*\*/g, '$1')
+            .replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '$1');
     }
 
-    private static formatName(name: any): string {
-        if (!name) return 'the void';
-        
-        let safeName = 'Unknown';
-        if (typeof name === 'string') {
-            safeName = name;
-        } else if (typeof name === 'object') {
-            safeName = name.name || JSON.stringify(name);
-            console.error('[DESC] Object passed as name:', name);
+    static generateDescriptor(context: DescriptionContext): string {
+        const speaker = this.formatSpeaker(context.speaker.name);
+        const target = this.formatTarget(context.target?.name || 'enemy');
+        const { hitQuality, trait, socialClass } = context;
+
+        if (hitQuality === 'MISS') {
+            const classBanter = socialClass && CLASS_BANTER[socialClass] 
+                ? CLASS_BANTER[socialClass] 
+                : [];
+            const templates = [...GENERIC_MISS_TEMPLATES, ...classBanter];
+            return this.interpolate(this.pickRandom(templates), speaker, target);
         }
 
-        let house = 'none';
-        if (safeName.includes('Eklund')) house = 'Eklund';
-        else if (safeName.includes('Valerius')) house = 'Valerius';
-        else if (safeName.includes('Draden')) house = 'Draden';
-        
-        return `[[NAME:${house}:${safeName}]]`;
-    }
+        if (hitQuality === 'CRIT') {
+            const traitBanter = trait && TRAIT_BANTER[trait] 
+                ? TRAIT_BANTER[trait] 
+                : [];
+            const classBanter = socialClass && CLASS_BANTER[socialClass] 
+                ? CLASS_BANTER[socialClass] 
+                : [];
+            const templates = [...GENERIC_CRIT_TEMPLATES, ...traitBanter, ...classBanter];
+            return this.interpolate(this.pickRandom(templates), speaker, target);
+        }
 
-    private static getVerb(context: DescriptionContext): string {
-        const type = context.eventType.includes('ATTACK') ? 'attack' : 'defend';
-        const set = VERB_LIBRARY[type] || VERB_LIBRARY['attack'];
-        
-        let level = 0;
-        if (context.dreadLevel >= 10) level = 10;
-        else if (context.dreadLevel >= 5) level = 5;
-
-        const verbs = set?.[level] || set?.[0] || ['hits'];
-        return verbs[Math.floor(Math.random() * verbs.length)] || 'hits';
+        const traitBanter = trait && TRAIT_BANTER[trait] 
+            ? TRAIT_BANTER[trait] 
+            : [];
+        const classBanter = socialClass && CLASS_BANTER[socialClass] 
+            ? CLASS_BANTER[socialClass] 
+            : [];
+        const templates = [...GENERIC_ATTACK_TEMPLATES, ...traitBanter, ...classBanter];
+        return this.interpolate(this.pickRandom(templates), speaker, target);
     }
 }
