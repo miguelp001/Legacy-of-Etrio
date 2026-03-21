@@ -1,5 +1,6 @@
 import { BaseClass } from './stats.js';
 import { NPCGenerator } from './party.js';
+import { EnemyGenerator } from './enemyGenerator.js';
 import type { Combatant } from './combat.js';
 
 export const BiomeType = {
@@ -89,35 +90,36 @@ export class DungeonManager {
             }
 
             const enemies: Combatant[] = [];
+            const roomId = `room_${floorNumber}_${i}`;
+            
             if (type === 'Encounter' || type === 'Boss') {
                 const isBoss = type === 'Boss';
-                const baseCount = floorNumber === 1 ? 1 : 1 + Math.floor(floorNumber / 20);
-                const enemyCount = isBoss ? baseCount + 1 : baseCount + Math.floor(Math.random() * 2);
 
-                for (let j = 0; j < Math.min(4, enemyCount); j++) {
-                    const level = isBoss ? floorNumber + 2 : (floorNumber === 1 ? 1 : floorNumber);
-                    const npc = NPCGenerator.generateNPC(level, 0);
+                if (isBoss) {
+                    enemies.push(...EnemyGenerator.generateBossSet(biome, floorNumber, i));
+                } else {
+                    const enemyCount = EnemyGenerator.generateEncounterCount(floorNumber);
+                    enemies.push(...EnemyGenerator.generateEnemySet(biome, floorNumber, enemyCount, roomId));
                     
                     if (floorNumber === 1) {
-                        npc.stats.strength *= 0.6;
-                        npc.stats.vitality *= 0.6;
-                        npc.hp = Math.floor(npc.hp * 0.6);
-                        npc.maxHp = npc.hp;
+                        enemies.forEach(enemy => {
+                            enemy.stats.strength = Math.floor(enemy.stats.strength * 0.6);
+                            enemy.stats.vitality = Math.floor(enemy.stats.vitality * 0.6);
+                            enemy.hp = Math.floor(enemy.hp * 0.6);
+                            enemy.maxHp = enemy.hp;
+                        });
                     }
-
-                    enemies.push({
-                        ...npc,
-                        id: `${type}_${floorNumber}_${i}_${j}`,
-                        isEnemy: true,
-                        name: isBoss ? `Guard of the Deep` : npc.name
-                    } as Combatant);
                 }
             }
 
+            const enemyDescription = enemies.length > 0 ? EnemyGenerator.getEnemyDescription(enemies) : '';
+            const baseDescription = this.getRoomDescription(type, biome);
+            const fullDescription = enemyDescription ? `${baseDescription} (${enemyDescription})` : baseDescription;
+
             rooms.push({
-                id: `room_${floorNumber}_${i}`,
+                id: roomId,
                 type,
-                description: this.getRoomDescription(type, biome),
+                description: fullDescription,
                 ...(enemies.length > 0 ? { enemies } : {})
             } as DungeonRoom);
         }
