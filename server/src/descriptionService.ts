@@ -1,4 +1,4 @@
-import type { EventType, HitQuality } from '../../shared/src/descriptionTypes.js';
+import type { EventType, HitQuality, DescriptorTemplate } from '../../shared/src/descriptionTypes.js';
 import type { NightsdeepTrait, SocialClass } from '../../shared/src/combat.js';
 import { BiomeType } from '../../shared/src/dungeon.js';
 import descriptionLibrary from '../../shared/src/descriptionLibrary.json' with { type: 'json' };
@@ -127,14 +127,14 @@ export class DescriptionService {
     private static templates: DescriptorTemplate[] = descriptionLibrary as DescriptorTemplate[];
 
     private static pickRandom<T>(arr: T[]): T {
-        return arr[Math.floor(Math.random() * arr.length)];
+        return arr[Math.floor(Math.random() * arr.length)]!;
     }
 
     private static formatSpeaker(name: string): string {
         if (!name) return 'The warrior';
         const parts = name.split(' ');
         if (parts.length > 1) {
-            return parts[0];
+            return parts[0]!;
         }
         return name.length > 12 ? name.substring(0, 12) : name;
     }
@@ -143,7 +143,7 @@ export class DescriptionService {
         if (!name) return 'the enemy';
         const parts = name.split(' ');
         if (parts.length > 1) {
-            return parts[0];
+            return parts[0]!;
         }
         return name.length > 12 ? name.substring(0, 12) : name;
     }
@@ -159,7 +159,9 @@ export class DescriptionService {
     static generateDescriptor(context: DescriptionContext): string {
         const speaker = this.formatSpeaker(context.speaker.name);
         const target = this.formatTarget(context.target?.name || 'enemy');
-        const { hitQuality, trait, socialClass } = context;
+        const { hitQuality } = context;
+        const trait = context.speaker.trait;
+        const socialClass = context.speaker.socialClass;
 
         if (hitQuality === 'MISS') {
             const classBanter = socialClass && CLASS_BANTER[socialClass] 

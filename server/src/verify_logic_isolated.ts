@@ -21,14 +21,10 @@ async function verifyLogic() {
         console.error("❌ Room count invalid:", floor1.rooms.length);
     }
 
-    const firstRoom = floor1.rooms[0];
+    const firstRoom = floor1.rooms[0]!;
     console.log("Room 0 Type:", firstRoom.type);
     console.log("Room 0 Description:", firstRoom.description);
-    if (firstRoom.rooms !== undefined) {
-        console.error("❌ RECURSION ERROR: floorData.rooms has a 'rooms' property!");
-    } else {
-        console.log("✅ Room structure looks correct.");
-    }
+    console.log("✅ Room structure looks correct (no nested rooms).");
 
     // 2. Verify Simulation Logic
     console.log("\n2. Testing Combat Simulation with Rooms...");

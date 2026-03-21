@@ -17,7 +17,8 @@ async function verifySoulBinding() {
         id: 'player-mc',
         name: 'Soul-Bound Hero',
         level: 1,
-        hp: 1, // Ensure they wipe immediately
+        xp: 0,
+        hp: 1,
         maxHp: 100,
         mp: 50,
         maxMp: 50,

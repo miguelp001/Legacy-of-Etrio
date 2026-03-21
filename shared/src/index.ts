@@ -3,5 +3,5 @@ export { DungeonManager, BiomeType, type DungeonFloor, type DungeonRoom } from '
 export { EnemyGenerator } from './enemyGenerator';
 export { NPCGenerator, type Relationship } from './party';
 export { BaseClass, SubClass, StatCalculator, TRIBE_BONUSES, type Stats, type CharacterStats } from './stats';
-export { Rarity, ItemType, type Item } from './items';
+export { Rarity, ItemType, ItemGenerator, type Item } from './items';
 export { type EventType, type HitQuality, type DescriptorTags, type DescriptorTemplate } from './descriptionTypes';

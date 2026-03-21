@@ -26,6 +26,7 @@ async function verifyAbyssalRelics() {
         id: 'player-mc',
         name: 'Relic Hunter',
         level: 30,
+        xp: 0,
         hp: 1000,
         maxHp: 1000,
         mp: 500,

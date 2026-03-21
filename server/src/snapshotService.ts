@@ -1,8 +1,7 @@
 import { CombatEngine } from '../../shared/src/combat.js';
 import type { CombatEvent, Combatant, NightsdeepTrait } from '../../shared/src/combat.js';
-import { ItemGenerator } from '../../shared/src/items.js';
+import { ItemGenerator, Rarity, DungeonManager } from '../../shared/src/index.js';
 import type { Item } from '../../shared/src/items.js';
-import { DungeonManager } from '../../shared/src/dungeon.js';
 import { prisma } from './db.js';
 
 const BANTER: Record<NightsdeepTrait, string[]> = {
@@ -93,6 +92,8 @@ export class SnapshotService {
                         turn: i,
                         attackerName: 'SYSTEM',
                         defenderName: 'Party',
+                        attackerId: 'system',
+                        defenderId: 'party',
                         damage: 0,
                         isCrit: false,
                         isMiss: false,
@@ -114,6 +115,8 @@ export class SnapshotService {
                             turn: i,
                             attackerName: member.name,
                             defenderName: 'THE DEEP',
+                            attackerId: member.id,
+                            defenderId: 'the-deep',
                             damage: 0,
                             isCrit: false,
                             isMiss: false,
@@ -143,6 +146,8 @@ export class SnapshotService {
                     turn: i,
                     attackerName: 'THE VOID',
                     defenderName: 'Reality',
+                    attackerId: 'the-void',
+                    defenderId: 'reality',
                     damage: 0,
                     isCrit: false,
                     isMiss: false,
@@ -161,6 +166,8 @@ export class SnapshotService {
                         turn: i,
                         attackerName: 'THE VOID',
                         defenderName: 'FOUND',
+                        attackerId: 'the-void',
+                        defenderId: 'found',
                         damage: 0,
                         isCrit: false,
                         isMiss: false,
@@ -224,6 +231,8 @@ export class SnapshotService {
                             turn: i,
                             attackerName: 'SYSTEM',
                             defenderName: partyCopy[0]?.name || 'Bondi',
+                            attackerId: 'system',
+                            defenderId: partyCopy[0]?.id || 'unknown',
                             damage: 0,
                             isCrit: false,
                             isMiss: false,

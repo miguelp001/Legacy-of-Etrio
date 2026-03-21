@@ -1,9 +1,10 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { bearerAuth } from 'hono/bearer-auth';
-import { CombatEngine } from '../../shared/src/combat.js';
+import { CombatEngine, NPCGenerator, Rarity, ItemGenerator } from '../../shared/src/index.js';
 import { OfflineEngine } from '../../shared/src/offline.js';
 import { GateManager } from '../../shared/src/gate.js';
+import { StateService } from './stateService.js';
 import { GameService } from './gameService.js';
 import { SnapshotService } from './snapshotService.js';
 import { AuthService } from './authService.js';
