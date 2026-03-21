@@ -197,7 +197,19 @@ export class GameService {
                     }
                 }
             } else {
-                // Non-combat room
+                // Non-combat room handling
+                if (room.type === 'Rest') {
+                    // Heal all surviving party members to full HP
+                    const healAmount = Math.floor(state.currentFloor * 10) + 50;
+                    participants.forEach(p => {
+                        if (p.hp > 0) {
+                            const oldHp = p.hp;
+                            p.hp = Math.min(p.maxHp, p.hp + healAmount);
+                            console.log(`[REST] ${p.name} healed for ${p.hp - oldHp} HP (${p.hp}/${p.maxHp})`);
+                        }
+                    });
+                }
+                
                 roomResults.push({
                     roomId: room.id,
                     type: room.type,
