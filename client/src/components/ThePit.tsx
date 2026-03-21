@@ -118,8 +118,8 @@ const ThePit: React.FC = () => {
             
             const timer = setTimeout(() => {
                 const newEvent = events[turnIndex];
-                if (!newEvent) {
-                    setTurnIndex(prev => prev + 1);
+                if (!newEvent || turnIndex >= events.length) {
+                    setIsSimulating(false);
                     return;
                 }
 
@@ -324,23 +324,47 @@ const ThePit: React.FC = () => {
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-warning-color/50 border-b border-white/5 pb-2 flex items-center gap-2">
                                     <Lucide.Zap size={10} /> TACTICAL LOG
                                 </h4>
-                                <div className="flex-1 overflow-y-auto mt-4 space-y-2 custom-scrollbar pr-2">
-                                    {(displayedEvents || []).slice(-8).map((ev, i) => {
-                                        // Simple name marker cleaning for the small log
+                                <div className="flex-1 overflow-y-auto mt-4 space-y-3 custom-scrollbar pr-2">
+                                    {(displayedEvents || []).slice(-10).map((ev, i) => {
+                                        // Helper to extract name from marker
+                                        const getName = (marker: string) => {
+                                            const match = marker.match(/\[\[NAME:([^:]+):([^\]]+)\]\]/);
+                                            return match ? match[2] : marker;
+                                        };
+                                        const getHouse = (marker: string) => {
+                                            const match = marker.match(/\[\[NAME:([^:]+):([^\]]+)\]\]/);
+                                            return match ? match[1].toLowerCase() : 'none';
+                                        };
+
+                                        const attackerName = getName(ev.attackerName);
+                                        const attackerHouse = getHouse(ev.attackerName);
+                                        const attackerClass = attackerHouse === 'none' ? 'noble-default' : `house-${attackerHouse}`;
+
+                                        const defenderName = getName(ev.defenderName);
+                                        const defenderHouse = getHouse(ev.defenderName);
+                                        const defenderClass = defenderHouse === 'none' ? 'noble-default' : `house-${defenderHouse}`;
+
                                         const cleanBanter = ev.banter?.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '$1');
                                         
                                         return (
-                                            <div key={ev.id || `ev-${i}`} className="text-[11px] flex gap-2 animate-slide-right items-start">
-                                                <span className="text-white/20 font-mono shrink-0">[{ev.turn}]</span>
-                                                <div className="flex-1">
-                                                    <span className="font-bold text-white/90">
-                                                        {cleanBanter || `${ev.attackerName} vs ${ev.defenderName}`}
+                                            <div key={ev.id || `ev-${i}`} className="text-[11px] flex flex-col gap-1 animate-slide-right opacity-90 hover:opacity-100 transition-opacity">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-white/20 font-mono text-[9px]">[{ev.turn}]</span>
+                                                    <span className={`px-1.5 py-0.5 rounded-[2px] font-black uppercase text-[9px] border border-white/5 ${attackerClass} bg-white/5`}>
+                                                        {attackerName}
                                                     </span>
-                                                    {ev.damage > 0 && (
-                                                        <span className="text-danger-color ml-1">
-                                                            -{ev.damage} {ev.isCrit && "💥"}
-                                                        </span>
+                                                    {!ev.banter && (
+                                                        <>
+                                                            <span className="text-white/20 text-[8px]">VS</span>
+                                                            <span className={`px-1.5 py-0.5 rounded-[2px] font-black uppercase text-[9px] border border-white/5 ${defenderClass} bg-white/5`}>
+                                                                {defenderName}
+                                                            </span>
+                                                        </>
                                                     )}
+                                                </div>
+                                                <div className="pl-6 text-white/70 leading-relaxed border-l border-white/5 py-1">
+                                                    {cleanBanter || (ev.damage > 0 ? `Struck for ${ev.damage} damage` : "Missed the strike")}
+                                                    {ev.damage > 0 && <span className="text-danger-color font-bold ml-1">-{ev.damage} {ev.isCrit && "💥"}</span>}
                                                 </div>
                                             </div>
                                         );

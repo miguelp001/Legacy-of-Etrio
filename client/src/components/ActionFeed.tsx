@@ -41,6 +41,21 @@ const ActionFeed: React.FC<ActionFeedProps> = ({ events, onLayToRest, floor = 1 
     return rendered;
   };
 
+  const renderNameBadge = (marker: string) => {
+    const match = marker.match(/\[\[NAME:([^:]+):([^\]]+)\]\]/);
+    if (!match) return <span className="text-muted">[Unknown]</span>;
+    
+    const house = match[1]?.toLowerCase();
+    const name = match[2];
+    const houseClass = house === 'none' ? 'noble-default' : `house-${house}`;
+    
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter border border-white/10 mr-2 ${houseClass} bg-white/5`}>
+        {name}
+      </span>
+    );
+  };
+
   const getVibeClass = () => {
     if (floor > 20) return 'deep-pulse';
     if (floor > 10) return 'deep-glitch';
@@ -55,29 +70,36 @@ const ActionFeed: React.FC<ActionFeedProps> = ({ events, onLayToRest, floor = 1 
         className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2"
       >
         {events.filter(ev => ev && ev.id).map((event) => (
-          <div key={event.id} className="feed-item text-[13px] leading-relaxed py-1 border-b border-white/5 last:border-0">
-            <div className="flex items-start gap-2">
-              <span className="text-muted opacity-50 font-mono">[{event.turn}]</span>
+          <div key={event.id} className="feed-item text-[13px] leading-relaxed py-2 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors px-2 rounded-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-muted opacity-30 font-mono text-[10px] mt-1">[{event.turn}]</span>
               
               <div className="flex-1">
                 {event.banter ? (
-                  <div className="text-white/90">
-                    {renderRichText(event.banter, event.damage > 0, event.isCrit)}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center">
+                      {renderNameBadge(event.attackerName)}
+                      <span className="text-[10px] font-bold text-muted uppercase tracking-widest opacity-50">Narrative</span>
+                    </div>
+                    <div className="text-white/90 italic pl-1 border-l-2 border-white/5 mt-1">
+                      {renderRichText(event.banter, event.damage > 0, event.isCrit)}
+                    </div>
                   </div>
                 ) : (
-                  <>
-                    <span className="font-bold text-white/90">
-                      {event.emojiTag} {event.attackerName} 
-                    </span>
-                    <span className="text-muted"> ⚔️ </span>
-                    <span className="font-bold text-white/90">{event.defenderName}</span>
-                  </>
+                  <div className="flex items-center flex-wrap gap-y-1">
+                    {renderNameBadge(event.attackerName)}
+                    <span className="text-muted px-1 text-[10px]">⚔️</span>
+                    {renderNameBadge(event.defenderName)}
+                  </div>
                 )}
                 
                 {event.damage > 0 && (
-                  <span className="ml-2 font-black text-danger-color">
-                    -{event.damage} {event.isCrit && "💥"}
-                  </span>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-danger-color uppercase">Casualty</span>
+                    <span className="font-black text-danger-color">
+                      -{event.damage} {event.isCrit && "💥"}
+                    </span>
+                  </div>
                 )}
                 
                 {event.corpseData && (
