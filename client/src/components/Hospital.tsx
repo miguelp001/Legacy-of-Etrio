@@ -14,6 +14,16 @@ const Hospital: React.FC = () => {
         return () => clearInterval(timer);
     }, []);
     
+    useEffect(() => {
+        if (!canRest || isResting) return;
+        
+        const interval = setInterval(async () => {
+            await restParty();
+        }, 30000);
+        
+        return () => clearInterval(interval);
+    }, [canRest, isResting, restParty]);
+    
     const handleRest = useCallback(async () => {
         setIsResting(true);
         await restParty();
@@ -171,7 +181,8 @@ const Hospital: React.FC = () => {
                     <button 
                         onClick={handleRest}
                         disabled={isResting}
-                        className="pointer-events-auto w-14 h-14 bg-warning-color/20 hover:bg-warning-color/30 border border-warning-color/30 rounded-full shadow-xl flex items-center justify-center text-warning-color active:scale-90 transition-all disabled:opacity-50"
+                        className="pointer-events-auto w-14 h-14 bg-secondary-color/20 hover:bg-secondary-color/30 border border-secondary-color/30 rounded-full shadow-xl flex items-center justify-center text-secondary-color active:scale-90 transition-all disabled:opacity-50"
+                        title="Auto-recovering (every 30s)"
                     >
                         <Bed size={24} className={isResting ? 'animate-pulse' : ''} />
                     </button>
@@ -195,7 +206,7 @@ const Hospital: React.FC = () => {
                 </div>
                 <div className="space-y-0.5">
                     <h4 className="font-black text-xs uppercase tracking-tight">Passive Convalescence</h4>
-                    <p className="text-[9px] text-muted leading-relaxed uppercase font-bold tracking-tighter">Nearby ley-lines provide 5% HP recovery per solar minute.</p>
+                    <p className="text-[9px] text-muted leading-relaxed uppercase font-bold tracking-tighter">Nearby ley-lines provide 10% HP recovery every 30 seconds while in hospital.</p>
                 </div>
             </div>
         </div>
