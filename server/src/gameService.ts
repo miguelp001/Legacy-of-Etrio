@@ -113,20 +113,50 @@ export class GameService {
         const floorData = DungeonManager.generateFloor(state.currentFloor);
         const roomResults: any[] = [];
         
-        // Ensure participants are clean and have enough HP to survive simple hits
-        let participants = [state.mainCharacter, ...state.party].filter(p => p !== null).map(p => {
+        // Filter party members - only those who can fight
+        const now = Date.now();
+        const healableParty = state.party.filter((p: any) => {
+            // Skip if dead or in recovery
+            if (p.hp <= 0) return false;
+            if (p.recoveryUntil && p.recoveryUntil > now) return false;
+            // NPC must be above 50% HP to fight
+            if (p.hp < p.maxHp * 0.5) return false;
+            return true;
+        });
+        
+        // Main character always fights if alive
+        let mainChar = state.mainCharacter;
+        if (mainChar) {
+            if (mainChar.hp <= 0 || (mainChar.recoveryUntil && mainChar.recoveryUntil > now)) {
+                mainChar = null;
+            }
+        }
+        
+        let participants = [mainChar, ...healableParty].filter(p => p !== null).map(p => {
             const member = { ...p };
-            if (member.hp === null || isNaN(member.hp) || member.hp <= 5) {
+            if (member.hp === null || isNaN(member.hp)) {
                 console.warn(`[BATTLE] HP FIXED: Player ${member.name} had ${member.hp} HP. Resetting to 150.`);
                 member.hp = Math.max(member.hp || 0, 150);
                 member.maxHp = Math.max(member.maxHp || 0, 150);
             }
-            // Legacy character XP migration
             if (member.xp === undefined || member.xp === null) {
                 member.xp = 0;
             }
             return member;
         });
+        
+        // Mark who stayed behind
+        const wounded = state.party.filter((p: any) => {
+            if (p.hp <= 0) return true;
+            if (p.recoveryUntil && p.recoveryUntil > now) return true;
+            if (p.hp < p.maxHp * 0.5) return true;
+            return false;
+        });
+        
+        if (wounded.length > 0) {
+            console.log(`[BATTLE] ${wounded.length} wounded resting: ${wounded.map((w: any) => w.name).join(', ')}`);
+        }
+        
         let floorVictory = true;
 
         console.log(`[BATTLE] Floor ${state.currentFloor}: ${participants.length} participants.`);
@@ -414,6 +444,55 @@ export class GameService {
             data: { state: JSON.stringify(state), updatedAt: new Date() }
         });
         return state;
+    }
+
+    static async processPassiveHealing(playerId: string) {
+        const player = await (prisma as any).playerState.findFirst({ where: { id: playerId } });
+        const state = JSON.parse(player.state);
+        const now = Date.now();
+        
+        let totalHealed = 0;
+        
+        // Heal main character
+        if (state.mainCharacter) {
+            if (state.mainCharacter.hp > 0 && state.mainCharacter.hp < state.mainCharacter.maxHp) {
+                const healAmount = Math.floor(state.mainCharacter.maxHp * 0.1); // 10% per rest
+                const newHp = Math.min(state.mainCharacter.maxHp, state.mainCharacter.hp + healAmount);
+                totalHealed += newHp - state.mainCharacter.hp;
+                state.mainCharacter.hp = newHp;
+            }
+            // Clear recovery if expired
+            if (state.mainCharacter.recoveryUntil && state.mainCharacter.recoveryUntil <= now) {
+                state.mainCharacter.recoveryUntil = 0;
+            }
+        }
+        
+        // Heal party members
+        state.party = state.party.map((m: any) => {
+            // Clear recovery if expired
+            if (m.recoveryUntil && m.recoveryUntil <= now) {
+                m.recoveryUntil = 0;
+            }
+            // Passive healing for wounded
+            if (m.hp > 0 && m.hp < m.maxHp) {
+                const healAmount = Math.floor(m.maxHp * 0.1);
+                const newHp = Math.min(m.maxHp, m.hp + healAmount);
+                totalHealed += newHp - m.hp;
+                return { ...m, hp: newHp };
+            }
+            return m;
+        });
+        
+        if (totalHealed > 0) {
+            console.log(`[HEAL] Restored ${totalHealed} HP total`);
+        }
+        
+        await (prisma as any).playerState.update({
+            where: { id: playerId },
+            data: { state: JSON.stringify(state), updatedAt: new Date() }
+        });
+        
+        return { state, healed: totalHealed };
     }
 
     static async ascendCharacter(playerId: string, memberId: string) {

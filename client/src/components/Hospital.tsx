@@ -1,17 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { HeartPulse, Clock, Activity, ShieldAlert, Heart, Users, Zap, Plus } from 'lucide-react';
+import { HeartPulse, Clock, Activity, ShieldAlert, Heart, Users, Zap, Plus, Bed } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
 const Hospital: React.FC = () => {
-    const { party, mainCharacter, healCharacter, pollutionLevel, gold, addGold } = useGameStore();
+    const { party, mainCharacter, healCharacter, restParty, pollutionLevel, gold, addGold } = useGameStore();
     const pollutionPenalty = pollutionLevel > 50 ? 1.2 : 1.0;
     const fullParty = [mainCharacter, ...party].filter(Boolean);
     const [currentTime, setCurrentTime] = useState(Date.now());
+    const [isResting, setIsResting] = useState(false);
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
         return () => clearInterval(timer);
     }, []);
+    
+    const handleRest = useCallback(async () => {
+        setIsResting(true);
+        await restParty();
+        setIsResting(false);
+    }, [restParty]);
+    
+    const woundedCount = fullParty.filter((m: any) => m.hp < m.maxHp).length;
+    const canRest = woundedCount > 0;
 
     const canHeal = useCallback((member: any) => {
         if (member.hp >= member.maxHp) return false;
@@ -156,15 +166,24 @@ const Hospital: React.FC = () => {
             </div>
 
             {/* Mobile Sticky Action Bar */}
-            <div className="fixed bottom-24 left-4 right-4 z-50 pointer-events-none">
+            <div className="fixed bottom-24 left-4 right-4 z-50 pointer-events-none flex gap-3 justify-end">
+                {canRest && (
+                    <button 
+                        onClick={handleRest}
+                        disabled={isResting}
+                        className="pointer-events-auto w-14 h-14 bg-warning-color/20 hover:bg-warning-color/30 border border-warning-color/30 rounded-full shadow-xl flex items-center justify-center text-warning-color active:scale-90 transition-all disabled:opacity-50"
+                    >
+                        <Bed size={24} className={isResting ? 'animate-pulse' : ''} />
+                    </button>
+                )}
                 <button 
                     onClick={handleHealAll}
                     disabled={fullParty.every((m: any) => m.hp >= m.maxHp || (m.recoveryUntil && m.recoveryUntil > currentTime))}
-                    className="pointer-events-auto ml-auto w-16 h-16 bg-secondary-color rounded-full shadow-2xl flex items-center justify-center text-white active:scale-90 transition-transform disabled:opacity-50 disabled:grayscale"
+                    className="pointer-events-auto w-14 h-14 bg-secondary-color rounded-full shadow-xl flex items-center justify-center text-white active:scale-90 transition-transform disabled:opacity-30"
                 >
                     <div className="relative">
-                        <HeartPulse size={28} />
-                        <Plus size={14} className="absolute -top-1 -right-1 bg-black rounded-full" />
+                        <HeartPulse size={22} />
+                        <Plus size={10} className="absolute -top-1 -right-1 bg-black rounded-full" />
                     </div>
                 </button>
             </div>

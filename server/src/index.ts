@@ -246,6 +246,16 @@ app.post('/api/game/heal', async (c) => {
     }
 });
 
+app.post('/api/game/rest', async (c) => {
+    const { playerId } = await c.req.json();
+    try {
+        const state = await GameService.processPassiveHealing(playerId);
+        return c.json(state);
+    } catch (e: any) {
+        return c.json({ error: e.message }, 400);
+    }
+});
+
 app.post('/api/game/ascend', async (c) => {
     const { playerId, characterId } = await c.req.json();
     try {

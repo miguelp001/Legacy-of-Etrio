@@ -76,6 +76,19 @@ export class SnapshotService {
         for (let i = 0; i < ticks; i++) {
             if (wiped) break;
 
+            // Passive Healing: 5% HP per tick (every 2 minutes) for wounded members
+            let healedThisTick = false;
+            partyCopy.forEach(member => {
+                if (member.hp > 0 && member.hp < member.maxHp) {
+                    const healAmount = Math.floor(member.maxHp * 0.05);
+                    const newHp = Math.min(member.maxHp, member.hp + healAmount);
+                    if (newHp !== member.hp) {
+                        member.hp = newHp;
+                        healedThisTick = true;
+                    }
+                }
+            });
+
             // Handle Blood Consumption
             const vampireCount = partyCopy.filter(m => m.isVampire).length;
             const rationsNeeded = vampireCount * 5; // 5 rations per vampire per 2-min tick

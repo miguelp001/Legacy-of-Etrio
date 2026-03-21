@@ -45,6 +45,11 @@ const App: React.FC = () => {
   const [showMap, setShowMap] = useState(false);
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
   const hasHandledSnapshot = useRef(false);
+  
+  const canDelve = party.every((m: any) => m.hp >= m.maxHp * 0.5) && 
+    (!mainCharacter || mainCharacter.hp >= mainCharacter.maxHp * 0.5);
+  const woundedCount = party.filter((m: any) => m.hp < m.maxHp * 0.5).length + 
+    (mainCharacter && mainCharacter.hp < mainCharacter.maxHp * 0.5 ? 1 : 0);
 
   useEffect(() => {
     if (isAuthenticated && playerId) {
@@ -313,7 +318,13 @@ const App: React.FC = () => {
                         <h3 className="text-3xl md:text-5xl font-black mb-4 italic tracking-tighter leading-tight uppercase">The Depths <br/>Await Your Will</h3>
                         <p className="text-muted leading-relaxed mb-10 text-lg opacity-80 font-medium">Monitoring aetheric levels... Your vanguard is primed for the next expedition. Shall we descend?</p>
                         <div className="flex flex-wrap gap-4">
-                          <button onClick={() => setLocation('The Pit')} className="btn-primary py-5 px-10 text-lg justify-center flex-1 sm:flex-none">Initiate Expedition</button>
+                          {!canDelve && woundedCount > 0 ? (
+                            <div className="text-warning-color text-sm font-black uppercase tracking-tight">
+                              {woundedCount} {woundedCount === 1 ? 'Member' : 'Members'} Need Recovery First
+                            </div>
+                          ) : (
+                            <button onClick={() => setLocation('The Pit')} className="btn-primary py-5 px-10 text-lg justify-center flex-1 sm:flex-none">Initiate Expedition</button>
+                          )}
                         </div>
                       </div>
                       
