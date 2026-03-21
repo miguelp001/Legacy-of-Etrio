@@ -240,3 +240,31 @@ button {
   50% { box-shadow: 0 0 30px #000, 0 0 40px var(--abyssal-glow); border-color: #0c001a; }
   100% { box-shadow: 0 0 10px var(--abyssal-glow); border-color: #9333ea; }
 }
+.noble-name {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.house-eklund { color: #f43f5e; text-shadow: 0 0 8px rgba(244, 63, 94, 0.4); }
+.house-valerius { color: #60a5fa; text-shadow: 0 0 8px rgba(96, 165, 250, 0.4); }
+.house-draden { color: #34d399; text-shadow: 0 0 8px rgba(52, 211, 153, 0.4); }
+.noble-default { color: #f59e0b; }
+
+.deep-glitch {
+  animation: glitch-subtle 3s infinite;
+}
+
+.deep-pulse {
+  animation: voidPulse 4s infinite;
+}
+
+@keyframes glitch-subtle {
+  0% { transform: translate(0); filter: hue-rotate(0deg); }
+  95% { transform: translate(0); filter: hue-rotate(0deg); }
+  96% { transform: translate(-1px, 1px); filter: hue-rotate(90deg); }
+  97% { transform: translate(1px, -1px); filter: hue-rotate(180deg); }
+  98% { transform: translate(-1px, -1px); filter: hue-rotate(270deg); }
+  99% { transform: translate(1px, 1px); filter: hue-rotate(360deg); }
+  100% { transform: translate(0); filter: hue-rotate(0deg); }
+}

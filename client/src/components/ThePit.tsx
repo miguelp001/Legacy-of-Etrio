@@ -325,15 +325,26 @@ const ThePit: React.FC = () => {
                                     <Lucide.Zap size={10} /> TACTICAL LOG
                                 </h4>
                                 <div className="flex-1 overflow-y-auto mt-4 space-y-2 custom-scrollbar pr-2">
-                                    {(displayedEvents || []).slice(-8).map((ev, i) => (
-                                        <div key={ev.id || `ev-${i}`} className="text-[11px] flex gap-2 animate-slide-right items-start">
-                                            <span className="text-white/20 font-mono shrink-0">[{ev.turn}]</span>
-                                            <span className="font-bold text-white/90">
-                                                {ev.attackerName} vs {ev.defenderName}:
-                                                {ev.damage > 0 ? <span className="text-danger-color ml-1">-{ev.damage}</span> : <span className="text-muted ml-1"> MISS</span>}
-                                            </span>
-                                        </div>
-                                    ))}
+                                    {(displayedEvents || []).slice(-8).map((ev, i) => {
+                                        // Simple name marker cleaning for the small log
+                                        const cleanBanter = ev.banter?.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '$1');
+                                        
+                                        return (
+                                            <div key={ev.id || `ev-${i}`} className="text-[11px] flex gap-2 animate-slide-right items-start">
+                                                <span className="text-white/20 font-mono shrink-0">[{ev.turn}]</span>
+                                                <div className="flex-1">
+                                                    <span className="font-bold text-white/90">
+                                                        {cleanBanter || `${ev.attackerName} vs ${ev.defenderName}`}
+                                                    </span>
+                                                    {ev.damage > 0 && (
+                                                        <span className="text-danger-color ml-1">
+                                                            -{ev.damage} {ev.isCrit && "💥"}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                     {isSimulating && (
                                         <div className="flex items-center gap-2 text-[10px] text-primary-color font-black animate-pulse opacity-50 mt-4 uppercase tracking-widest">
                                             <Lucide.Loader2 size={12} className="animate-spin" /> Battle Raging...

@@ -2,6 +2,7 @@ import { prisma } from './db.js';
 import { CombatEngine } from '../../shared/src/combat.js';
 import { DungeonManager } from '../../shared/src/dungeon.js';
 import { ItemGenerator } from '../../shared/src/items.js';
+import { DescriptionService } from './descriptionService.js';
 
 export class GameService {
     // Validate and process a building upgrade
@@ -121,7 +122,11 @@ export class GameService {
                     break;
                 }
 
-                const combatResult = CombatEngine.simulate(survivors, room.enemies);
+                const combatResult = CombatEngine.simulate(survivors, room.enemies, {
+                    biome: state.biome,
+                    dreadLevel: state.currentFloor,
+                    generator: (ctx) => DescriptionService.generateDescriptor(ctx as any)
+                });
                 console.log(`[BATTLE] Sim Done: Victory=${combatResult.victory}, Events=${combatResult.events.length}`);
 
                 roomResults.push({

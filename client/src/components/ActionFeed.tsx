@@ -5,9 +5,10 @@ import type { CombatEvent } from '../../../shared/src/combat';
 interface ActionFeedProps {
   events: CombatEvent[];
   onLayToRest: (corpseId: string) => void;
+  floor?: number;
 }
 
-const ActionFeed: React.FC<ActionFeedProps> = ({ events, onLayToRest }) => {
+const ActionFeed: React.FC<ActionFeedProps> = ({ events, onLayToRest, floor = 1 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -16,8 +17,38 @@ const ActionFeed: React.FC<ActionFeedProps> = ({ events, onLayToRest }) => {
     }
   }, [events]);
 
+  const renderRichText = (text: string, isCombat: boolean, isCrit: boolean) => {
+    // 1. Parse Noble Names: [[NAME:house:name]]
+    const parts = text.split(/(\[\[NAME:[^:]+:[^\]]+\]\])/g);
+    
+    let rendered = parts.map((part, i) => {
+      const match = part.match(/\[\[NAME:([^:]+):([^\]]+)\]\]/);
+      if (match) {
+        const house = match[1]?.toLowerCase();
+        const name = match[2];
+        const houseClass = house === 'none' ? 'noble-default' : `house-${house}`;
+        return <span key={i} className={`noble-name ${houseClass}`}>{name}</span>;
+      }
+      return part;
+    });
+
+    // 2. Emoji Injection for combat
+    if (isCombat) {
+      const emoji = isCrit ? '🔥' : '⚔️';
+      rendered.push(<span key="emoji" className="ml-1">{emoji}</span>);
+    }
+
+    return rendered;
+  };
+
+  const getVibeClass = () => {
+    if (floor > 20) return 'deep-pulse';
+    if (floor > 10) return 'deep-glitch';
+    return '';
+  };
+
   return (
-    <div className="action-feed flex-1 flex flex-col h-full p-4 overflow-hidden">
+    <div className={`action-feed flex-1 flex flex-col h-full p-4 overflow-hidden ${getVibeClass()}`}>
       <h3 className="text-sm font-black uppercase tracking-widest text-muted mb-4 px-2">The Deep - Action Feed</h3>
       <div 
         ref={scrollRef}
@@ -29,11 +60,19 @@ const ActionFeed: React.FC<ActionFeedProps> = ({ events, onLayToRest }) => {
               <span className="text-muted opacity-50 font-mono">[{event.turn}]</span>
               
               <div className="flex-1">
-                <span className="font-bold text-white/90">
-                  {event.emojiTag} {event.attackerName} 
-                </span>
-                <span className="text-muted"> ⚔️ </span>
-                <span className="font-bold text-white/90">{event.defenderName}</span>
+                {event.banter ? (
+                  <div className="text-white/90">
+                    {renderRichText(event.banter, event.damage > 0, event.isCrit)}
+                  </div>
+                ) : (
+                  <>
+                    <span className="font-bold text-white/90">
+                      {event.emojiTag} {event.attackerName} 
+                    </span>
+                    <span className="text-muted"> ⚔️ </span>
+                    <span className="font-bold text-white/90">{event.defenderName}</span>
+                  </>
+                )}
                 
                 {event.damage > 0 && (
                   <span className="ml-2 font-black text-danger-color">
@@ -41,12 +80,6 @@ const ActionFeed: React.FC<ActionFeedProps> = ({ events, onLayToRest }) => {
                   </span>
                 )}
                 
-                {event.banter && (
-                  <div className="mt-1 pl-4 border-l border-white/10 italic text-accent-color/80">
-                    "{event.banter}"
-                  </div>
-                )}
-
                 {event.corpseData && (
                   <div className="mt-2 p-3 rounded-lg bg-primary-color/10 border border-primary-color/20 flex items-center justify-between animate-pulse">
                     <div className="flex items-center gap-2">

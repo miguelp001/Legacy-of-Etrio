@@ -48,76 +48,45 @@ export interface CombatResult {
 
 
 
-class BanterGenerator {
-    static getBanter(attacker: Combatant, isCrit: boolean, isMiss: boolean): string {
-        if (isMiss) {
-            return Math.random() > 0.5 ? "A clumsy swing!" : "Curses! The darkness betrays me.";
-        }
-        if (isCrit) {
-            const critQuotes = [
-                "FOR THE LINEAGE!",
-                "FEEL THE WEIGHT OF ETRIO!",
-                "THE DEEP DEMANDS YOUR SOUL!",
-                "SHATTER UNDER MY STRENGTH!",
-                "BY SALUWAN'S WILL!"
-            ];
-            return critQuotes[Math.floor(Math.random() * critQuotes.length)] || "";
-        }
+import type { EventType } from './descriptionTypes.js';
 
-        const classQuotes: Record<SocialClass, string[]> = {
-            Thrall: ["I bleed for my masters!", "Pity is for the weak.", "Death is my only reprieve."],
-            Bondi: ["Etrio stands with me!", "I'll carve your name into the rock.", "Taste Bondi steel!"],
-            Vardr: ["The Vanguard never breaks!", "Maintain the line!", "Your bones will pave our path."],
-            Scrifadr: ["Knowledge is power, but blood is swifter.", "I've read your death in the stars.", "Sacrifice is mandatory."],
-            Drengskapr: ["My honor exceeds your meager life.", "A worthy duel... almost.", "Victory is preordained."]
-        };
-
-        const tribeQuotes: Record<Tribe, string[]> = {
-            Vinrforad: ["The wind carries your ending.", "Swift as the northern gale!"],
-            Logi: ["Burn in the eternal flame!", "Ash to ash, bone to fire."],
-            Fridrbjorn: ["The bear's claws are sharp tonight.", "Strength is the only truth."],
-            Iftiqad: ["Submit to the faith!", "Your heresy ends here."],
-            Grima: ["The shadows claim you.", "Silence is my weapon."],
-            Jotunheimr: ["I am a mountain, you are dust.", "Crush beneath the ancient weight."],
-            'The Frozen': ["Ice in my veins, death in my hand.", "Freeze in the eternal night."],
-            'The Drowned': ["The abyss swallows all.", "Drown in the dark tide."],
-            'The Beasts': ["*Incoherent Primal Roar*", "Nature's wrath is absolute."]
-        };
-
-        const sClass = attacker.socialClass;
-        if (sClass && classQuotes[sClass]) {
-            const quotes = classQuotes[sClass];
-            if (quotes && Math.random() > 0.7) return quotes[Math.floor(Math.random() * quotes.length)] || "";
-        }
-        const sTribe = attacker.tribe;
-        if (sTribe && tribeQuotes[sTribe]) {
-            const quotes = tribeQuotes[sTribe];
-            if (quotes && Math.random() > 0.7) return quotes[Math.floor(Math.random() * quotes.length)] || "";
-        }
-
-        return "";
-    }
-
-    static getEmoji(isCrit: boolean, isMiss: boolean, isEnemy: boolean): string {
-        if (isMiss) return "💨";
-        if (isCrit) return "🔥";
-        return isEnemy ? "💀" : "⚔️";
-    }
+export interface DescriptorContext {
+    eventType: EventType;
+    speaker: {
+        name: string;
+        trait?: NightsdeepTrait | undefined;
+        socialClass?: SocialClass | undefined;
+        weapon?: string | undefined;
+    };
+    target?: {
+        name: string;
+    } | undefined;
+    biome?: any | undefined;
+    hitQuality?: 'CRIT' | 'NORMAL' | 'MISS' | undefined;
+    affinity?: number | undefined;
+    dreadLevel: number;
+    value?: number | undefined;
 }
 
+export type DescriptorGenerator = (context: DescriptorContext) => string;
+
 export class CombatEngine {
-    static simulate(party: Combatant[], enemies: Combatant[]): CombatResult {
+    static simulate(
+        party: Combatant[], 
+        enemies: Combatant[], 
+        options: { 
+            biome?: any; 
+            dreadLevel?: number; 
+            generator?: DescriptorGenerator 
+        } = {}
+    ): CombatResult {
         const events: CombatEvent[] = [];
         let turnCount = 1;
-        
-        console.log(`[SIM] Starting simulation: ${party.length} party vs ${enemies.length} enemies`);
+        const dreadLevel = options.dreadLevel || 0;
         
         const simulatedParty = party.map(p => ({ ...p, stats: { ...p.stats } }));
         const simulatedEnemies = enemies.map(e => ({ ...e, stats: { ...e.stats } }));
         
-        console.log(`[SIM] Party HPs: ${simulatedParty.map(p => p.hp).join(', ')}`);
-        console.log(`[SIM] Enemy HPs: ${simulatedEnemies.map(e => e.hp).join(', ')}`);
-
         const allCombatants = [...simulatedParty, ...simulatedEnemies].sort((a, b) => b.stats.agility - a.stats.agility);
 
         while (simulatedParty.some(p => p.hp > 0) && simulatedEnemies.some(e => e.hp > 0) && turnCount < 200) {
@@ -151,6 +120,31 @@ export class CombatEngine {
                     defender.hp = Math.max(0, (defender.hp || 0) - damage);
                 }
 
+                const hitQuality = isMissValue ? 'MISS' : (isCrit ? 'CRIT' : 'NORMAL');
+                let banter = "";
+
+                if (options.generator) {
+                    banter = options.generator({
+                        eventType: 'COMBAT_ATTACK',
+                        speaker: {
+                            name: attacker.name,
+                            trait: attacker.trait,
+                            socialClass: attacker.socialClass,
+                            weapon: attacker.weapon?.name
+                        },
+                        target: {
+                            name: defender.name
+                        },
+                        biome: options.biome,
+                        hitQuality,
+                        affinity: attacker.affinityLevel || 0,
+                        dreadLevel,
+                        value: damage
+                    });
+                } else {
+                    banter = isMissValue ? "A clumsy swing!" : (isCrit ? "CRITICAL HIT!" : "A solid strike.");
+                }
+
                 events.push({
                     id: `ev-${Date.now()}-${turnCount}-${events.length}-${Math.random().toString(36).substring(2, 7)}`,
                     turn: turnCount,
@@ -160,8 +154,8 @@ export class CombatEngine {
                     isCrit,
                     isMiss: isMissValue,
                     remainingHp: defender.hp,
-                    banter: BanterGenerator.getBanter(attacker, isCrit, isMissValue),
-                    emojiTag: BanterGenerator.getEmoji(isCrit, isMissValue, attacker.isEnemy)
+                    banter,
+                    emojiTag: isMissValue ? "💨" : (isCrit ? "🔥" : "⚔️")
                 });
 
                 if (simulatedParty.every(p => p.hp <= 0) || simulatedEnemies.every(e => e.hp <= 0)) break;

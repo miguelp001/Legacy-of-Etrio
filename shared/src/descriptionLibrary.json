@@ -1,0 +1,1005 @@
+[
+    {
+        "id": "attack_vardr_stoic",
+        "text": "With a cold, practiced efficiency, the ${speaker} ${verb} their weapon into the softest part of the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Vardr"],
+            "traits": ["Stoic"],
+            "hitQuality": "CRIT"
+        }
+    },
+    {
+        "id": "attack_thrall_hotheaded",
+        "text": "Spitting a curse at the Eklunds, the ${speaker} ${verb} wildly, finding purchase in the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Thrall"],
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "attack_drengskapr_stoic",
+        "text": "The ${speaker} offers a shallow nod before their blade ${verb} through the **${target}** with surgical precision.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Drengskapr"],
+            "traits": ["Stoic"],
+            "hitQuality": "CRIT"
+        }
+    },
+    {
+        "id": "attack_scrifadr_analytical",
+        "text": "Adjusting their spectacles, the ${speaker} ${verb} a precise arc that bisects the **${target}**'s guard.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Scrifadr"],
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "attack_bondi_hotheaded",
+        "text": "'GET BACK TO THE VOID!' the ${speaker} screams as they ${verb} their weapon into the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Bondi"],
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "attack_heavy_hammer_jotun",
+        "text": "The ${speaker} raises a massive iron hammer, the weight of Jotunheimr behind it, as they ${verb} the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "biomes": ["Crystalline Caverns"]
+        }
+    },
+    {
+        "id": "attack_magic_iftiqad",
+        "text": "Muttering a prayer to Saluwan, the ${speaker} ${verb} a bolt of searing aether into the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Stoic"],
+            "hitQuality": "CRIT"
+        }
+    },
+    {
+        "id": "attack_daggers_grima",
+        "text": "Emerging from a wreath of shadows, the ${speaker} ${verb} two obsidian daggers into the **${target}**'s back.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "attack_spear_valerius",
+        "text": "The ${speaker} lunges with a silver-tipped spear, the emblem of Valerius flashing as they ${verb} the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Vardr"],
+            "hitQuality": "NORMAL"
+        }
+    },
+    {
+        "id": "attack_sunless_sea_salt",
+        "text": "Amidst the roar of the black tide, the ${speaker} ${verb} the **${target}**, their movements slick with sea salt.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "biomes": ["Sunless Sea"]
+        }
+    },
+    {
+        "id": "attack_molten_core_heat",
+        "text": "Wiping sweat and ash from their brow, the ${speaker} ${verb} the **${target}** with a glowing, heat-tempered blade.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "biomes": ["Molten Core"]
+        }
+    },
+    {
+        "id": "attack_frozen_waste_ice",
+        "text": "Steam rises from the ${speaker}'s breath as they **${verb}** the frozen **${target}**, their weapon trailing frost.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "biomes": ["The Frozen Wastes"]
+        }
+    },
+    {
+        "id": "attack_thrall_bitter",
+        "text": "'For the masters...' the ${speaker} spits, their weapon ${verb} the **${target}** with a mechanical, joyless rhythm.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Thrall"],
+            "traits": ["Stoic"]
+        }
+    },
+    {
+        "id": "attack_drengskapr_honor",
+        "text": "The ${speaker} executes a perfect salute before ${verb} the **${target}**. 'A worthy end for a unworthy foe.'",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Drengskapr"],
+            "traits": ["Stoic"],
+            "hitQuality": "CRIT"
+        }
+    },
+    {
+        "id": "attack_beast_primal",
+        "text": "With a primal roar that echoes through the deep, the ${speaker} ${verb} the **${target}** with savage intensity.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "attack_miss_clumsy",
+        "text": "The ${speaker} ${verb} wildly at the air, their weapon whistling harmlessly past the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "hitQuality": "MISS"
+        }
+    },
+    {
+        "id": "attack_miss_darkness",
+        "text": "The shifting shadows of the deep deceive the ${speaker}, causing their strike to ${verb} empty air.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "hitQuality": "MISS"
+        }
+    },
+    {
+        "id": "defend_stoic_normal",
+        "text": "The ${speaker} catches the strike on their bracer, their face a mask of granite.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "traits": ["Stoic"],
+            "hitQuality": "NORMAL"
+        }
+    },
+    {
+        "id": "defend_vardr_wall",
+        "text": "The ${speaker} sets their feet, a wall of steel that the strike breaks against in vain.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "ranks": ["Vardr"]
+        }
+    },
+    {
+        "id": "defend_bondi_shield",
+        "text": "Heaving their shield upward, the ${speaker} turns the blow aside with a grunt of effort.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "ranks": ["Bondi"]
+        }
+    },
+    {
+        "id": "defend_thrall_cower",
+        "text": "The ${speaker} shrinks back, the strike merely grazing them as they scramble for safety.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "ranks": ["Thrall"]
+        }
+    },
+    {
+        "id": "defend_drengskapr_parry",
+        "text": "With a flick of the wrist, the ${speaker} parries the blow, their expression one of mild boredom.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "ranks": ["Drengskapr"],
+            "traits": ["Stoic"]
+        }
+    },
+    {
+        "id": "defend_vinrforad_dodge",
+        "text": "The ${speaker} moves like smoke in the wind, the strike passing through where they were a heartbeat ago.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "defend_fridrbjorn_tenacity",
+        "text": "The ${speaker} takes the hit full on the shoulder, barely flinching as they absorb the impact.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "traits": ["Stoic"]
+        }
+    },
+    {
+        "id": "banter_analytical_reminiscence",
+        "text": "I can still smell the clockwork grease of the Darkholm docks... it’s better than the smell of this place.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "banter_vardr_affinity",
+        "text": "The Dreamer is breathing heavier tonight, ${target}. Don't let your tether go slack.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Vardr"],
+            "minAffinity": 80
+        }
+    },
+    {
+        "id": "idle_bondi_cheerful",
+        "text": "The ${speaker} hums a hollow tune, their eyes reflecting the flickering gaslight of their lantern.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Bondi"],
+            "traits": ["Cheerful"]
+        }
+    },
+    {
+        "id": "banter_thrall_despair",
+        "text": "'Do you think the surface still remembers us?' the ${speaker} whispers, staring into the abyss.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Thrall"]
+        }
+    },
+    {
+        "id": "banter_drengskapr_lineage",
+        "text": "'My house has stood for a thousand years,' the ${speaker} says proudly. 'The deep will not be our end.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Drengskapr"]
+        }
+    },
+    {
+        "id": "banter_scrifadr_knowledge",
+        "text": "the ${speaker} checks their notes over a dry ration. 'The crystallization rate is... concerning.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Scrifadr"],
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "banter_hotheaded_impatient",
+        "text": "The ${speaker} kicks a stone into a dark crevice. 'If we don't find something soon, I'm going to start hitting things.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "banter_stoic_eternity",
+        "text": "the ${speaker} stands perfectly still, listening to the drip of groundwater. 'Time is a different beast down here.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "traits": ["Stoic"]
+        }
+    },
+    {
+        "id": "banter_sea_waves",
+        "text": "'The salt is getting in my wounds,' the ${speaker} grumbles, looking out at the black waves.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "biomes": ["Sunless Sea"]
+        }
+    },
+    {
+        "id": "banter_core_heat",
+        "text": "'I can feel the heat in my marrow,' the ${speaker} pants, their skin slick with sweat.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "biomes": ["Molten Core"]
+        }
+    },
+    {
+        "id": "world_fallen_party",
+        "text": "You find the remains of a fallen party. The ${speaker} bows their head. 'May the Alien forget your name.'",
+        "tags": {
+            "eventType": "WORLD_EVENT",
+            "traits": ["Stoic"]
+        }
+    },
+    {
+        "id": "world_ancient_shrine",
+        "text": "The ${speaker} brushes dust from an ancient Saluwan shrine. 'The faith still breathes in these halls.'",
+        "tags": {
+            "eventType": "WORLD_EVENT",
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "world_aether_vein",
+        "text": "A vein of glowing aether pulses in the wall. The ${speaker} reaches out, their hand trembling slightly.",
+        "tags": {
+            "eventType": "WORLD_EVENT"
+        }
+    },
+    {
+        "id": "attack_sword_eklund_crimson",
+        "text": "The ${speaker} draws a blade etched with crimson runes, the mark of House Eklund glowing as they ${verb} the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Hot-Headed"],
+            "hitQuality": "CRIT"
+        }
+    },
+    {
+        "id": "attack_hammer_shatter",
+        "text": "Raising their heavy hammer, the ${speaker} ${verb} the **${target}** with enough force to liquefy bone.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Stoic"],
+            "hitQuality": "CRIT"
+        }
+    },
+    {
+        "id": "attack_magic_void_burn",
+        "text": "Purple flames dance on the ${speaker}'s fingers as they ${verb} the **${target}** with raw void energy.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Scrifadr"]
+        }
+    },
+    {
+        "id": "attack_dagger_venom",
+        "text": "With a serpent's speed, the ${speaker} ${verb} their toxin-coated daggers into the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "attack_heavy_broadsword_vardr",
+        "text": "Adjusting the grip on their broadsword, the ${speaker} delivers a crushing blow that ${verb} the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Vardr"],
+            "traits": ["Stoic"]
+        }
+    },
+    {
+        "id": "attack_cheerful_macabre",
+        "text": "The ${speaker} chuckles a dark, unsettling sound before they ${verb} the **${target}**. 'Dance for me.'",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Cheerful"]
+        }
+    },
+    {
+        "id": "attack_hotheaded_scream",
+        "text": "With a roar that shreds the silence, the ${speaker} **${verb}** the **${target}** in a frenzy of iron and blood.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "attack_analytical_vulnerable",
+        "text": "The ${speaker} waits for the perfect moment of imbalance before they ${verb} the **${target}**'s weak point.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "attack_unarmed_savage",
+        "text": "Abandoning their weapon, the ${speaker} **${verb}** the **${target}** with their bare, bloodied hands.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Thrall"]
+        }
+    },
+    {
+        "id": "attack_crit_extinguish",
+        "text": "The ${speaker}'s weapon glows with a terrible light, **${verb}** the very spark of life within the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "hitQuality": "CRIT"
+        }
+    },
+    {
+        "id": "defend_high_affinity_protect",
+        "text": "the ${speaker} steps in front of the blow meant for **${target}**, their bond acting as a shield.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "minAffinity": 90
+        }
+    },
+    {
+        "id": "defend_scrifadr_calculation",
+        "text": "the ${speaker} predicts the trajectory, shifting just enough to let the strike whistle past their ear.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "ranks": ["Scrifadr"]
+        }
+    },
+    {
+        "id": "defend_beast_thick_hide",
+        "text": "The strike lands true, but the ${speaker}'s scarred hide is too thick to yield.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "traits": ["Stoic"]
+        }
+    },
+    {
+        "id": "banter_sea_monsters",
+        "text": "the ${speaker} points at a ripple in the black water. 'Something big is following the wake.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "biomes": ["Sunless Sea"]
+        }
+    },
+    {
+        "id": "banter_caverns_echo",
+        "text": "'Listen,' the ${speaker} whispers. 'The crystals are singing. Or maybe that's just the madness.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "biomes": ["Crystalline Caverns"]
+        }
+    },
+    {
+        "id": "banter_market_cravings",
+        "text": "the ${speaker} licks their dry lips. 'I can't wait to get back to the Blood Market... I need a fix.'",
+        "tags": {
+            "eventType": "BANTER_IDLE"
+        }
+    },
+    {
+        "id": "banter_smithy_heat",
+        "text": "the ${speaker} adjusts their armor. 'The Steam Forge's heat is a mercy compared to the chill of the deep.'",
+        "tags": {
+            "eventType": "BANTER_IDLE"
+        }
+    },
+    {
+        "id": "world_abandoned_camp",
+        "text": "An abandoned camp lies cold. The ${speaker} picks up a rusted spoon. 'They left in a hurry.'",
+        "tags": {
+            "eventType": "WORLD_EVENT"
+        }
+    },
+    {
+        "id": "world_glowing_mushrooms",
+        "text": "a patch of bioluminescent fungi illuminates the path. the ${speaker} treads carefully.",
+        "tags": {
+            "eventType": "WORLD_EVENT",
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "world_distant_scream",
+        "text": "A distant scream echoes through the tunnels. the ${speaker} grips their weapon tighter.",
+        "tags": {
+            "eventType": "WORLD_EVENT",
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "attack_bow_frozen",
+        "text": "Drawing a bow carved from whalebone, the ${speaker} ${verb} the **${target}** with an arrow of ice.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "biomes": ["The Frozen Wastes"]
+        }
+    },
+    {
+        "id": "attack_spear_underwater",
+        "text": "The ${speaker} thrusts their trident with fluid ease, **${verb}** the **${target}** through the dark water.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "biomes": ["The Drowned City"]
+        }
+    },
+    {
+        "id": "attack_cheerful_creepy",
+        "text": "'Such beautiful blood!' the ${speaker} beams as they ${verb} the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Cheerful"]
+        }
+    },
+    {
+        "id": "attack_stoic_finality",
+        "text": "With zero emotion, the ${speaker} **${verb}** the **${target}**. 'Your existence is concluded.'",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Stoic"]
+        }
+    },
+    {
+        "id": "attack_hotheaded_vengeance",
+        "text": "'THAT'S FOR THE LAST ONE!' the ${speaker} bellows, **${verb}** the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "attack_thrall_desperation",
+        "text": "Driven by a desperate need for survival, the ${speaker} ${verb} the **${target}** with a jagged piece of scrap.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Thrall"]
+        }
+    },
+    {
+        "id": "attack_vardr_discipline",
+        "text": "Following the third stanza of the Vardr manual, the ${speaker} **${verb}** the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Vardr"],
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "attack_scrifadr_ritual",
+        "text": "Trimming a candle with one hand and ${verb} the **${target}** with the other, the ${speaker} remains focused.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Scrifadr"]
+        }
+    },
+    {
+        "id": "attack_drengskapr_elegant",
+        "text": "The ${speaker} moves with the grace of a court dancer, **${verb}** the **${target}** in a display of pure martial art.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Drengskapr"]
+        }
+    },
+    {
+        "id": "attack_crit_destruction",
+        "text": "The impact ripples through the very air, the ${speaker} **${verb}** the **${target}** with world-shaking power.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "hitQuality": "CRIT"
+        }
+    },
+    {
+        "id": "defend_analytical_preemption",
+        "text": "the ${speaker} identifies the tell in the enemy's shoulder and is already moving, letting the blow slide off harmlessly.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "defend_cheerful_laugh",
+        "text": "The ${speaker} laughs a bright, terrifying sound as they deflect the lethal strike.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "traits": ["Cheerful"]
+        }
+    },
+    {
+        "id": "defend_hotheaded_counter",
+        "text": "the ${speaker} takes the blow just to get closer, their anger fueling their defense.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "banter_thrall_master_whisper",
+        "text": "'Does the High Vardr still look at the stars?' the ${speaker} asks softly.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Thrall"]
+        }
+    },
+    {
+        "id": "banter_bondi_ground_salt",
+        "text": "the ${speaker} kicks the dirt. 'This ground is dead. Not even a worm could live here.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Bondi"]
+        }
+    },
+    {
+        "id": "banter_vardr_oath_weight",
+        "text": "'The oath is heavy today,' the ${speaker} sighs, leaning on their weapon.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Vardr"]
+        }
+    },
+    {
+        "id": "banter_scrifadr_ink_dry",
+        "text": "the ${speaker} shakes their pen. 'The air is so dry... my ink is clogging. Unacceptable.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Scrifadr"]
+        }
+    },
+    {
+        "id": "banter_drengskapr_wine_missing",
+        "text": "'I would give my left eye for a glass of vintage elven wine,' the ${speaker} muses.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Drengskapr"]
+        }
+    },
+    {
+        "id": "banter_cheerful_smiling_corpse",
+        "text": "'Look at how the light hits that skull!' the ${speaker} grins. 'Exquisite.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "traits": ["Cheerful"]
+        }
+    },
+    {
+        "id": "banter_stoic_breathing",
+        "text": "the ${speaker} takes a slow, steady breath. 'Focus on the task. The deep is a test of patience.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "traits": ["Stoic"]
+        }
+    },
+    {
+        "id": "banter_hotheaded_blood_lust",
+        "text": "'I can smell the copper in the air,' the ${speaker} growls. 'It's making me hungry.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "banter_analytical_pattern_finding",
+        "text": "'The wall markings... they repeat every twelve meters,' the ${speaker} notes.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "world_ominous_shadow",
+        "text": "A shadow detaches itself from the ceiling and vanishes. the ${speaker} doesn't blink.",
+        "tags": {
+            "eventType": "WORLD_EVENT"
+        }
+    },
+    {
+        "id": "attack_spear_piercing",
+        "text": "the ${speaker} lunges with silver grace, their spear **${verb}** the **${target}** through a gap in their armor.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "attack_axe_hewing",
+        "text": "With a wide, savage arc, the ${speaker} **${verb}** the **${target}**, their axe biting deep into yielding flesh.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "attack_mace_crushing",
+        "text": "The ${speaker} brings down a flanged mace, **${verb}** the **${target}** with an audible crack of splitting bone.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Vardr"]
+        }
+    },
+    {
+        "id": "attack_magic_frost_bite",
+        "text": "A chilling mist gathers as the ${speaker} **${verb}** the **${target}**, leaving a layer of rime where the magic touched.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "biomes": ["The Frozen Wastes"]
+        }
+    },
+    {
+        "id": "attack_bondi_standard",
+        "text": "For the pride of Etrio, the ${speaker} **${verb}** the **${target}** with a dependable, heavy strike.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Bondi"]
+        }
+    },
+    {
+        "id": "attack_miss_fumble",
+        "text": "the ${speaker} slips on a loose stone, their strike **${verb}** harmlessly into the ground.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "hitQuality": "MISS"
+        }
+    },
+    {
+        "id": "defend_vancouver_intercept",
+        "text": "the ${speaker} intercepts the blow with their weapon's hilt, redirecting the momentum away.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "ranks": ["Drengskapr"]
+        }
+    },
+    {
+        "id": "banter_sea_salt_tongue",
+        "text": "'I can taste the salt on my tongue,' the ${speaker} says, spitting into the black water.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "biomes": ["Sunless Sea"]
+        }
+    },
+    {
+        "id": "attack_final_annihilation",
+        "text": "The ${speaker} pours every ounce of their soul into the strike, **${verb}** the **${target}** in a blaze of glory.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "hitQuality": "CRIT",
+            "minAffinity": 95
+        }
+    },
+    {
+        "id": "attack_scrifadr_logic_cut",
+        "text": "The ${speaker} mumbling equations, **${verb}** the **${target}** exactly where the geometry of their armor is weakest.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Scrifadr"],
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "attack_drengskapr_mercy",
+        "text": "'It is a mercy I grant you,' the ${speaker} says, **${verb}** the **${target}** with a swift, clean stroke.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Drengskapr"],
+            "traits": ["Stoic"]
+        }
+    },
+    {
+        "id": "attack_bondi_survival",
+        "text": "the ${speaker} heaves their weapon with the strength of Etrio's soil, **${verb}** the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Bondi"]
+        }
+    },
+    {
+        "id": "attack_thrall_rebellion",
+        "text": "With a flicker of fire in their eyes, the ${speaker} **${verb}** the **${target}**, a brief moment of defiance in the dark.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Thrall"],
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "attack_magic_soul_drain",
+        "text": "The ${speaker} reaches out with a spectral hand, **${verb}** the very essence from the **${target}**'s core.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Stoic"]
+        }
+    },
+    {
+        "id": "attack_crit_world_breaker",
+        "text": "The impact creates a vacuum in the air, the ${speaker} **${verb}** the **${target}** so hard the ground cracks.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "hitQuality": "CRIT"
+        }
+    },
+    {
+        "id": "attack_miss_echo",
+        "text": "The ${speaker}'s strike hits the wall, the sound **${verb}** down the corridor and alerting the deep.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "hitQuality": "MISS"
+        }
+    },
+    {
+        "id": "defend_stoic_statue",
+        "text": "the ${speaker} doesn't even blink as the blow lands, standing like a statue made of obsidian.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "traits": ["Stoic"]
+        }
+    },
+    {
+        "id": "defend_hotheaded_spit",
+        "text": "The ${speaker} spits blood and laughs, the enemy's strike only serving to sharpen their resolve.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "defend_cheerful_spin",
+        "text": "With a joyful twirl, the ${speaker} narrowly avoids the blade, their laughter echoing in the tight tunnel.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "traits": ["Cheerful"]
+        }
+    },
+    {
+        "id": "banter_thrall_memory_sun",
+        "text": "'I once saw a painting of the sun,' the ${speaker} says, his voice small and fragile.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Thrall"]
+        }
+    },
+    {
+        "id": "banter_bondi_work_song",
+        "text": "the ${speaker} grunts as they check their gear. 'Another day in the pit, another day closer to Etrio's embrace.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Bondi"]
+        }
+    },
+    {
+        "id": "banter_vardr_vigil",
+        "text": "'Don't sleep too deep,' the ${speaker} warns, their hand never leaving their sword hilt.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Vardr"]
+        }
+    },
+    {
+        "id": "banter_scrifadr_stars_missing",
+        "text": "the ${speaker} looks upward. 'I miss the precision of the constellations. These tunnels have no order.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Scrifadr"]
+        }
+    },
+    {
+        "id": "banter_drengskapr_superiority",
+        "text": "'Our ancestors conquered the deep once,' the ${speaker} muses. 'We are merely reclamation specialists.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "ranks": ["Drengskapr"]
+        }
+    },
+    {
+        "id": "banter_analytical_blueprint",
+        "text": "the ${speaker} traces a crack in the stone. 'Stress fractures here indicate a chamber nearby. Or a collapse.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "banter_molten_core_sulfur",
+        "text": "'The sulfur is making my eyes sting,' the ${speaker} winces, covering their face with a damp cloth.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "biomes": ["Molten Core"]
+        }
+    },
+    {
+        "id": "banter_frozen_waste_whisper",
+        "text": "'The ice is talking again,' the ${speaker} whispers, their face pale and frosty.",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "biomes": ["The Frozen Wastes"]
+        }
+    },
+    {
+        "id": "world_ancient_machinery",
+        "text": "The ${speaker} kicks a pile of rusted clockwork. It groans with a dying metallic scream.",
+        "tags": {
+            "eventType": "WORLD_EVENT"
+        }
+    },
+    {
+        "id": "attack_hammer_seismic",
+        "text": "the ${speaker} slams their hammer into the floor, the **${verb}** shockwave throwing the **${target}** off balance.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "biomes": ["Crystalline Caverns"]
+        }
+    },
+    {
+        "id": "attack_scrifadr_dissection",
+        "text": "the ${speaker} treats the combat like a medical procedure, carefully **${verb}** the **${target}**.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Scrifadr"],
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "attack_crit_obliteration",
+        "text": "There is nothing left but dust after the ${speaker} **${verb}** the **${target}** with total finality.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "hitQuality": "CRIT"
+        }
+    },
+    {
+        "id": "attack_miss_blinding_light",
+        "text": "A flare of aether blinds the ${speaker}, causing their strike to **${verb}** harmlessly into a pillar.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "hitQuality": "MISS"
+        }
+    },
+    {
+        "id": "defend_thrall_luck",
+        "text": "the ${speaker} trips at the exact right moment, the lethal blow whistling over their head.",
+        "tags": {
+            "eventType": "COMBAT_DEFEND",
+            "ranks": ["Thrall"]
+        }
+    },
+    {
+        "id": "banter_sea_ghost_lights",
+        "text": "'Don't look at the lights in the water,' the ${speaker} tells the party. 'They aren't stars.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "biomes": ["Sunless Sea"]
+        }
+    },
+    {
+        "id": "banter_city_shadows",
+        "text": "the ${speaker} gestures to a flooded archway. 'The Drowned City had no poets. Only architects of silence.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "biomes": ["The Drowned City"]
+        }
+    },
+    {
+        "id": "banter_stoic_granite",
+        "text": "the ${speaker} gazes at the stone. 'Granite doesn't care about your lineage. It only cares about time.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "traits": ["Stoic"]
+        }
+    },
+    {
+        "id": "banter_hotheaded_itch",
+        "text": "the ${speaker} rubs their knuckles. 'My skin is itching. I need to draw some blood or I'll go mad.'",
+        "tags": {
+            "eventType": "BANTER_IDLE",
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "world_bone_pile",
+        "text": "A pile of humanoid bones marks the entrance. the ${speaker} marks it on his map.",
+        "tags": {
+            "eventType": "WORLD_EVENT",
+            "traits": ["Analytical"]
+        }
+    },
+    {
+        "id": "attack_dagger_quick_silver",
+        "text": "The ${speaker} is a blur of motion, their blade **${verb}** the **${target}** multiple times in a second.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "traits": ["Hot-Headed"]
+        }
+    },
+    {
+        "id": "attack_spear_noble_thrust",
+        "text": "Executing a textbook maneuver, the ${speaker} **${verb}** the **${target}** with noble precision.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Drengskapr"]
+        }
+    },
+    {
+        "id": "attack_magic_shattering_blast",
+        "text": "A wave of sonic energy erupts as the ${speaker} **${verb}** the **${target}**, shattering the air itself.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK"
+        }
+    },
+    {
+        "id": "attack_unarmed_vicious_bite",
+        "text": "Snarling like a cornered beast, the ${speaker} **${verb}** the **${target}**, their teeth finding the neck.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Thrall"]
+        }
+    },
+    {
+        "id": "attack_bondi_heavy_strike",
+        "text": "the ${speaker} puts their whole weight into the blow, **${verb}** the **${target}** with a sickening thud.",
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "ranks": ["Bondi"]
+        }
+    }
+]

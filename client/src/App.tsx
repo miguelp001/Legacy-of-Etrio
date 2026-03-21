@@ -313,7 +313,7 @@ const App: React.FC = () => {
               <X size={24} />
            </button>
         </div>
-        <ActionFeed events={events} onLayToRest={handleLayToRest} />
+        <ActionFeed events={events} onLayToRest={handleLayToRest} floor={currentFloor} />
       </aside>
 
       {/* 5. BOTTOM NAVIGATION (Mobile Only) */}
