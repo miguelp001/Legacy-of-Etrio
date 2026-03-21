@@ -1,6 +1,8 @@
 import { prisma } from './db.js';
 import { CombatEngine } from '../../shared/src/combat.js';
 import { DungeonManager } from '../../shared/src/dungeon.js';
+import { EnemyGenerator } from '../../shared/src/enemyGenerator.js';
+import type { GeneratedEnemy } from '../../shared/src/enemyGenerator.js';
 import { ItemGenerator } from '../../shared/src/items.js';
 import { StatCalculator, BaseClass } from '../../shared/src/stats.js';
 import { DescriptionService } from './descriptionService.js';
@@ -160,12 +162,38 @@ export class GameService {
                 });
                 console.log(`[BATTLE] Sim Done: Victory=${combatResult.victory}, Events=${combatResult.events.length}`);
 
+                let roomLoot: { enemy: any; loot: any }[] = [];
+                let totalGold = 0;
+                let totalXp = 0;
+
+                if (combatResult.victory) {
+                    for (const enemy of room.enemies as GeneratedEnemy[]) {
+                        const mainChar = participants.find(p => p.id === state.mainCharacter?.id);
+                        const playerLuck = mainChar?.stats.luck || 0;
+                        const loot = EnemyGenerator.rollLootDrop(enemy, playerLuck);
+                        totalGold += loot.gold;
+                        totalXp += (enemy as any).xpValue || 25;
+                        
+                        if (loot.item) {
+                            roomLoot.push({ enemy: enemy.name, loot: loot.item });
+                            console.log(`[LOOT] ${enemy.name} dropped: ${loot.item.name}!`);
+                        }
+                        
+                        if (loot.gold > 0) {
+                            console.log(`[LOOT] ${enemy.name} dropped: ${loot.gold} gold`);
+                        }
+                    }
+                }
+
                 roomResults.push({
                     roomId: room.id,
                     type: room.type,
                     description: room.description,
                     combatResult,
-                    enemies: room.enemies.map((e: any) => ({ ...e }))
+                    enemies: room.enemies.map((e: any) => ({ ...e })),
+                    loot: roomLoot,
+                    goldEarned: totalGold,
+                    xpEarned: totalXp
                 });
 
                 // Update participants with new HPs
@@ -188,13 +216,19 @@ export class GameService {
                 }
 
                 // Award XP to surviving party members
-                const xpPerEnemy = 25 + (room.enemies.length * 10) + (state.currentFloor * 5);
+                const xpPerEnemy = totalXp;
                 
                 for (const survivor of survivors) {
                     const levelResult = this.awardXP(survivor, xpPerEnemy);
                     if (levelResult.leveled) {
                         console.log(`[XP] ${survivor.name} gained ${xpPerEnemy} XP and leveled up to ${levelResult.newLevel}!`);
                     }
+                }
+                
+                // Award gold to main character
+                if (state.mainCharacter) {
+                    state.gold = (state.gold || 0) + totalGold;
+                    console.log(`[GOLD] Main character gained ${totalGold} gold (Total: ${state.gold})`);
                 }
             } else {
                 // Non-combat room handling

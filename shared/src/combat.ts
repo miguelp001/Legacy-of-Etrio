@@ -150,22 +150,41 @@ export class CombatEngine {
                 const defender = targets[Math.floor(Math.random() * targets.length)]!;
                 
                 const atkStr = attacker.stats.strength || 10;
-                const defVit = defender.stats.vitality || 10;
+                const atkInt = attacker.stats.intelligence || 10;
                 const atkAgil = attacker.stats.agility || 10;
+                const atkSpirit = attacker.stats.spirit || 10;
+                const defVit = defender.stats.vitality || 10;
+                const defSpirit = defender.stats.spirit || 10;
                 const defAgil = defender.stats.agility || 10;
                 const atkLuck = attacker.stats.luck || 10;
 
-                const isMissValue = Math.random() > (0.8 + (atkAgil - defAgil) * 0.01);
+                const isMissValue = Math.random() > (0.7 + (atkAgil - defAgil) * 0.02);
                 let damage = 0;
                 let isCrit = false;
+                let attackType: 'physical' | 'magic' = 'physical';
 
                 if (!isMissValue) {
-                    const baseDamage = atkStr * 2;
-                    const defense = defVit * 0.5;
+                    let baseDamage: number;
+                    let defense: number;
+                    
+                    const weaponType = CombatEngine.getWeaponType(attacker.weapon?.name);
+                    
+                    if (weaponType === 'magic' || attacker.baseClass === 'Mage') {
+                        attackType = 'magic';
+                        baseDamage = atkInt * 2.2 + atkSpirit * 0.5;
+                        defense = defSpirit * 0.6;
+                    } else {
+                        attackType = 'physical';
+                        baseDamage = atkStr * 2 + atkAgil * 0.3;
+                        defense = defVit * 0.5 + defAgil * 0.2;
+                    }
+                    
                     damage = Math.max(1, baseDamage - defense);
                     
-                    isCrit = Math.random() < (atkLuck * 0.01);
-                    if (isCrit) damage *= 2;
+                    isCrit = Math.random() < (atkLuck * 0.015);
+                    if (isCrit) {
+                        damage *= 2;
+                    }
                     
                     damage = Math.floor(damage * (0.9 + Math.random() * 0.2));
                     defender.hp = Math.max(0, (defender.hp || 0) - damage);

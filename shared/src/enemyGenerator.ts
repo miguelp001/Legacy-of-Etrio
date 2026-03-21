@@ -1,63 +1,305 @@
 import type { Combatant, NightsdeepTrait } from './combat';
 import { BaseClass, StatCalculator } from './stats';
+import type { ItemType } from './items';
+import { ItemGenerator } from './items';
+
+interface LootDrop {
+    type: ItemType;
+    dropChance: number;
+    minLevel: number;
+    maxLevel: number;
+    goldMin: number;
+    goldMax: number;
+}
 
 interface EnemyTemplate {
     name: string;
     names: string[];
     description: string;
+    baseClass: BaseClass;
     baseHpMultiplier: number;
-    strengthMultiplier: number;
-    vitalityMultiplier: number;
-    defenseMultiplier: number;
-    speedMultiplier: number;
-    luckMultiplier: number;
+    statMultipliers: {
+        strength: number;
+        intelligence: number;
+        agility: number;
+        vitality: number;
+        spirit: number;
+        luck: number;
+    };
     trait: NightsdeepTrait;
     weaponType: 'sword' | 'axe' | 'spear' | 'dagger' | 'hammer' | 'fist' | 'claw' | 'magic' | 'natural';
     spawnWeight: number;
+    loot: LootDrop;
+    xpValue: number;
+    goldValue: number;
 }
 
 const FROZEN_CAVES_ENEMIES: EnemyTemplate[] = [
-    { name: "Frost Wraith", names: ["Mistshroud", "Niflheim", "Frostfang", "Gelid", "Cryonex"], description: "A spirit frozen in eternal ice.", baseHpMultiplier: 0.8, strengthMultiplier: 1.1, vitalityMultiplier: 0.7, defenseMultiplier: 0.9, speedMultiplier: 1.2, luckMultiplier: 0.8, trait: 'Stoic', weaponType: 'magic', spawnWeight: 15 },
-    { name: "Ice Ravager", names: ["Glacius", "Shiver", "Rimeclaw", "Frostmaw", "Blizzara"], description: "A hulking brute of living ice.", baseHpMultiplier: 1.5, strengthMultiplier: 1.4, vitalityMultiplier: 1.3, defenseMultiplier: 1.2, speedMultiplier: 0.7, luckMultiplier: 0.6, trait: 'Stoic', weaponType: 'hammer', spawnWeight: 12 },
-    { name: "Frost Archer", names: ["Iceweaver", "Sleet", "Arrowflight", "Coldsnap", "Flurry"], description: "A deadly ice marksman.", baseHpMultiplier: 0.7, strengthMultiplier: 0.9, vitalityMultiplier: 0.6, defenseMultiplier: 0.7, speedMultiplier: 1.3, luckMultiplier: 1.0, trait: 'Cheerful', weaponType: 'spear', spawnWeight: 14 },
-    { name: "Glacier Knight", names: ["Avalanche", "Iceheart", "Frostborn", "Coldmantle", "Gelidion"], description: "An armored ice sentinel.", baseHpMultiplier: 1.2, strengthMultiplier: 1.2, vitalityMultiplier: 1.1, defenseMultiplier: 1.5, speedMultiplier: 0.8, luckMultiplier: 0.7, trait: 'Stoic', weaponType: 'sword', spawnWeight: 10 },
-    { name: "Chillspawn", names: ["Shiverling", "Frostbite", "Icewhelp", "Gelidkin", "Cryon"], description: "Young ice creatures that hunt in packs.", baseHpMultiplier: 0.5, strengthMultiplier: 0.7, vitalityMultiplier: 0.5, defenseMultiplier: 0.5, speedMultiplier: 1.4, luckMultiplier: 0.9, trait: 'Hot-Headed', weaponType: 'claw', spawnWeight: 18 },
-    { name: "Permafrost Elemental", names: ["Ancientone", "Tundran", "Glaciara", "Winterborn", "Frostfather"], description: "A primordial force of frozen death.", baseHpMultiplier: 2.0, strengthMultiplier: 1.6, vitalityMultiplier: 1.8, defenseMultiplier: 1.4, speedMultiplier: 0.6, luckMultiplier: 0.5, trait: 'Stoic', weaponType: 'natural', spawnWeight: 6 },
-    { name: "Icecult Zealot", names: ["Frostspeaker", "Deepfreeze", "Winterbite", "Coldsoul", "Icevein"], description: "A fanatic of the frozen depths.", baseHpMultiplier: 0.9, strengthMultiplier: 1.0, vitalityMultiplier: 0.8, defenseMultiplier: 0.8, speedMultiplier: 1.1, luckMultiplier: 0.8, trait: 'Hot-Headed', weaponType: 'dagger', spawnWeight: 13 },
-    { name: "Frozen Hound", names: ["Icefang", "Snowmaw", "Frostbite", "Gelidwolf", "Blizzard"], description: "A wolf corrupted by eternal winter.", baseHpMultiplier: 1.0, strengthMultiplier: 1.1, vitalityMultiplier: 0.9, defenseMultiplier: 0.8, speedMultiplier: 1.5, luckMultiplier: 0.7, trait: 'Hot-Headed', weaponType: 'claw', spawnWeight: 12 },
+    { 
+        name: "Frost Wraith", names: ["Mistshroud", "Niflheim", "Frostfang", "Gelid", "Cryonex"], 
+        description: "A spirit frozen in eternal ice.", baseClass: BaseClass.Mage,
+        baseHpMultiplier: 0.8, statMultipliers: { strength: 0.8, intelligence: 1.4, agility: 1.2, vitality: 0.7, spirit: 1.3, luck: 0.8 },
+        trait: 'Stoic', weaponType: 'magic', spawnWeight: 15,
+        loot: { type: 'Accessory', dropChance: 0.15, minLevel: 1, maxLevel: 5, goldMin: 10, goldMax: 30 },
+        xpValue: 40, goldValue: 15
+    },
+    { 
+        name: "Ice Ravager", names: ["Glacius", "Shiver", "Rimeclaw", "Frostmaw", "Blizzara"], 
+        description: "A hulking brute of living ice.", baseClass: BaseClass.Warrior,
+        baseHpMultiplier: 1.5, statMultipliers: { strength: 1.4, intelligence: 0.5, agility: 0.7, vitality: 1.3, spirit: 0.6, luck: 0.6 },
+        trait: 'Stoic', weaponType: 'hammer', spawnWeight: 12,
+        loot: { type: 'Armor', dropChance: 0.25, minLevel: 2, maxLevel: 8, goldMin: 20, goldMax: 50 },
+        xpValue: 60, goldValue: 25
+    },
+    { 
+        name: "Frost Archer", names: ["Iceweaver", "Sleet", "Arrowflight", "Coldsnap", "Flurry"], 
+        description: "A deadly ice marksman.", baseClass: BaseClass.Thief,
+        baseHpMultiplier: 0.7, statMultipliers: { strength: 0.9, intelligence: 0.8, agility: 1.3, vitality: 0.6, spirit: 0.7, luck: 1.0 },
+        trait: 'Cheerful', weaponType: 'spear', spawnWeight: 14,
+        loot: { type: 'Weapon', dropChance: 0.20, minLevel: 1, maxLevel: 6, goldMin: 15, goldMax: 40 },
+        xpValue: 35, goldValue: 20
+    },
+    { 
+        name: "Glacier Knight", names: ["Avalanche", "Iceheart", "Frostborn", "Coldmantle", "Gelidion"], 
+        description: "An armored ice sentinel.", baseClass: BaseClass.Warrior,
+        baseHpMultiplier: 1.2, statMultipliers: { strength: 1.2, intelligence: 0.6, agility: 0.8, vitality: 1.1, spirit: 0.9, luck: 0.7 },
+        trait: 'Stoic', weaponType: 'sword', spawnWeight: 10,
+        loot: { type: 'Weapon', dropChance: 0.30, minLevel: 3, maxLevel: 10, goldMin: 30, goldMax: 80 },
+        xpValue: 70, goldValue: 40
+    },
+    { 
+        name: "Chillspawn", names: ["Shiverling", "Frostbite", "Icewhelp", "Gelidkin", "Cryon"], 
+        description: "Young ice creatures that hunt in packs.", baseClass: BaseClass.Thief,
+        baseHpMultiplier: 0.5, statMultipliers: { strength: 0.7, intelligence: 0.4, agility: 1.4, vitality: 0.5, spirit: 0.4, luck: 0.9 },
+        trait: 'Hot-Headed', weaponType: 'claw', spawnWeight: 18,
+        loot: { type: 'Accessory', dropChance: 0.10, minLevel: 1, maxLevel: 3, goldMin: 5, goldMax: 15 },
+        xpValue: 20, goldValue: 8
+    },
+    { 
+        name: "Permafrost Elemental", names: ["Ancientone", "Tundran", "Glaciara", "Winterborn", "Frostfather"], 
+        description: "A primordial force of frozen death.", baseClass: BaseClass.Mage,
+        baseHpMultiplier: 2.0, statMultipliers: { strength: 1.6, intelligence: 1.8, agility: 0.6, vitality: 1.8, spirit: 1.6, luck: 0.5 },
+        trait: 'Stoic', weaponType: 'natural', spawnWeight: 6,
+        loot: { type: 'Weapon', dropChance: 0.50, minLevel: 5, maxLevel: 15, goldMin: 50, goldMax: 150 },
+        xpValue: 150, goldValue: 100
+    },
+    { 
+        name: "Icecult Zealot", names: ["Frostspeaker", "Deepfreeze", "Winterbite", "Coldsoul", "Icevein"], 
+        description: "A fanatic of the frozen depths.", baseClass: BaseClass.Thief,
+        baseHpMultiplier: 0.9, statMultipliers: { strength: 1.0, intelligence: 0.9, agility: 1.1, vitality: 0.8, spirit: 0.8, luck: 0.8 },
+        trait: 'Hot-Headed', weaponType: 'dagger', spawnWeight: 13,
+        loot: { type: 'Weapon', dropChance: 0.22, minLevel: 2, maxLevel: 7, goldMin: 18, goldMax: 45 },
+        xpValue: 45, goldValue: 22
+    },
+    { 
+        name: "Frozen Hound", names: ["Icefang", "Snowmaw", "Frostbite", "Gelidwolf", "Blizzard"], 
+        description: "A wolf corrupted by eternal winter.", baseClass: BaseClass.Thief,
+        baseHpMultiplier: 1.0, statMultipliers: { strength: 1.1, intelligence: 0.3, agility: 1.5, vitality: 0.9, spirit: 0.5, luck: 0.7 },
+        trait: 'Hot-Headed', weaponType: 'claw', spawnWeight: 12,
+        loot: { type: 'Armor', dropChance: 0.18, minLevel: 2, maxLevel: 6, goldMin: 12, goldMax: 35 },
+        xpValue: 38, goldValue: 18
+    },
 ];
 
 const CRYSTALLINE_PEAKS_ENEMIES: EnemyTemplate[] = [
-    { name: "Prismatic Stalker", names: ["Refraction", "Luminant", "Spectrum", "Prismeye", "Shardweaver"], description: "A creature of living crystal.", baseHpMultiplier: 0.9, strengthMultiplier: 1.0, vitalityMultiplier: 0.8, defenseMultiplier: 1.1, speedMultiplier: 1.2, luckMultiplier: 1.1, trait: 'Cheerful', weaponType: 'magic', spawnWeight: 14 },
-    { name: "Resonance Knight", names: ["Harmonist", "Vibration", "Oscillate", "Chordborn", "Pitch"], description: "A warrior of crystal harmonics.", baseHpMultiplier: 1.1, strengthMultiplier: 1.3, vitalityMultiplier: 1.0, defenseMultiplier: 1.2, speedMultiplier: 1.0, luckMultiplier: 0.8, trait: 'Stoic', weaponType: 'sword', spawnWeight: 12 },
-    { name: "Shard Sentinel", names: ["Crystalline", "Faceted", "Prismguard", "Gemheart", "Quartzite"], description: "Animated crystal constructs.", baseHpMultiplier: 1.3, strengthMultiplier: 1.1, vitalityMultiplier: 1.4, defenseMultiplier: 1.6, speedMultiplier: 0.7, luckMultiplier: 0.5, trait: 'Stoic', weaponType: 'hammer', spawnWeight: 11 },
-    { name: "Luminescent Hunter", names: ["Gleamscale", "Sparkwing", "Radiance", "Luminos", "Lustrewing"], description: "A graceful crystal predator.", baseHpMultiplier: 0.8, strengthMultiplier: 0.9, vitalityMultiplier: 0.7, defenseMultiplier: 0.8, speedMultiplier: 1.4, luckMultiplier: 1.0, trait: 'Cheerful', weaponType: 'dagger', spawnWeight: 15 },
-    { name: "Crystal Worm", names: ["Tunneler", "Cavernjaw", "Gemgorger", "Stoneburrower", "Quarry"], description: "A massive burrowing crystal horror.", baseHpMultiplier: 1.8, strengthMultiplier: 1.5, vitalityMultiplier: 1.6, defenseMultiplier: 1.3, speedMultiplier: 0.5, luckMultiplier: 0.4, trait: 'Stoic', weaponType: 'natural', spawnWeight: 8 },
-    { name: "Prism Mage", names: ["Spectrum Weaver", "Rainbow", "Colorwraith", "Huekeeper", "Chiaroscuro"], description: "A master of light magic.", baseHpMultiplier: 0.7, strengthMultiplier: 0.8, vitalityMultiplier: 0.6, defenseMultiplier: 0.7, speedMultiplier: 1.3, luckMultiplier: 1.2, trait: 'Cheerful', weaponType: 'magic', spawnWeight: 13 },
-    { name: "Facet Swarm", names: ["Shardswarm", "Glassling", "Splintercloud", "Microlith", "Crystalline Spawn"], description: "Tiny crystal fragments as one mass.", baseHpMultiplier: 0.4, strengthMultiplier: 0.5, vitalityMultiplier: 0.4, defenseMultiplier: 0.6, speedMultiplier: 1.6, luckMultiplier: 0.8, trait: 'Hot-Headed', weaponType: 'natural', spawnWeight: 16 },
-    { name: "Echoing Shade", names: ["Resonator", "Harmonic", "Frequencyshift", "Reverberant", "Pitchbender"], description: "A phantom of crystal harmonics.", baseHpMultiplier: 0.9, strengthMultiplier: 1.0, vitalityMultiplier: 0.7, defenseMultiplier: 0.9, speedMultiplier: 1.1, luckMultiplier: 1.0, trait: 'Hot-Headed', weaponType: 'magic', spawnWeight: 11 },
+    { 
+        name: "Prismatic Stalker", names: ["Refraction", "Luminant", "Spectrum", "Prismeye", "Shardweaver"], 
+        description: "A creature of living crystal.", baseClass: BaseClass.Mage,
+        baseHpMultiplier: 0.9, statMultipliers: { strength: 1.0, intelligence: 1.2, agility: 1.2, vitality: 0.8, spirit: 1.1, luck: 1.1 },
+        trait: 'Cheerful', weaponType: 'magic', spawnWeight: 14,
+        loot: { type: 'Accessory', dropChance: 0.20, minLevel: 3, maxLevel: 10, goldMin: 25, goldMax: 60 },
+        xpValue: 50, goldValue: 30
+    },
+    { 
+        name: "Resonance Knight", names: ["Harmonist", "Vibration", "Oscillate", "Chordborn", "Pitch"], 
+        description: "A warrior of crystal harmonics.", baseClass: BaseClass.Warrior,
+        baseHpMultiplier: 1.1, statMultipliers: { strength: 1.3, intelligence: 0.7, agility: 1.0, vitality: 1.0, spirit: 0.8, luck: 0.8 },
+        trait: 'Stoic', weaponType: 'sword', spawnWeight: 12,
+        loot: { type: 'Weapon', dropChance: 0.28, minLevel: 4, maxLevel: 12, goldMin: 35, goldMax: 90 },
+        xpValue: 65, goldValue: 45
+    },
+    { 
+        name: "Shard Sentinel", names: ["Crystalline", "Faceted", "Prismguard", "Gemheart", "Quartzite"], 
+        description: "Animated crystal constructs.", baseClass: BaseClass.Warrior,
+        baseHpMultiplier: 1.3, statMultipliers: { strength: 1.1, intelligence: 0.4, agility: 0.7, vitality: 1.4, spirit: 1.0, luck: 0.5 },
+        trait: 'Stoic', weaponType: 'hammer', spawnWeight: 11,
+        loot: { type: 'Armor', dropChance: 0.35, minLevel: 5, maxLevel: 14, goldMin: 45, goldMax: 120 },
+        xpValue: 80, goldValue: 55
+    },
+    { 
+        name: "Luminescent Hunter", names: ["Gleamscale", "Sparkwing", "Radiance", "Luminos", "Lustrewing"], 
+        description: "A graceful crystal predator.", baseClass: BaseClass.Thief,
+        baseHpMultiplier: 0.8, statMultipliers: { strength: 0.9, intelligence: 0.8, agility: 1.4, vitality: 0.7, spirit: 0.6, luck: 1.0 },
+        trait: 'Cheerful', weaponType: 'dagger', spawnWeight: 15,
+        loot: { type: 'Weapon', dropChance: 0.22, minLevel: 3, maxLevel: 9, goldMin: 28, goldMax: 65 },
+        xpValue: 42, goldValue: 32
+    },
+    { 
+        name: "Crystal Worm", names: ["Tunneler", "Cavernjaw", "Gemgorger", "Stoneburrower", "Quarry"], 
+        description: "A massive burrowing crystal horror.", baseClass: BaseClass.Warrior,
+        baseHpMultiplier: 1.8, statMultipliers: { strength: 1.5, intelligence: 0.3, agility: 0.5, vitality: 1.6, spirit: 0.8, luck: 0.4 },
+        trait: 'Stoic', weaponType: 'natural', spawnWeight: 8,
+        loot: { type: 'Armor', dropChance: 0.45, minLevel: 8, maxLevel: 18, goldMin: 80, goldMax: 200 },
+        xpValue: 140, goldValue: 90
+    },
+    { 
+        name: "Prism Mage", names: ["Spectrum Weaver", "Rainbow", "Colorwraith", "Huekeeper", "Chiaroscuro"], 
+        description: "A master of light magic.", baseClass: BaseClass.Mage,
+        baseHpMultiplier: 0.7, statMultipliers: { strength: 0.6, intelligence: 1.6, agility: 1.1, vitality: 0.6, spirit: 1.3, luck: 1.2 },
+        trait: 'Cheerful', weaponType: 'magic', spawnWeight: 13,
+        loot: { type: 'Weapon', dropChance: 0.32, minLevel: 6, maxLevel: 15, goldMin: 55, goldMax: 140 },
+        xpValue: 55, goldValue: 48
+    },
+    { 
+        name: "Facet Swarm", names: ["Shardswarm", "Glassling", "Splintercloud", "Microlith", "Crystalline Spawn"], 
+        description: "Tiny crystal fragments as one mass.", baseClass: BaseClass.Thief,
+        baseHpMultiplier: 0.4, statMultipliers: { strength: 0.5, intelligence: 0.4, agility: 1.6, vitality: 0.4, spirit: 0.3, luck: 0.8 },
+        trait: 'Hot-Headed', weaponType: 'natural', spawnWeight: 16,
+        loot: { type: 'Accessory', dropChance: 0.08, minLevel: 2, maxLevel: 5, goldMin: 8, goldMax: 22 },
+        xpValue: 18, goldValue: 10
+    },
+    { 
+        name: "Echoing Shade", names: ["Resonator", "Harmonic", "Frequencyshift", "Reverberant", "Pitchbender"], 
+        description: "A phantom of crystal harmonics.", baseClass: BaseClass.Mage,
+        baseHpMultiplier: 0.9, statMultipliers: { strength: 0.8, intelligence: 1.3, agility: 1.1, vitality: 0.7, spirit: 1.2, luck: 1.0 },
+        trait: 'Hot-Headed', weaponType: 'magic', spawnWeight: 11,
+        loot: { type: 'Weapon', dropChance: 0.25, minLevel: 4, maxLevel: 11, goldMin: 32, goldMax: 75 },
+        xpValue: 48, goldValue: 35
+    },
 ];
 
 const FUNGAL_GROTTO_ENEMIES: EnemyTemplate[] = [
-    { name: "Spore Terror", names: ["Mushling", "Fungicide", "Mycotyx", "Sporemother", "Moldwalker"], description: "A walking mass of fungi and decay.", baseHpMultiplier: 1.2, strengthMultiplier: 1.0, vitalityMultiplier: 1.3, defenseMultiplier: 1.0, speedMultiplier: 0.8, luckMultiplier: 0.7, trait: 'Stoic', weaponType: 'natural', spawnWeight: 15 },
-    { name: "Tendril Horror", names: ["Rootclaw", "Vinewhip", "Grasping One", "Mycelium", "Entanglus"], description: "Animated vines that suffocate.", baseHpMultiplier: 1.0, strengthMultiplier: 1.2, vitalityMultiplier: 1.1, defenseMultiplier: 0.9, speedMultiplier: 0.9, luckMultiplier: 0.6, trait: 'Stoic', weaponType: 'natural', spawnWeight: 14 },
-    { name: "Toxic Crawler", names: ["Puffling", "Sporebeetle", "Acidback", "Venomshell", "Corrosion"], description: "A giant insect with corrosive bile.", baseHpMultiplier: 0.8, strengthMultiplier: 1.0, vitalityMultiplier: 0.8, defenseMultiplier: 1.0, speedMultiplier: 1.3, luckMultiplier: 0.8, trait: 'Hot-Headed', weaponType: 'natural', spawnWeight: 16 },
-    { name: "Bioluminescent Nightmare", names: ["Glowmaw", "Luminant", "Phosphor", "Glowspawn", "Luminesca"], description: "Beautiful but deadly fungal predator.", baseHpMultiplier: 0.9, strengthMultiplier: 0.8, vitalityMultiplier: 0.7, defenseMultiplier: 0.6, speedMultiplier: 1.2, luckMultiplier: 1.1, trait: 'Cheerful', weaponType: 'natural', spawnWeight: 14 },
-    { name: "Mycelial Overlord", names: ["Nexus", "The Weave", "Sporeking", "Fungal Throne", "Mycotyrant"], description: "The heart of the fungal network.", baseHpMultiplier: 2.0, strengthMultiplier: 1.3, vitalityMultiplier: 1.8, defenseMultiplier: 1.2, speedMultiplier: 0.6, luckMultiplier: 0.5, trait: 'Stoic', weaponType: 'natural', spawnWeight: 6 },
-    { name: "Slime Mold Beast", names: ["Oozewraith", "Gelatinox", "Amorphus", "Jellicle", "Mucolynx"], description: "A shapeless engulfing predator.", baseHpMultiplier: 1.1, strengthMultiplier: 0.9, vitalityMultiplier: 1.2, defenseMultiplier: 0.8, speedMultiplier: 1.0, luckMultiplier: 0.9, trait: 'Cheerful', weaponType: 'natural', spawnWeight: 13 },
-    { name: "Sporeling Assassin", names: ["Toxic Shadow", "Sporewalker", "Deathpuff", "Miststalker", "Venenox"], description: "Silent killers of toxic spores.", baseHpMultiplier: 0.6, strengthMultiplier: 1.1, vitalityMultiplier: 0.5, defenseMultiplier: 0.5, speedMultiplier: 1.5, luckMultiplier: 1.0, trait: 'Hot-Headed', weaponType: 'dagger', spawnWeight: 15 },
-    { name: "Giant Centipede", names: ["Carapace", "Skitterfangs", "Moltling", "Chitincrawler", "Segmentus"], description: "A massive segmented horror.", baseHpMultiplier: 0.9, strengthMultiplier: 1.2, vitalityMultiplier: 0.8, defenseMultiplier: 0.9, speedMultiplier: 1.4, luckMultiplier: 0.7, trait: 'Hot-Headed', weaponType: 'natural', spawnWeight: 12 },
+    { 
+        name: "Spore Terror", names: ["Mushling", "Fungicide", "Mycotyx", "Sporemother", "Moldwalker"], 
+        description: "A walking mass of fungi and decay.", baseClass: BaseClass.Warrior,
+        baseHpMultiplier: 1.2, statMultipliers: { strength: 1.0, intelligence: 0.6, agility: 0.8, vitality: 1.3, spirit: 0.9, luck: 0.7 },
+        trait: 'Stoic', weaponType: 'natural', spawnWeight: 15,
+        loot: { type: 'Armor', dropChance: 0.22, minLevel: 6, maxLevel: 14, goldMin: 40, goldMax: 95 },
+        xpValue: 55, goldValue: 38
+    },
+    { 
+        name: "Tendril Horror", names: ["Rootclaw", "Vinewhip", "Grasping One", "Mycelium", "Entanglus"], 
+        description: "Animated vines that suffocate.", baseClass: BaseClass.Warrior,
+        baseHpMultiplier: 1.0, statMultipliers: { strength: 1.2, intelligence: 0.4, agility: 0.9, vitality: 1.1, spirit: 0.7, luck: 0.6 },
+        trait: 'Stoic', weaponType: 'natural', spawnWeight: 14,
+        loot: { type: 'Weapon', dropChance: 0.20, minLevel: 5, maxLevel: 12, goldMin: 35, goldMax: 85 },
+        xpValue: 50, goldValue: 35
+    },
+    { 
+        name: "Toxic Crawler", names: ["Puffling", "Sporebeetle", "Acidback", "Venomshell", "Corrosion"], 
+        description: "A giant insect with corrosive bile.", baseClass: BaseClass.Thief,
+        baseHpMultiplier: 0.8, statMultipliers: { strength: 1.0, intelligence: 0.7, agility: 1.3, vitality: 0.8, spirit: 0.6, luck: 0.8 },
+        trait: 'Hot-Headed', weaponType: 'natural', spawnWeight: 16,
+        loot: { type: 'Accessory', dropChance: 0.18, minLevel: 4, maxLevel: 10, goldMin: 22, goldMax: 55 },
+        xpValue: 38, goldValue: 25
+    },
+    { 
+        name: "Bioluminescent Nightmare", names: ["Glowmaw", "Luminant", "Phosphor", "Glowspawn", "Luminesca"], 
+        description: "Beautiful but deadly fungal predator.", baseClass: BaseClass.Mage,
+        baseHpMultiplier: 0.9, statMultipliers: { strength: 0.8, intelligence: 1.2, agility: 1.2, vitality: 0.7, spirit: 1.0, luck: 1.1 },
+        trait: 'Cheerful', weaponType: 'natural', spawnWeight: 14,
+        loot: { type: 'Weapon', dropChance: 0.25, minLevel: 7, maxLevel: 16, goldMin: 50, goldMax: 120 },
+        xpValue: 52, goldValue: 42
+    },
+    { 
+        name: "Mycelial Overlord", names: ["Nexus", "The Weave", "Sporeking", "Fungal Throne", "Mycotyrant"], 
+        description: "The heart of the fungal network.", baseClass: BaseClass.Warrior,
+        baseHpMultiplier: 2.0, statMultipliers: { strength: 1.3, intelligence: 1.0, agility: 0.6, vitality: 1.8, spirit: 1.2, luck: 0.5 },
+        trait: 'Stoic', weaponType: 'natural', spawnWeight: 6,
+        loot: { type: 'Armor', dropChance: 0.60, minLevel: 10, maxLevel: 20, goldMin: 100, goldMax: 300 },
+        xpValue: 180, goldValue: 150
+    },
+    { 
+        name: "Slime Mold Beast", names: ["Oozewraith", "Gelatinox", "Amorphus", "Jellicle", "Mucolynx"], 
+        description: "A shapeless engulfing predator.", baseClass: BaseClass.Warrior,
+        baseHpMultiplier: 1.1, statMultipliers: { strength: 0.9, intelligence: 0.5, agility: 1.0, vitality: 1.2, spirit: 0.8, luck: 0.9 },
+        trait: 'Cheerful', weaponType: 'natural', spawnWeight: 13,
+        loot: { type: 'Accessory', dropChance: 0.20, minLevel: 5, maxLevel: 12, goldMin: 30, goldMax: 70 },
+        xpValue: 45, goldValue: 32
+    },
+    { 
+        name: "Sporeling Assassin", names: ["Toxic Shadow", "Sporewalker", "Deathpuff", "Miststalker", "Venenox"], 
+        description: "Silent killers of toxic spores.", baseClass: BaseClass.Thief,
+        baseHpMultiplier: 0.6, statMultipliers: { strength: 1.1, intelligence: 0.8, agility: 1.5, vitality: 0.5, spirit: 0.6, luck: 1.0 },
+        trait: 'Hot-Headed', weaponType: 'dagger', spawnWeight: 15,
+        loot: { type: 'Weapon', dropChance: 0.28, minLevel: 6, maxLevel: 14, goldMin: 45, goldMax: 110 },
+        xpValue: 42, goldValue: 38
+    },
+    { 
+        name: "Giant Centipede", names: ["Carapace", "Skitterfangs", "Moltling", "Chitincrawler", "Segmentus"], 
+        description: "A massive segmented horror.", baseClass: BaseClass.Thief,
+        baseHpMultiplier: 0.9, statMultipliers: { strength: 1.2, intelligence: 0.4, agility: 1.4, vitality: 0.8, spirit: 0.5, luck: 0.7 },
+        trait: 'Hot-Headed', weaponType: 'natural', spawnWeight: 12,
+        loot: { type: 'Armor', dropChance: 0.22, minLevel: 4, maxLevel: 11, goldMin: 28, goldMax: 65 },
+        xpValue: 40, goldValue: 28
+    },
 ];
 
 const VOLCANIC_DEPTHS_ENEMIES: EnemyTemplate[] = [
-    { name: "Magma Brute", names: ["Emberjaw", "Lavafist", "Cinderfall", "Moltengore", "Scorchling"], description: "A creature of living flame and rock.", baseHpMultiplier: 1.4, strengthMultiplier: 1.5, vitalityMultiplier: 1.3, defenseMultiplier: 1.3, speedMultiplier: 0.8, luckMultiplier: 0.6, trait: 'Hot-Headed', weaponType: 'hammer', spawnWeight: 14 },
-    { name: "Obsidian Guard", names: ["Blackforge", "Volcanite", "Ashwalker", "Cinderborn", "Slagheart"], description: "Armor fused to living flesh.", baseHpMultiplier: 1.3, strengthMultiplier: 1.2, vitalityMultiplier: 1.4, defenseMultiplier: 1.7, speedMultiplier: 0.7, luckMultiplier: 0.5, trait: 'Stoic', weaponType: 'sword', spawnWeight: 12 },
-    { name: "Fire Dancer", names: ["Flameweaver", "Sparkwing", "Emberstep", "Pyrelight", "Ignispride"], description: "A nimble fighter of flame.", baseHpMultiplier: 0.8, strengthMultiplier: 1.0, vitalityMultiplier: 0.7, defenseMultiplier: 0.7, speedMultiplier: 1.5, luckMultiplier: 0.9, trait: 'Cheerful', weaponType: 'fist', spawnWeight: 15 },
-    { name: "Ash Wraith", names: ["Cinder Specter", "Smoke Form", "Emberwraith", "Sootghost", "Pyrals"], description: "Spirits born of volcanic death.", baseHpMultiplier: 0.9, strengthMultiplier: 1.1, vitalityMultiplier: 0.6, defenseMultiplier: 0.8, speedMultiplier: 1.3, luckMultiplier: 0.8, trait: 'Hot-Headed', weaponType: 'magic', spawnWeight: 13 },
-    { name: "Lava Wyrm", names: ["Magmawyrm", "Serpent Tongue", "Cindercoil", "Emberdrake", "Pyrovar"], description: "A serpentine dragon of fire.", baseHpMultiplier: 1.8, strengthMultiplier: 1.6, vitalityMultiplier: 1.5, defenseMultiplier: 1.4, speedMultiplier: 0.9, luckMultiplier: 0.6, trait: 'Hot-Headed', weaponType: 'natural', spawnWeight: 8 },
-    { name: "Brimstone Cultist", names: ["Ashspeaker", "Flamekeeper", "Cinder Prophet", "Molten Voice", "Emberguard"], description: "A zealot of volcanic fury.", baseHpMultiplier: 0.9, strengthMultiplier: 1.0, vitalityMultiplier: 0.8, defenseMultiplier: 0.8, speedMultiplier: 1.1, luckMultiplier: 0.9, trait: 'Hot-Headed', weaponType: 'dagger', spawnWeight: 13 },
-    { name: "Coal Golem", names: ["Charheart", "Sootwalker", "Cinder construct", "Ashbody", "Slagforge"], description: "An animated coal creature.", baseHpMultiplier: 1.2, strengthMultiplier: 1.3, vitalityMultiplier: 1.2, defenseMultiplier: 1.1, speedMultiplier: 0.8, luckMultiplier: 0.6, trait: 'Stoic', weaponType: 'hammer', spawnWeight: 11 },
-    { name: "Flame Sprite", names: ["Sparkling", "Emberkin", "Firikin", "Pyrelit", "Igniculus"], description: "Tiny elemental fire beings.", baseHpMultiplier: 0.4, strengthMultiplier: 0.6, vitalityMultiplier: 0.3, defenseMultiplier: 0.4, speedMultiplier: 1.8, luckMultiplier: 1.0, trait: 'Cheerful', weaponType: 'magic', spawnWeight: 17 },
+    { 
+        name: "Magma Brute", names: ["Emberjaw", "Lavafist", "Cinderfall", "Moltengore", "Scorchling"], 
+        description: "A creature of living flame and rock.", baseClass: BaseClass.Warrior,
+        baseHpMultiplier: 1.4, statMultipliers: { strength: 1.5, intelligence: 0.5, agility: 0.8, vitality: 1.3, spirit: 0.7, luck: 0.6 },
+        trait: 'Hot-Headed', weaponType: 'hammer', spawnWeight: 14,
+        loot: { type: 'Weapon', dropChance: 0.30, minLevel: 8, maxLevel: 16, goldMin: 55, goldMax: 130 },
+        xpValue: 75, goldValue: 55
+    },
+    { 
+        name: "Obsidian Guard", names: ["Blackforge", "Volcanite", "Ashwalker", "Cinderborn", "Slagheart"], 
+        description: "Armor fused to living flesh.", baseClass: BaseClass.Warrior,
+        baseHpMultiplier: 1.3, statMultipliers: { strength: 1.2, intelligence: 0.4, agility: 0.7, vitality: 1.4, spirit: 0.9, luck: 0.5 },
+        trait: 'Stoic', weaponType: 'sword', spawnWeight: 12,
+        loot: { type: 'Armor', dropChance: 0.35, minLevel: 9, maxLevel: 18, goldMin: 65, goldMax: 150 },
+        xpValue: 85, goldValue: 65
+    },
+    { 
+        name: "Fire Dancer", names: ["Flameweaver", "Sparkwing", "Emberstep", "Pyrelight", "Ignispride"], 
+        description: "A nimble fighter of flame.", baseClass: BaseClass.Thief,
+        baseHpMultiplier: 0.8, statMultipliers: { strength: 1.0, intelligence: 0.8, agility: 1.5, vitality: 0.7, spirit: 0.6, luck: 0.9 },
+        trait: 'Cheerful', weaponType: 'fist', spawnWeight: 15,
+        loot: { type: 'Accessory', dropChance: 0.22, minLevel: 6, maxLevel: 14, goldMin: 40, goldMax: 95 },
+        xpValue: 48, goldValue: 40
+    },
+    { 
+        name: "Ash Wraith", names: ["Cinder Specter", "Smoke Form", "Emberwraith", "Sootghost", "Pyrals"], 
+        description: "Spirits born of volcanic death.", baseClass: BaseClass.Mage,
+        baseHpMultiplier: 0.9, statMultipliers: { strength: 1.0, intelligence: 1.4, agility: 1.1, vitality: 0.6, spirit: 1.2, luck: 0.8 },
+        trait: 'Hot-Headed', weaponType: 'magic', spawnWeight: 13,
+        loot: { type: 'Weapon', dropChance: 0.28, minLevel: 7, maxLevel: 15, goldMin: 50, goldMax: 120 },
+        xpValue: 55, goldValue: 45
+    },
+    { 
+        name: "Lava Wyrm", names: ["Magmawyrm", "Serpent Tongue", "Cindercoil", "Emberdrake", "Pyrovar"], 
+        description: "A serpentine dragon of fire.", baseClass: BaseClass.Warrior,
+        baseHpMultiplier: 1.8, statMultipliers: { strength: 1.6, intelligence: 0.6, agility: 0.9, vitality: 1.5, spirit: 0.8, luck: 0.6 },
+        trait: 'Hot-Headed', weaponType: 'natural', spawnWeight: 8,
+        loot: { type: 'Weapon', dropChance: 0.55, minLevel: 12, maxLevel: 22, goldMin: 120, goldMax: 350 },
+        xpValue: 160, goldValue: 130
+    },
+    { 
+        name: "Brimstone Cultist", names: ["Ashspeaker", "Flamekeeper", "Cinder Prophet", "Molten Voice", "Emberguard"], 
+        description: "A zealot of volcanic fury.", baseClass: BaseClass.Thief,
+        baseHpMultiplier: 0.9, statMultipliers: { strength: 1.0, intelligence: 1.0, agility: 1.1, vitality: 0.8, spirit: 0.9, luck: 0.9 },
+        trait: 'Hot-Headed', weaponType: 'dagger', spawnWeight: 13,
+        loot: { type: 'Weapon', dropChance: 0.25, minLevel: 6, maxLevel: 14, goldMin: 42, goldMax: 100 },
+        xpValue: 50, goldValue: 42
+    },
+    { 
+        name: "Coal Golem", names: ["Charheart", "Sootwalker", "Cinder construct", "Ashbody", "Slagforge"], 
+        description: "An animated coal creature.", baseClass: BaseClass.Warrior,
+        baseHpMultiplier: 1.2, statMultipliers: { strength: 1.3, intelligence: 0.3, agility: 0.8, vitality: 1.2, spirit: 0.7, luck: 0.6 },
+        trait: 'Stoic', weaponType: 'hammer', spawnWeight: 11,
+        loot: { type: 'Armor', dropChance: 0.30, minLevel: 7, maxLevel: 16, goldMin: 48, goldMax: 115 },
+        xpValue: 60, goldValue: 48
+    },
+    { 
+        name: "Flame Sprite", names: ["Sparkling", "Emberkin", "Firikin", "Pyrelit", "Igniculus"], 
+        description: "Tiny elemental fire beings.", baseClass: BaseClass.Mage,
+        baseHpMultiplier: 0.4, statMultipliers: { strength: 0.4, intelligence: 1.2, agility: 1.6, vitality: 0.3, spirit: 1.0, luck: 1.0 },
+        trait: 'Cheerful', weaponType: 'magic', spawnWeight: 17,
+        loot: { type: 'Accessory', dropChance: 0.12, minLevel: 3, maxLevel: 8, goldMin: 15, goldMax: 40 },
+        xpValue: 22, goldValue: 15
+    },
 ];
 
 const BIOME_ENEMIES: Record<string, EnemyTemplate[]> = {
@@ -77,18 +319,27 @@ function selectWeightedRandom<T extends { spawnWeight: number }>(items: T[]): T 
     return items[items.length - 1]!;
 }
 
-function createEnemyFromTemplate(template: EnemyTemplate, level: number, id: string): Combatant {
-    const baseClass = template.weaponType === 'magic' ? BaseClass.Mage :
-                       template.weaponType === 'natural' ? BaseClass.Thief :
-                       template.weaponType === 'fist' ? BaseClass.Warrior :
-                       template.baseHpMultiplier > 1.2 ? BaseClass.Warrior :
-                       BaseClass.Thief;
+export interface LootResult {
+    item: any | null;
+    gold: number;
+}
+
+export interface GeneratedEnemy extends Combatant {
+    templateName: string;
+    lootTable: LootDrop;
+    xpValue: number;
+}
+
+function createEnemyFromTemplate(template: EnemyTemplate, level: number, id: string): GeneratedEnemy {
+    const baseClass = template.baseClass;
     
     const calculatedStats = StatCalculator.calculateStats(level, baseClass, 0);
     const name = template.names[Math.floor(Math.random() * template.names.length)]!;
     const baseHp = StatCalculator.calculateHP(calculatedStats);
     const baseMp = StatCalculator.calculateMP(calculatedStats);
     const hp = Math.floor(baseHp * template.baseHpMultiplier);
+    
+    const multiplier = template.statMultipliers;
     
     return {
         id,
@@ -104,22 +355,25 @@ function createEnemyFromTemplate(template: EnemyTemplate, level: number, id: str
         mp: baseMp,
         maxMp: baseMp,
         stats: {
-            strength: Math.floor(calculatedStats.strength * template.strengthMultiplier),
-            vitality: Math.floor(calculatedStats.vitality * template.vitalityMultiplier),
-            agility: Math.floor(calculatedStats.agility * template.speedMultiplier),
-            spirit: Math.floor(calculatedStats.spirit * template.defenseMultiplier),
-            luck: Math.floor(calculatedStats.luck * template.luckMultiplier),
-            intelligence: calculatedStats.intelligence
+            strength: Math.max(1, Math.floor(calculatedStats.strength * multiplier.strength)),
+            intelligence: Math.max(1, Math.floor(calculatedStats.intelligence * multiplier.intelligence)),
+            agility: Math.max(1, Math.floor(calculatedStats.agility * multiplier.agility)),
+            vitality: Math.max(1, Math.floor(calculatedStats.vitality * multiplier.vitality)),
+            spirit: Math.max(1, Math.floor(calculatedStats.spirit * multiplier.spirit)),
+            luck: Math.max(1, Math.floor(calculatedStats.luck * multiplier.luck)),
         },
         weapon: null,
         armor: null,
-        accessory: null
+        accessory: null,
+        templateName: template.name,
+        lootTable: template.loot,
+        xpValue: template.xpValue
     };
 }
 
 export class EnemyGenerator {
-    static generateEnemySet(biome: string, level: number, count: number, setId: string): Combatant[] {
-        const enemies: Combatant[] = [];
+    static generateEnemySet(biome: string, level: number, count: number, setId: string): GeneratedEnemy[] {
+        const enemies: GeneratedEnemy[] = [];
         const biomeEnemyList = BIOME_ENEMIES[biome] ?? BIOME_ENEMIES['Frozen Caves']!;
         const usedTemplates = new Set<string>();
         
@@ -152,7 +406,7 @@ export class EnemyGenerator {
         return 3;
     }
     
-    static generateBossSet(biome: string, floorNumber: number, bossIndex: number): Combatant[] {
+    static generateBossSet(biome: string, floorNumber: number, bossIndex: number): GeneratedEnemy[] {
         const level = floorNumber + 2;
         const id = `boss_${floorNumber}_${bossIndex}_${Math.random().toString(36).substring(2, 8)}`;
         
@@ -161,7 +415,9 @@ export class EnemyGenerator {
             e.name.includes('Elemental') || 
             e.name.includes('Overlord') || 
             e.name.includes('Wyrm') ||
-            e.name.includes('Knight')
+            e.name.includes('Knight') ||
+            e.name.includes('Sentinel') ||
+            e.name.includes('Wraith')
         );
         
         const template = bossTemplates.length > 0 
@@ -171,6 +427,7 @@ export class EnemyGenerator {
         const bossName = template.names[Math.floor(Math.random() * template.names.length)]!;
         const boss = createEnemyFromTemplate(template, level, id);
         boss.name = `${bossName}, ${template.name} of the Depths`;
+        boss.xpValue = Math.floor(boss.xpValue * 3);
         return [boss];
     }
     
@@ -181,5 +438,26 @@ export class EnemyGenerator {
         const lastEnemy = enemies[enemies.length - 1]!;
         const others = enemies.slice(0, -1).map(e => e.name).join(', ');
         return `${others}, and ${lastEnemy.name}`;
+    }
+    
+    static rollLootDrop(enemy: GeneratedEnemy, playerLuck: number = 0): LootResult {
+        const loot = enemy.lootTable;
+        const goldDrop = Math.floor(loot.goldMin + Math.random() * (loot.goldMax - loot.goldMin));
+        
+        const result: LootResult = {
+            item: null,
+            gold: Math.floor(goldDrop * (1 + (enemy.level - 1) * 0.2))
+        };
+        
+        const dropChance = loot.dropChance * (1 + playerLuck * 0.01);
+        
+        if (Math.random() < dropChance) {
+            const itemLevel = Math.floor(loot.minLevel + Math.random() * (loot.maxLevel - loot.minLevel));
+            result.item = ItemGenerator.generateItem(itemLevel);
+            result.item.type = loot.type;
+            result.item.level = itemLevel;
+        }
+        
+        return result;
     }
 }

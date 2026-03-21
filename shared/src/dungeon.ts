@@ -1,5 +1,6 @@
 import { BaseClass } from './stats';
 import { EnemyGenerator } from './enemyGenerator';
+import type { GeneratedEnemy } from './enemyGenerator';
 import type { Combatant } from './combat';
 
 export const BiomeType = {
@@ -14,7 +15,7 @@ export interface DungeonRoom {
     id: string;
     type: 'Corridor' | 'Encounter' | 'Cache' | 'Boss' | 'Rest';
     description: string;
-    enemies?: Combatant[];
+    enemies?: GeneratedEnemy[];
     loot?: any;
 }
 
@@ -103,7 +104,11 @@ export class DungeonManager {
                     if (floorNumber === 1) {
                         enemies.forEach(enemy => {
                             enemy.stats.strength = Math.floor(enemy.stats.strength * 0.6);
+                            enemy.stats.intelligence = Math.floor(enemy.stats.intelligence * 0.6);
+                            enemy.stats.agility = Math.floor(enemy.stats.agility * 0.6);
                             enemy.stats.vitality = Math.floor(enemy.stats.vitality * 0.6);
+                            enemy.stats.spirit = Math.floor(enemy.stats.spirit * 0.6);
+                            enemy.stats.luck = Math.floor(enemy.stats.luck * 0.6);
                             enemy.hp = Math.floor(enemy.hp * 0.6);
                             enemy.maxHp = enemy.hp;
                         });
