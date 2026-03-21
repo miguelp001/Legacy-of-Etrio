@@ -132,7 +132,7 @@ banter_quotes = [
 
 # --- Generate Templates ---
 
-# 1. Combat Attack (1000)
+# 1. Combat Attack (Tagged, 1000)
 for i in range(1000):
     stem = random.choice(attack_stems)
     flourish = random.choice(attack_flourishes)
@@ -153,7 +153,21 @@ for i in range(1000):
         }
     })
 
-# 2. Combat Defend (150)
+# 2. Combat Attack (Wildcard, 500)
+for i in range(500):
+    stem = random.choice(attack_stems)
+    flourish = random.choice(attack_flourishes)
+    quality = random.choice(hit_qualities)
+    templates.append({
+        "id": "gen_attack_wc_{:04d}".format(i),
+        "text": stem + " " + flourish,
+        "tags": {
+            "eventType": "COMBAT_ATTACK",
+            "hitQuality": quality
+        }
+    })
+
+# 3. Combat Defend (Tagged, 150)
 for i in range(150):
     stem = random.choice(defend_stems)
     flourish = random.choice(defend_flourishes)
@@ -170,7 +184,19 @@ for i in range(150):
         }
     })
 
-# 3. Banter Idle (200)
+# 4. Combat Defend (Wildcard, 100)
+for i in range(100):
+    stem = random.choice(defend_stems)
+    flourish = random.choice(defend_flourishes)
+    templates.append({
+        "id": "gen_defend_wc_{:04d}".format(i),
+        "text": stem + " " + flourish,
+        "tags": {
+            "eventType": "COMBAT_DEFEND"
+        }
+    })
+
+# 5. Banter Idle (Tagged, 200)
 for i in range(200):
     stem = random.choice(banter_stems)
     quote = random.choice(banter_quotes)
@@ -189,7 +215,19 @@ for i in range(200):
         }
     })
 
-# 4. World Event (50)
+# 6. Banter Idle (Wildcard, 100)
+for i in range(100):
+    stem = random.choice(banter_stems)
+    quote = random.choice(banter_quotes)
+    templates.append({
+        "id": "gen_banter_wc_{:04d}".format(i),
+        "text": stem + " " + quote,
+        "tags": {
+            "eventType": "BANTER_IDLE"
+        }
+    })
+
+# 7. World Event (50)
 for i in range(50):
     biome = random.choice(biomes)
     templates.append({
@@ -201,8 +239,8 @@ for i in range(50):
         }
     })
 
-# Load existing
-lib_path = 'c:/Users/migue/Documents/Code/Legacy of Etrio/shared/src/descriptionLibrary.json'
+# Force absolute path for library
+lib_path = r'c:\Users\migue\Documents\Code\Legacy of Etrio\shared\src\descriptionLibrary.json'
 try:
     with open(lib_path, 'r') as f:
         existing = json.load(f)
@@ -210,12 +248,12 @@ except Exception as e:
     print(f"Error loading existing: {e}")
     existing = []
 
-# Combine and unique (simple ID override)
+# Filter out old generated ones to avoid duplicates if ID pattern changes, or just append
 all_templates = existing + templates
 
 # Output to workspace
-output_path = 'c:/Users/migue/Documents/Code/Legacy of Etrio/shared/src/descriptionLibrary_expanded.json'
+output_path = r'c:\Users\migue\Documents\Code\Legacy of Etrio\shared\src\descriptionLibrary.json'
 with open(output_path, 'w') as f:
     json.dump(all_templates, f, indent=4)
 
-print(f"Generated {len(templates)} templates. Total library: {len(all_templates)}")
+print(f"Generated {len(templates)} templates. Total library level: {len(all_templates)}")

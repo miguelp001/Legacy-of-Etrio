@@ -43,7 +43,14 @@ const ActionFeed: React.FC<ActionFeedProps> = ({ events, onLayToRest, floor = 1 
 
   const renderNameBadge = (marker: string) => {
     const match = marker.match(/\[\[NAME:([^:]+):([^\]]+)\]\]/);
-    if (!match) return <span className="text-muted">[Unknown]</span>;
+    if (!match) {
+      // Direct name fallback
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter border border-white/10 mr-2 noble-default bg-white/5">
+          {marker}
+        </span>
+      );
+    }
     
     const house = match[1]?.toLowerCase();
     const name = match[2];
@@ -69,56 +76,76 @@ const ActionFeed: React.FC<ActionFeedProps> = ({ events, onLayToRest, floor = 1 
         ref={scrollRef}
         className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2"
       >
-        {events.filter(ev => ev && ev.id).map((event) => (
-          <div key={event.id} className="feed-item text-[13px] leading-relaxed py-2 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors px-2 rounded-lg">
-            <div className="flex items-start gap-3">
-              <span className="text-muted opacity-30 font-mono text-[10px] mt-1">[{event.turn}]</span>
-              
-              <div className="flex-1">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center">
-                    {renderNameBadge(event.attackerName)}
-                    <span className="text-[10px] font-bold text-muted uppercase tracking-widest opacity-50">
-                      {event.banter ? "Narrative" : "Action"}
-                    </span>
-                  </div>
-                  <div className="text-white/90 italic pl-1 border-l-2 border-white/5 mt-1">
-                    {renderRichText(
-                      event.banter || `${event.attackerName} ${event.damage > 0 ? "executes a strike" : "misses the mark"} against ${event.defenderName}.`,
-                      event.damage > 0,
-                      event.isCrit
+        {events.filter(ev => ev && ev.id).map((event) => {
+            const attackerName = event.attackerName.includes('[[NAME:') ? event.attackerName : `[[NAME:none:${event.attackerName}]]`;
+            const defenderName = event.defenderName.includes('[[NAME:') ? event.defenderName : `[[NAME:none:${event.defenderName}]]`;
+            
+            const actionFallbacks = event.damage > 0 
+                ? [
+                    `presses the advantage against ${defenderName}`,
+                    `finds an opening in ${defenderName}'s guard`,
+                    `executes a calculated strike upon ${defenderName}`,
+                    `drives their weapon toward ${defenderName}`
+                  ]
+                : [
+                    `misses the mark against ${defenderName}`,
+                    `overextends the strike against ${defenderName}`,
+                    `swings blindly at ${defenderName}`,
+                    `fails to connect with ${defenderName}`
+                  ];
+            const fallback = actionFallbacks[Math.floor(Math.random() * actionFallbacks.length)];
+
+            return (
+              <div key={event.id} className="feed-item text-[13px] leading-relaxed py-2 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors px-2 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <span className="text-muted opacity-30 font-mono text-[10px] mt-1">[{event.turn}]</span>
+                  
+                  <div className="flex-1">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center">
+                        {renderNameBadge(attackerName)}
+                        <span className="text-[10px] font-bold text-muted uppercase tracking-widest opacity-50">
+                          {event.banter ? "Narrative" : "Action"}
+                        </span>
+                      </div>
+                      <div className="text-white/90 italic pl-1 border-l-2 border-white/5 mt-1">
+                        {renderRichText(
+                          event.banter || `${renderNameBadge(attackerName)} ${fallback}.`,
+                          event.damage > 0,
+                          event.isCrit
+                        )}
+                      </div>
+                    </div>
+                    
+                    {event.damage > 0 && (
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-danger-color uppercase">Casualty</span>
+                        <span className="font-black text-danger-color">
+                          -{event.damage} {event.isCrit && "💥"}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {event.corpseData && (
+                      <div className="mt-2 p-3 rounded-lg bg-primary-color/10 border border-primary-color/20 flex items-center justify-between animate-pulse">
+                        <div className="flex items-center gap-2">
+                          <Ghost size={16} className="text-primary-color" />
+                          <span className="font-bold text-primary-color uppercase tracking-wider">Ghost Corpse Detected</span>
+                        </div>
+                        <button 
+                          onClick={() => onLayToRest(event.corpseData!!.playerId)} 
+                          className="bg-primary-color hover:bg-primary-color/80 text-white px-3 py-1 rounded-md text-[10px] font-black flex items-center gap-1 transition-all"
+                        >
+                          <Heart size={10} />
+                          LAY TO REST
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
-                
-                {event.damage > 0 && (
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-danger-color uppercase">Casualty</span>
-                    <span className="font-black text-danger-color">
-                      -{event.damage} {event.isCrit && "💥"}
-                    </span>
-                  </div>
-                )}
-                
-                {event.corpseData && (
-                  <div className="mt-2 p-3 rounded-lg bg-primary-color/10 border border-primary-color/20 flex items-center justify-between animate-pulse">
-                    <div className="flex items-center gap-2">
-                      <Ghost size={16} className="text-primary-color" />
-                      <span className="font-bold text-primary-color uppercase tracking-wider">Ghost Corpse Detected</span>
-                    </div>
-                    <button 
-                      onClick={() => onLayToRest(event.corpseData!.playerId)} 
-                      className="bg-primary-color hover:bg-primary-color/80 text-white px-3 py-1 rounded-md text-[10px] font-black flex items-center gap-1 transition-all"
-                    >
-                      <Heart size={10} />
-                      LAY TO REST
-                    </button>
-                  </div>
-                )}
               </div>
-            </div>
-          </div>
-        ))}
+            );
+        })}
         {events.length === 0 && (
           <div className="text-center py-20 text-muted italic opacity-50">
             Waiting for expedition data...

@@ -79,12 +79,12 @@ const ThePit: React.FC = () => {
     }, [currentRoomIdx, floorReport]);
 
     useEffect(() => {
-        if (!activeRoom || !activeRoom.combatResult) {
+        if (!activeRoom) {
             setIsSimulating(false);
             return;
         }
 
-        const events = activeRoom.combatResult.events || [];
+        const events = activeRoom.combatResult?.events || [];
         if (events.length === 0) {
             setIsSimulating(false);
             if (displayedEvents.length === 0) {
@@ -136,7 +136,7 @@ const ThePit: React.FC = () => {
         const events = activeRoom.combatResult?.events || [];
         const isCombatRoom = activeRoom.type === 'Encounter';
         const combatFinished = isCombatRoom && events.length > 0 && turnIndex >= events.length;
-        const noCombatEvents = events.length === 0 && displayedEvents.length > 0;
+        const noCombatEvents = (events.length === 0 || !activeRoom.combatResult) && displayedEvents.length > 0;
         const victory = activeRoom.combatResult?.victory ?? true;
 
         if ((combatFinished && victory) || noCombatEvents) {
@@ -322,6 +322,11 @@ const ThePit: React.FC = () => {
 
                                         const cleanBanter = ev.banter?.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '$1');
                                         
+                                        const fallbacks = ev.damage > 0 
+                                            ? ["launches a fierce assault against", "presses forward with a strike upon", "finds an opening and attacks", "advances with a heavy blow to"]
+                                            : ["overextends a wild swing at", "misses the mark against", "fails to connect with", "swings blindly and misses"];
+                                        const fallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+
                                         return (
                                             <div key={ev.id || `ev-${i}`} className="text-[11px] flex flex-col gap-1 animate-slide-right opacity-90 hover:opacity-100 transition-opacity">
                                                 <div className="flex items-center gap-2">
@@ -331,7 +336,7 @@ const ThePit: React.FC = () => {
                                                     </span>
                                                 </div>
                                                 <div className="pl-6 text-white/70 leading-relaxed border-l border-white/5 py-1">
-                                                    {cleanBanter || (ev.damage > 0 ? `Advances with a strike against ${defenderName}` : `Overextends against ${defenderName}`)}
+                                                    {cleanBanter || `${fallback} ${defenderName}`}
                                                     {ev.damage > 0 && <span className="text-danger-color font-bold ml-1">-{ev.damage} {ev.isCrit && "💥"}</span>}
                                                 </div>
                                             </div>

@@ -25,13 +25,13 @@ export interface VerbSet {
 
 export const VERB_LIBRARY: Record<string, VerbSet> = {
     attack: {
-        0: ['hits', 'strikes', 'slashes', 'stabs'],
-        5: ['reaps', 'severs', 'punctures', 'gashes'],
-        10: ['rends', 'withers', 'annihilates', 'extinguishes']
+        0: ['hits', 'strikes', 'slashes', 'stabs', 'lunges at', 'chops toward', 'swings at', 'lashes out at', 'presses against'],
+        5: ['reaps', 'severs', 'punctures', 'gashes', 'cleaves through', 'lacerates', 'skewers', 'impales', 'mauls'],
+        10: ['rends', 'withers', 'annihilates', 'extinguishes', 'obliterates', 'disintegrates', 'eviscerates', 'shatters', 'exterminates']
     },
     defend: {
-        0: ['blocks', 'parries', 'deflects'],
-        5: ['absorbs', 'endures', 'withstands'],
-        10: ['shrugs off', 'nullifies', 'ignores']
+        0: ['blocks', 'parries', 'deflects', 'evades', 'dodges', 'sidesteps', 'retreats from', 'ducks'],
+        5: ['absorbs', 'endures', 'withstands', 'negates', 'braces against', 'weathers', 'stands firm against'],
+        10: ['shrugs off', 'nullifies', 'ignores', 'defies', 'transpired through', 'dissipates', 'scorns']
     }
 };

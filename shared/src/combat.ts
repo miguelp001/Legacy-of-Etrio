@@ -142,7 +142,10 @@ export class CombatEngine {
                         value: damage
                     });
                 } else {
-                    banter = isMissValue ? "A clumsy swing!" : (isCrit ? "CRITICAL HIT!" : "A solid strike.");
+                    const fallbacks = isMissValue 
+                        ? ["A clumsy swing!", "The blade slices only air.", "Momentum carries the strike wide."] 
+                        : (isCrit ? ["A devastating critical blow!", "An unstoppable strike!", "The hit resonates with force!"] : ["A solid strike connects.", "Finding purchase in the target.", "The exchange favors the attacker."]);
+                    banter = fallbacks[Math.floor(Math.random() * fallbacks.length)];
                 }
 
                 events.push({

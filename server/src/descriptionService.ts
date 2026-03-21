@@ -37,10 +37,21 @@ export class DescriptionService {
         const bestTemplate = scoredTemplates[0]?.template;
 
         if (!bestTemplate) {
-            const baseVerbs = context.hitQuality === 'MISS' ? ['overextends', 'misses', 'swings wildly'] : ['advances', 'attacks', 'strikes'];
-            const verb = baseVerbs[Math.floor(Math.random() * baseVerbs.length)];
+            const verb = this.getVerb(context);
             const targetName = this.formatName(context.target?.name || 'the void');
-            return `${this.formatName(context.speaker.name)} ${verb} against ${targetName}.`;
+            const speakerName = this.formatName(context.speaker.name);
+            
+            // Richer fallback prose
+            const flourishes = [
+                `with a frantic motion`,
+                `without hesitation`,
+                `finding a brief opening`,
+                `driven by pure instinct`,
+                `in the heat of the fray`
+            ];
+            const flourish = flourishes[Math.floor(Math.random() * flourishes.length)];
+            
+            return `${speakerName} ${verb} ${targetName} ${flourish}.`;
         }
 
         return this.interpolate(bestTemplate.text, context);
