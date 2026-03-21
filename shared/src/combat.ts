@@ -149,14 +149,42 @@ export class CombatEngine {
 
                 const defender = targets[Math.floor(Math.random() * targets.length)]!;
                 
-                const atkStr = attacker.stats.strength || 10;
-                const atkInt = attacker.stats.intelligence || 10;
-                const atkAgil = attacker.stats.agility || 10;
-                const atkSpirit = attacker.stats.spirit || 10;
-                const defVit = defender.stats.vitality || 10;
-                const defSpirit = defender.stats.spirit || 10;
-                const defAgil = defender.stats.agility || 10;
-                const atkLuck = attacker.stats.luck || 10;
+                const getTotalStats = (c: typeof attacker) => {
+                    const base = c.stats;
+                    let bonus = { strength: 0, intelligence: 0, agility: 0, vitality: 0, spirit: 0, luck: 0 };
+                    
+                    [c.weapon, c.armor, c.accessory].forEach(item => {
+                        if (item) {
+                            bonus.strength += item.stats.strength || 0;
+                            bonus.intelligence += item.stats.intelligence || 0;
+                            bonus.agility += item.stats.agility || 0;
+                            bonus.vitality += item.stats.vitality || 0;
+                            bonus.spirit += item.stats.spirit || 0;
+                            bonus.luck += item.stats.luck || 0;
+                        }
+                    });
+                    
+                    return {
+                        strength: base.strength + bonus.strength,
+                        intelligence: base.intelligence + bonus.intelligence,
+                        agility: base.agility + bonus.agility,
+                        vitality: base.vitality + bonus.vitality,
+                        spirit: base.spirit + bonus.spirit,
+                        luck: base.luck + bonus.luck
+                    };
+                };
+                
+                const atkStats = getTotalStats(attacker);
+                const defStats = getTotalStats(defender);
+                
+                const atkStr = atkStats.strength || 10;
+                const atkInt = atkStats.intelligence || 10;
+                const atkAgil = atkStats.agility || 10;
+                const atkSpirit = atkStats.spirit || 10;
+                const defVit = defStats.vitality || 10;
+                const defSpirit = defStats.spirit || 10;
+                const defAgil = defStats.agility || 10;
+                const atkLuck = atkStats.luck || 10;
 
                 const isMissValue = Math.random() > (0.7 + (atkAgil - defAgil) * 0.02);
                 let damage = 0;
