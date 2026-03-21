@@ -241,13 +241,14 @@ export const useGameStore = create<GameState>()(
             const { state: updatedState, victory } = data;
             
             if (updatedState) {
-              // Sync with server state but preserve local-only auth fields
+              // Sync with server state but preserve local-only auth fields and UI location
               set({ 
                 ...updatedState,
                 playerId: state.playerId,
                 isAuthenticated: state.isAuthenticated,
                 user: state.user,
-                token: state.token
+                token: state.token,
+                location: state.location // PRESERVE UI LOCATION
               });
             }
             

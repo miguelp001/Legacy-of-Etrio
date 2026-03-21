@@ -1,5 +1,5 @@
 import React from 'react';
-import { Droplets, Coins, TrendingUp } from 'lucide-react';
+import { Droplets, Coins, TrendingUp, ChevronRight } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
 const BloodMarket: React.FC = () => {
@@ -7,9 +7,9 @@ const BloodMarket: React.FC = () => {
   const [loading, setLoading] = React.useState(false);
 
   const packs = [
-    { name: 'Small Vial', amount: 50, cost: 500, description: 'A modest offering for a single night.' },
-    { name: 'Large Cask', amount: 250, cost: 2000, description: 'Sourced from the finest Bondi donors.' },
-    { name: 'Noble Reserve', amount: 1000, cost: 7500, description: 'Vintage blood from the high castes.' },
+    { name: 'Sanguine Vial', amount: 50, cost: 500, icon: '🧪' },
+    { name: 'Casket of Echoes', amount: 250, cost: 2000, icon: '🏺' },
+    { name: 'Ancestral Reserve', amount: 1000, cost: 7500, icon: '💎' },
   ];
 
   const handlePurchase = async (amount: number, cost: number) => {
@@ -24,67 +24,67 @@ const BloodMarket: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-fade-in pb-10">
-      <div className="glass p-6 md:p-8 rounded-3xl border-l-4 border-red-500/50 bg-red-950/20 relative overflow-hidden px-4 md:px-8">
-        <div className="absolute top-0 right-0 p-8 opacity-5 rotate-12 pointer-events-none">
-          <Droplets size={120} />
+    <div className="space-y-6 animate-fade-in pb-32">
+      {/* Dynamic Status Header */}
+      <div className="mx-4 glass p-6 rounded-[2.5rem] border-red-500/20 bg-red-500/5 relative overflow-hidden">
+        <div className="absolute -top-4 -right-4 opacity-5 rotate-12">
+          <Droplets size={120} className="text-red-500" />
         </div>
         
-        <div className="flex items-center gap-4 mb-6 relative z-10">
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-red-500/20 rounded-2xl flex items-center justify-center text-red-500 shadow-xl shadow-red-500/20 shrink-0">
-            <Droplets size={24} className="md:w-8 md:h-8" />
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-14 h-14 bg-red-500/20 rounded-2xl flex items-center justify-center text-red-500 shadow-xl shadow-red-500/10">
+            <Droplets size={24} />
           </div>
           <div>
-            <h3 className="text-xl md:text-3xl font-black uppercase tracking-tighter italic">The Vein & Vesper</h3>
-            <p className="text-[10px] md:text-sm uppercase font-bold tracking-tight opacity-50">Nightsdeep's premier Blood Market.</p>
+            <h3 className="text-xl font-black uppercase tracking-tighter italic">Blood Registry</h3>
+            <span className="text-[10px] text-red-500/60 font-black uppercase tracking-widest leading-none">Market Volatility: Stable</span>
           </div>
         </div>
         
-        <div className="flex justify-between items-center mt-4 p-4 md:p-6 bg-black/40 rounded-2xl border border-white/5 relative z-10">
-          <div>
-            <div className="text-[8px] md:text-[10px] uppercase font-black tracking-[0.2em] text-white/30 mb-1">Current Rations</div>
-            <div className="text-2xl md:text-4xl font-black text-red-500 tracking-tighter italic">{bloodRations.toLocaleString()}</div>
+        <div className="bg-black/40 rounded-3xl border border-white/5 p-5 flex justify-between items-end">
+          <div className="space-y-1">
+            <span className="text-[9px] uppercase font-black tracking-widest text-white/20">Current Sanguine Stock</span>
+            <div className="text-4xl font-black text-red-500 tracking-tighter italic">{Math.floor(bloodRations).toLocaleString()}</div>
           </div>
-          <TrendingUp className="text-white/10" size={32} />
+          <TrendingUp className="text-white/10 mb-1" size={24} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 px-4 md:px-0">
+      {/* Packs - Vertical List for One Handed Tap */}
+      <div className="space-y-4 px-4">
+        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 ml-1">Acquisition Protocols</h4>
         {packs.map((pack) => (
-          <div key={pack.name} className="glass p-6 rounded-2xl border border-white/5 hover:border-red-500/30 transition-all group relative overflow-hidden flex flex-col">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 blur-3xl -mr-12 -mt-12 group-hover:bg-red-500/10 transition-all"></div>
-            
-            <h4 className="text-sm md:text-base font-black uppercase tracking-widest mb-1 group-hover:text-red-500 transition-colors">{pack.name}</h4>
-            <p className="text-[10px] md:text-xs text-muted mb-6 italic leading-relaxed opacity-60 flex-1">{pack.description}</p>
-            
-            <div className="flex items-center justify-between pt-4 border-t border-white/5">
-              <div>
-                <div className="text-[8px] uppercase font-black tracking-widest opacity-30">Amount</div>
-                <div className="text-xl font-black text-red-500 tracking-tighter italic">+{pack.amount}</div>
-              </div>
-              <button 
-                onClick={() => handlePurchase(pack.amount, pack.cost)}
-                disabled={gold < pack.cost}
-                className={`px-5 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center gap-2 active:scale-95 ${
-                  gold >= pack.cost 
-                  ? 'bg-white text-black hover:bg-red-500 hover:text-white shadow-lg shadow-white/10' 
-                  : 'bg-white/5 text-white/10 cursor-not-allowed border border-white/5'
-                }`}
-              >
-                <Coins size={14} />
-                {pack.cost.toLocaleString()}g
-              </button>
+          <div key={pack.name} className="glass p-5 rounded-3xl border border-white/5 flex items-center justify-between group active:bg-red-500/5">
+            <div className="flex items-center gap-4">
+                <div className="text-2xl w-12 h-12 flex items-center justify-center bg-white/5 rounded-2xl border border-white/5">
+                    {pack.icon}
+                </div>
+                <div>
+                   <div className="text-xs font-black uppercase tracking-tight">{pack.name}</div>
+                   <div className="text-lg font-black text-red-500">+{pack.amount} <span className="text-[10px] uppercase text-white/20 ml-1 italic">Rations</span></div>
+                </div>
             </div>
+
+            <button 
+              onClick={() => handlePurchase(pack.amount, pack.cost)}
+              disabled={gold < pack.cost || loading}
+              className={`h-14 px-6 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-2 transition-all active:scale-90 ${
+                gold >= pack.cost 
+                ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' 
+                : 'bg-white/5 text-white/20 border border-white/10 opacity-50'
+              }`}
+            >
+              <Coins size={14} />
+              {pack.cost.toLocaleString()}
+            </button>
           </div>
         ))}
       </div>
 
-      <div className="glass p-6 md:p-8 rounded-3xl border border-dashed border-red-500/20 bg-red-500/5 px-4 md:px-8 mx-4 md:mx-0">
-        <h5 className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] mb-3 text-red-500/50">Market Notice:</h5>
-        <p className="text-[10px] md:text-xs leading-relaxed italic text-muted opacity-80">
-          The Consumption of blood is a necessity for the Children of the Night. 
-          Without regular rations, your vampires will enter a state of <span className="text-red-500 font-bold">Starvation</span>, 
-          halving their physical and spiritual prowess.
+      {/* Narrative Footer */}
+      <div className="mx-4 p-5 glass border-dashed border-red-500/20 bg-red-500/5 rounded-3xl">
+        <p className="text-[10px] leading-relaxed italic text-muted opacity-60 font-bold uppercase tracking-tight">
+          Blood is the currency of survival. Without it, the Children of the Night fade into starvation, their prowess halved by the creeping void.
         </p>
       </div>
     </div>

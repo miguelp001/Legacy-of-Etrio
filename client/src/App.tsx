@@ -13,7 +13,9 @@ import {
   Cloud,
   X,
   Castle,
-  History
+  History,
+  ChevronUp,
+  Plus
 } from 'lucide-react';
 import { useGameStore } from './store/gameStore';
 import Tavern from './components/Tavern';
@@ -45,6 +47,7 @@ const App: React.FC = () => {
   const [isFeedOpen, setIsFeedOpen] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [lastSnapshotData, setLastSnapshotData] = useState<any>(null);
+  const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
   const hasHandledSnapshot = useRef(false);
 
   useEffect(() => {
@@ -60,14 +63,13 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [isAuthenticated, saveProgress]);
 
-  // Heartbeat for lastLogout
   useEffect(() => {
     if (!isAuthenticated) return;
     const interval = setInterval(() => setLastLogout(Date.now()), 60000);
     return () => clearInterval(interval);
   }, [isAuthenticated, setLastLogout]);
 
-  // Snapshot handling (Background progress)
+  // Snapshot handling
   useEffect(() => {
     if (!isAuthenticated || !mainCharacter || hasHandledSnapshot.current) return;
 
@@ -150,139 +152,135 @@ const App: React.FC = () => {
   const NavItem = ({ id, icon: Icon, label, mobileOnly = false }: { id: string, icon: any, label: string, mobileOnly?: boolean }) => (
     <button
       onClick={() => setLocation(id)}
-      className={`flex flex-col md:flex-row items-center gap-1 md:gap-3 px-2 md:px-4 py-2 md:py-3 rounded-xl transition-all group ${
+      className={`flex flex-col items-center justify-center gap-1 px-1 py-2 h-full transition-all group relative ${
         location === id 
-        ? 'text-primary-color md:bg-primary-color md:text-white shadow-lg shadow-primary-color/20' 
-        : 'text-muted hover:bg-white/5 hover:text-white'
-      } ${mobileOnly ? 'md:hidden' : ''}`}
+        ? 'text-primary-color' 
+        : 'text-muted hover:text-white'
+      } ${mobileOnly ? 'md:hidden' : ''} flex-1`}
     >
-      <Icon size={20} className={location === id ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'} />
-      <span className="font-bold text-[10px] md:text-sm tracking-tight uppercase md:capitalize">{label}</span>
+      <Icon size={24} className={location === id ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'} />
+      <span className="font-black text-[8px] uppercase tracking-tighter">{label}</span>
+      {location === id && (
+        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-primary-color rounded-full shadow-[0_0_8px_var(--primary-glow)]" />
+      )}
     </button>
   );
 
+  // Master Action Button Logic
+  const getMABAction = () => {
+    switch(location) {
+      case 'The Pit': return { label: 'Descend', icon: Sword, action: () => null /* Handled by Pit state */ };
+      case 'Hospital': return { label: 'Heal All', icon: HeartPulse, action: () => null /* Inject via ref or state */ };
+      case 'Tavern': return { label: 'Recruit', icon: Users, action: () => null };
+      default: return null;
+    }
+  };
+
+  const mab = getMABAction();
+
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col md:flex-row font-sans selection:bg-primary-color selection:text-white overflow-hidden relative">
-      {/* 1. TOP HEADER (Mobile & Desktop) */}
-      <header className="z-50 shrink-0 border-b border-white/10 bg-black/50 backdrop-blur-xl px-4 py-3 md:px-8 md:py-4 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gradient-to-br from-primary-color to-secondary-color flex items-center justify-center font-black italic shadow-lg shadow-primary-color/20">E</div>
-          <div className="hidden sm:block">
-            <h1 className="text-lg md:text-2xl font-black tracking-tighter leading-none uppercase">ETRIO</h1>
-            <span className="text-[8px] md:text-[10px] font-bold text-primary-color tracking-[0.3em] uppercase opacity-80">LEADERSHIP</span>
+      
+      {/* 1. TOP HEADER (Mobile Compact / Desktop Full) */}
+      <header className={`
+        z-50 shrink-0 border-b border-white/10 bg-black/50 backdrop-blur-xl px-4 transition-all duration-300
+        ${isHeaderExpanded ? 'h-32' : 'h-14 md:h-16'}
+      `}>
+        <div className="h-14 md:h-16 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-color to-secondary-color flex items-center justify-center font-black italic shadow-lg">E</div>
+            <h1 className="text-sm font-black tracking-tighter uppercase sm:text-lg">Legacy</h1>
+          </div>
+
+          <div className="flex items-center gap-2">
+             <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-full border border-white/5 md:px-4">
+                <Coins size={14} className="text-accent-color" />
+                <span className="font-black text-[10px] md:text-sm text-accent-color">{gold.toLocaleString()}</span>
+             </div>
+             
+             <button 
+                onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+                className="p-1.5 rounded-full bg-white/5 border border-white/10 text-muted active:scale-95 transition-transform"
+             >
+                <ChevronUp size={16} className={`transition-transform duration-300 ${isHeaderExpanded ? '' : 'rotate-180'}`} />
+             </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-4 lg:gap-6">
-          <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full border border-white/10 glass">
-            <Droplets size={14} className="text-red-500" />
-            <span className="font-black text-xs text-red-500">{Math.floor(bloodRations)}</span>
-          </div>
-          
-          <button 
-            onClick={() => setResonatorActive(!isResonatorActive)}
-            className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all glass ${
-              isResonatorActive ? 'bg-primary-color/20 border-primary-color text-primary-color shadow-lg' : 'bg-white/5 border-white/10 text-muted'
-            }`}
-          >
-            <Zap size={14} />
-            <span className="font-black text-[10px] uppercase tracking-tighter">{isResonatorActive ? 'Resonator On' : 'Resonator'}</span>
-          </button>
-
-          <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full border border-white/10 glass">
-            <Coins size={14} className="text-accent-color" />
-            <span className="font-black text-xs text-accent-color">{gold.toLocaleString()}g</span>
-          </div>
-
-          <button
-            onClick={() => setIsFeedOpen(true)}
-            className={`lg:hidden p-2 rounded-full hover:bg-white/10 text-muted transition-all relative ${events.length > 0 ? 'text-primary-color' : ''}`}
-          >
-            <History size={20} />
-            {events.filter(ev => ev && ev.id).length > 0 && <span className="absolute top-0 right-0 w-2 h-2 bg-primary-color rounded-full animate-ping" />}
-          </button>
+        {/* Expanded Header Stats */}
+        <div className={`flex gap-4 overflow-hidden transition-all duration-300 ${isHeaderExpanded ? 'h-16 opacity-100' : 'h-0 opacity-0'}`}>
+           <div className="flex-1 glass p-2 flex flex-col justify-center items-center border-red-500/20">
+              <Droplets size={12} className="text-red-500 mb-1" />
+              <span className="font-black text-xs">{Math.floor(bloodRations)}</span>
+           </div>
+           <button 
+             onClick={() => setResonatorActive(!isResonatorActive)}
+             className={`flex-1 glass p-2 flex flex-col justify-center items-center transition-colors ${isResonatorActive ? 'border-primary-color bg-primary-color/10' : 'border-white/5'}`}
+           >
+              <Zap size={12} className={isResonatorActive ? 'text-primary-color' : 'text-muted'} />
+              <span className="font-black text-[8px] uppercase mt-1">Resonator</span>
+           </button>
+           <button 
+             onClick={() => setIsFeedOpen(true)}
+             className="flex-1 glass p-2 flex flex-col justify-center items-center border-white/5"
+           >
+              <History size={12} className="text-muted" />
+              <span className="font-black text-[8px] uppercase mt-1">Logs</span>
+           </button>
         </div>
       </header>
 
       {/* 2. SIDEBAR (Desktop Only) */}
       <aside className="hidden md:flex flex-col w-64 lg:w-72 bg-[#0a0a0a] border-r border-white/10 shrink-0">
-        <nav className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar space-y-8">
-          <div className="space-y-1">
-            <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2">Command</h3>
-            <NavItem id="Respite" icon={LayoutDashboard} label="Overview" />
-            <NavItem id="The Pit" icon={Sword} label="The Pit" />
-          </div>
-
-          <div className="space-y-1">
-            <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2">The Hub</h3>
-            <NavItem id="Tavern" icon={Users} label="Tavern" />
-            <NavItem id="Hospital" icon={HeartPulse} label="Infirmary" />
-            <NavItem id="Blacksmith" icon={Shield} label="Forge" />
-            <NavItem id="Market" icon={Droplets} label="Blood Market" />
-          </div>
-
-          <div className="space-y-1">
-            <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2">Legacy</h3>
-            <NavItem id="Basilica" icon={Sparkles} label="Basilica" />
-            <NavItem id="Guild Hall" icon={Castle} label="Guild Hall" />
-            <NavItem id="Lineage" icon={History} label="Lineage Hall" />
-          </div>
+        <nav className="flex-1 overflow-y-auto px-4 py-8 space-y-8">
+            <div className="space-y-1">
+              <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2">Command</h3>
+              <NavItem id="Respite" icon={LayoutDashboard} label="Overview" />
+              <NavItem id="The Pit" icon={Sword} label="The Pit" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-2">Hub</h3>
+              <NavItem id="Tavern" icon={Users} label="Tavern" />
+              <NavItem id="Hospital" icon={HeartPulse} label="Infirmary" />
+              <NavItem id="Blacksmith" icon={Shield} label="Forge" />
+              <NavItem id="Market" icon={Droplets} label="Market" />
+            </div>
         </nav>
-
-        <div className="p-4 border-t border-white/5 m-4 glass rounded-2xl bg-primary-color/5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Aether Sync</span>
-            <Cloud size={12} className="text-primary-color opacity-50" />
-          </div>
-          <p className="text-[10px] text-muted leading-tight line-clamp-2">Your lineage is preserved in the eternal archives.</p>
-        </div>
       </aside>
 
       {/* 3. MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[radial-gradient(circle_at_50%_0%,rgba(168,85,247,0.05)_0%,transparent_50%)]">
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 lg:p-12 pb-32 md:pb-8">
-          <div className="max-w-4xl mx-auto space-y-8">
-            <header className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl md:text-5xl font-black italic tracking-tighter uppercase text-glow">{location}</h2>
-                <div className="text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-black text-primary-color/60 mt-1">Operational Module</div>
-              </div>
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        <div className="flex-1 overflow-y-auto custom-scrollbar thumb-scroll">
+          <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
+            <header className="md:mb-8">
+              <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase text-glow">{location}</h2>
+              <div className="text-[9px] uppercase tracking-[0.4em] font-black text-primary-color/60 mt-1">Operational Module</div>
             </header>
 
             <section className="animate-fade-in">
               {location === 'Respite' && (
                 <div className="space-y-6">
                   <div className="glass p-6 md:p-10 rounded-[2rem] border border-white/5 relative overflow-hidden group">
-                    <div className="absolute -top-10 -right-10 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                      <Castle size={200} />
-                    </div>
-                    <h3 className="text-xl md:text-3xl font-black mb-2 md:mb-4 italic tracking-tighter">VANGUARD STATUS</h3>
-                    <p className="text-muted leading-relaxed mb-6 md:mb-8 text-sm md:text-lg max-w-2xl">All systems operational. The Depths hum with ancient resonance. Monitor your party's vitality at the Infirmary or expand the guild's reach through the Guild Hall.</p>
-                    <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-                      <button onClick={() => setLocation('The Pit')} className="btn-primary w-full sm:w-auto px-8 py-3 md:py-4 text-base md:text-lg flex justify-center">Enter The Pit</button>
-                      <button onClick={() => setLocation('Tavern')} className="btn-outline w-full sm:w-auto px-8 py-3 md:py-4 text-base md:text-lg flex justify-center">Visit Tavern</button>
+                    <h3 className="text-xl md:text-3xl font-black mb-2 italic tracking-tighter">VANGUARD STATUS</h3>
+                    <p className="text-muted leading-relaxed mb-6 text-sm md:text-lg">The Depths hum with ancient resonance. Monitor your party's vitality or expand your reach.</p>
+                    <div className="flex gap-3">
+                      <button onClick={() => setLocation('The Pit')} className="btn-primary flex-1 py-4 justify-center">Enter The Pit</button>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6">
-                    <div className="glass p-4 md:p-6 rounded-2xl border border-white/5 flex flex-col justify-between h-32 md:h-40">
-                      <div className="flex items-center gap-2 md:gap-3 text-primary-color">
-                        <Users size={18} />
-                        <h4 className="font-bold text-[10px] md:text-xs uppercase tracking-widest opacity-50">Active Party</h4>
-                      </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="glass p-4 rounded-2xl border border-white/5 flex flex-col justify-between h-32">
+                      <Users size={18} className="text-primary-color" />
                       <div>
-                        <div className="text-3xl md:text-5xl font-black tracking-tighter italic">{party.length + (mainCharacter ? 1 : 0)}<span className="text-xl md:text-2xl opacity-20 ml-1">/ 4</span></div>
-                        <div className="text-[10px] text-muted mt-1 uppercase tracking-tighter font-bold">Vanguard Deployed</div>
+                        <div className="text-3xl font-black italic">{party.length + (mainCharacter ? 1 : 0)}<span className="text-lg opacity-20 ml-1">/4</span></div>
+                        <div className="text-[9px] text-muted uppercase font-bold tracking-tighter">Vanguard</div>
                       </div>
                     </div>
-                    <div className="glass p-4 md:p-6 rounded-2xl border border-white/5 flex flex-col justify-between h-32 md:h-40">
-                      <div className="flex items-center gap-2 md:gap-3 text-secondary-color">
-                        <Mountain size={18} />
-                        <h4 className="font-bold text-[10px] md:text-xs uppercase tracking-widest opacity-50">Penetration</h4>
-                      </div>
+                    <div className="glass p-4 rounded-2xl border border-white/5 flex flex-col justify-between h-32">
+                      <Mountain size={18} className="text-secondary-color" />
                       <div>
-                        <div className="text-3xl md:text-5xl font-black tracking-tighter italic">{currentFloor}<span className="text-xl md:text-2xl opacity-20 ml-1">F</span></div>
-                        <div className="text-[10px] text-muted mt-1 uppercase tracking-tighter font-bold">Maximum Reached</div>
+                        <div className="text-3xl font-black italic">{currentFloor}F</div>
+                        <div className="text-[9px] text-muted uppercase font-bold tracking-tighter">Penetration</div>
                       </div>
                     </div>
                   </div>
@@ -300,14 +298,29 @@ const App: React.FC = () => {
             </section>
           </div>
         </div>
+
+        {/* Master Action Button (MAB) - Only on Mobile */}
+        {mab && (
+          <div className="md:hidden mab-container">
+            <button 
+              onClick={mab.action}
+              className="mab-primary flex items-center justify-center p-0 transition-transform active:rotate-12"
+            >
+              <mab.icon size={28} />
+            </button>
+            <div className="bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest shadow-xl">
+              {mab.label}
+            </div>
+          </div>
+        )}
       </main>
 
-      {/* 4. ACTION FEED (Drawer for Mobile, Side Panel for Desktop) */}
-      <aside className={`
-        fixed inset-y-0 right-0 z-[60] w-full sm:w-[400px] lg:relative lg:flex lg:w-[400px] bg-[#080808] border-l border-white/10 flex-col overflow-hidden transition-transform duration-500
-        ${isFeedOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+      {/* 4. ACTION FEED DRAWER */}
+       <aside className={`
+        fixed inset-y-0 right-0 z-[100] w-full sm:w-[400px] bg-[#080808]/95 backdrop-blur-2xl border-l border-white/10 flex flex-col transition-transform duration-500
+        ${isFeedOpen ? 'translate-x-0' : 'translate-x-full'}
       `}>
-        <div className="lg:hidden flex items-center justify-between p-6 border-b border-white/10 bg-black/30 backdrop-blur-xl">
+        <div className="flex items-center justify-between p-6 border-b border-white/10 bg-black/30">
            <h3 className="text-xl font-black italic tracking-tighter uppercase">Tactical Feed</h3>
            <button onClick={() => setIsFeedOpen(false)} className="p-2 text-muted hover:text-white transition-colors">
               <X size={24} />
@@ -316,22 +329,14 @@ const App: React.FC = () => {
         <ActionFeed events={events} onLayToRest={handleLayToRest} floor={currentFloor} />
       </aside>
 
-      {/* 5. BOTTOM NAVIGATION (Mobile Only) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-t border-white/10 px-2 py-3 pb-8 flex justify-around items-center">
+      {/* 5. BOTTOM NAVIGATION (Mobile Only - Thumb Zone) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[110] bg-black/60 backdrop-blur-3xl border-t border-white/10 px-2 h-20 flex justify-around items-center pb-safe-bottom">
         <NavItem id="Respite" icon={LayoutDashboard} label="Home" />
         <NavItem id="The Pit" icon={Sword} label="The Pit" />
         <NavItem id="Tavern" icon={Users} label="Tavern" />
-        <NavItem id="Guild Hall" icon={Castle} label="Guild" />
-        <button 
-          onClick={() => {
-            const nextLocation = location === 'Market' ? 'Respite' : 'Market';
-            setLocation(nextLocation);
-          }}
-          className={`flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-all ${location === 'Market' ? 'text-primary-color' : 'text-muted'}`}
-        >
-          <Droplets size={20} />
-          <span className="font-bold text-[10px] uppercase tracking-tight">Market</span>
-        </button>
+        <NavItem id="Hospital" icon={HeartPulse} label="Med" />
+        <NavItem id="Blacksmith" icon={Shield} label="Forge" />
+        <NavItem id="Market" icon={Droplets} label="Blood" />
       </nav>
 
       {!mainCharacter && <CharacterCreation />}
@@ -339,8 +344,8 @@ const App: React.FC = () => {
 
       {/* Depth Map Modal */}
       {showMap && lastSnapshotData && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in">
+          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar p-6 glass border-primary-color/20">
              <DepthMap 
                events={lastSnapshotData.events} 
                startFloor={currentFloor} 
@@ -348,7 +353,7 @@ const App: React.FC = () => {
              />
              <button 
                onClick={() => setShowMap(false)}
-               className="w-full mt-6 py-5 bg-primary-color text-white rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] transition-all shadow-xl shadow-primary-color/20"
+               className="w-full mt-6 py-4 bg-primary-color text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary-color/30"
              >
                Return to Hub
              </button>
