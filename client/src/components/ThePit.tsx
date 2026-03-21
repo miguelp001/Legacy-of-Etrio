@@ -35,16 +35,12 @@ const ThePit: React.FC = () => {
         const room = floorReport?.roomResults?.[currentRoomIdx];
         if (room) {
             console.log('[PIT] Room Data:', room);
-            // If room has combat and we haven't started simulating or showing events,
-            // we should technically refresh localPartyHP if it's the START of the floor.
-            // But let's handle initialization when floorReport is first set.
         }
         return room;
     }, [floorReport, currentRoomIdx]);
 
     const startDescent = async () => {
         setLoading(true);
-        // Pre-capture current HP states for visual simulation
         const initialHPs: Record<string, number> = {};
         if (mainCharacter) initialHPs[mainCharacter.id] = mainCharacter.hp;
         party.forEach(m => { initialHPs[m.id] = m.hp; });
@@ -53,7 +49,6 @@ const ThePit: React.FC = () => {
         try {
             const res = await processCombatTick();
             if (res && res.floorData && Array.isArray(res.roomResults)) {
-                console.log('[PIT] Raw Floor Report:', res);
                 setFloorReport(res);
                 setCurrentRoomIdx(0);
                 setTurnIndex(0);
@@ -61,11 +56,9 @@ const ThePit: React.FC = () => {
                 setIsSimulating(false);
                 setIsActive(true);
             } else {
-                console.error('Invalid response from server:', res);
                 alert('Descent calculation failed: Invalid response from server.');
             }
         } catch (error: any) {
-            console.error('Descent failed:', error);
             alert(`Descent failed: ${error.message || 'Unknown error'}`);
         } finally {
             setLoading(false);
@@ -85,7 +78,6 @@ const ThePit: React.FC = () => {
         }
     }, [currentRoomIdx, floorReport]);
 
-    // Combat Simulation Effect
     useEffect(() => {
         if (!activeRoom || !activeRoom.combatResult) {
             setIsSimulating(false);
@@ -113,9 +105,7 @@ const ThePit: React.FC = () => {
         }
 
         if (turnIndex < events.length) {
-            // Only set once to avoid re-triggering effect
             setIsSimulating(true);
-            
             const timer = setTimeout(() => {
                 const newEvent = events[turnIndex];
                 if (!newEvent || turnIndex >= events.length) {
@@ -128,9 +118,7 @@ const ThePit: React.FC = () => {
                     return [...prev, newEvent];
                 });
 
-                // Update local party HP if they are the defender
                 if (turnIndex === events.length - 1) {
-                    console.log(`[PIT-SIM] Room ${currentRoomIdx} - Adding all ${events.length} events to global store`);
                     addEvents(events);
                 }
 
@@ -140,9 +128,8 @@ const ThePit: React.FC = () => {
         } else {
             setIsSimulating(false);
         }
-    }, [activeRoom, turnIndex, currentRoomIdx, mainCharacter?.id, party.length, addEvents]);
+    }, [activeRoom, turnIndex, currentRoomIdx, party.length, addEvents]);
 
-    // Auto-Progression Effect
     useEffect(() => {
         if (!isActive || isSimulating || !floorReport || !activeRoom) return;
 
@@ -154,7 +141,6 @@ const ThePit: React.FC = () => {
 
         if ((combatFinished && victory) || noCombatEvents) {
             if (currentRoomIdx < floorReport.roomResults.length - 1) {
-                console.log(`[PIT-AUTO] Advancing from room ${currentRoomIdx + 1}`);
                 const timer = setTimeout(() => {
                     nextRoom();
                 }, isCombatRoom ? 3000 : 2000);
@@ -168,21 +154,21 @@ const ThePit: React.FC = () => {
             <div className="space-y-6 md:space-y-8 animate-fade-in max-w-2xl mx-auto py-6 md:py-10">
                 <div className="text-center space-y-4">
                     <div className="w-16 h-16 md:w-24 md:h-24 bg-primary-color/10 border-2 border-primary-color/30 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-2xl shadow-primary-color/20">
-                        <Lucide.Skull size={32} className="text-primary-color animate-pulse md:hidden" />
                         <Lucide.Skull size={40} className="text-primary-color animate-pulse hidden md:block" />
+                        <Lucide.Skull size={32} className="text-primary-color animate-pulse md:hidden" />
                     </div>
                     <h2 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase text-gradient">The Pit</h2>
                     <p className="text-muted text-sm md:text-lg max-w-md mx-auto px-4">Abyssal depths await. Secure every sector.</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 md:gap-4 px-4">
+                <div className="grid grid-cols-2 gap-4 px-4">
                     <div className="glass p-4 md:p-6 rounded-2xl border border-white/5 text-center">
-                        <Lucide.MapPin className="mx-auto mb-1 md:mb-2 text-primary-color" size={16} />
+                        <Lucide.MapPin className="mx-auto mb-2 text-primary-color" size={16} />
                         <div className="text-xs font-black uppercase text-white/30 tracking-widest">Active Biome</div>
                         <div className="text-sm md:text-xl font-black">{biome}</div>
                     </div>
                     <div className="glass p-4 md:p-6 rounded-2xl border border-white/5 text-center">
-                        <Lucide.Skull className="mx-auto mb-1 md:mb-2 text-danger-color" size={16} />
+                        <Lucide.Skull className="mx-auto mb-2 text-danger-color" size={16} />
                         <div className="text-xs font-black uppercase text-white/30 tracking-widest">Target Floor</div>
                         <div className="text-sm md:text-xl font-black">{currentFloor}</div>
                     </div>
@@ -192,7 +178,7 @@ const ThePit: React.FC = () => {
                     <button 
                       onClick={startDescent} 
                       disabled={loading || party.length === 0}
-                      className="w-full py-4 md:py-6 bg-primary-color hover:bg-primary-color/80 text-white rounded-2xl md:rounded-[2rem] font-black uppercase tracking-widest shadow-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-4"
+                      className="w-full py-6 bg-primary-color hover:bg-primary-color/80 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-4"
                     >
                         {loading ? <Lucide.Loader2 className="animate-spin" /> : <Lucide.Play fill="currentColor" />}
                         {party.length === 0 ? "No Party Assigned" : "COMMENCE DESCENT"}
@@ -203,15 +189,14 @@ const ThePit: React.FC = () => {
     }
 
     return (
-        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl pt-4 md:pt-10 px-4 md:px-10 animate-fade-in overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl pt-10 px-10 animate-fade-in overflow-hidden flex flex-col">
             <div className="max-w-6xl mx-auto w-full h-full flex flex-col">
-                {/* Header */}
                 <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10 shrink-0">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-primary-color flex items-center justify-center font-black italic text-xl">E</div>
                         <div>
-                           <h2 className="text-xl md:text-2xl font-black tracking-tighter uppercase">Floor {currentFloor}</h2>
-                           <span className="text-[8px] md:text-[10px] font-black text-primary-color uppercase tracking-widest">Descent Sequence</span>
+                           <h2 className="text-2xl font-black tracking-tighter uppercase">Floor {currentFloor}</h2>
+                           <span className="text-[10px] font-black text-primary-color uppercase tracking-widest">Descent Sequence</span>
                         </div>
                     </div>
                     
@@ -229,22 +214,21 @@ const ThePit: React.FC = () => {
 
                     <button 
                         onClick={() => { setIsActive(false); setFloorReport(null); }}
-                        className="p-2 md:p-3 hover:bg-white/10 rounded-xl text-muted hover:text-white transition-all flex items-center gap-2"
+                        className="p-3 hover:bg-white/10 rounded-xl text-muted hover:text-white transition-all flex items-center gap-2"
                     >
-                        <span className="hidden md:block text-[10px] font-black uppercase tracking-widest text-primary-color">Retreat</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary-color">Retreat</span>
                         <Lucide.X size={20} />
                     </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar pb-10 space-y-6">
-                    {/* Scene / Description */}
-                    <div className="glass p-6 md:p-10 rounded-3xl border border-white/10 relative overflow-hidden bg-gradient-to-br from-primary-color/5 to-transparent shrink-0">
+                    <div className="glass p-10 rounded-3xl border border-white/10 relative overflow-hidden bg-gradient-to-br from-primary-color/5 to-transparent shrink-0">
                          <div className="absolute top-0 right-0 p-8 opacity-5">
                              {activeRoom?.type === 'Encounter' ? <Lucide.Swords size={150} /> : <Lucide.MapPin size={150} />}
                          </div>
                          <div className="relative z-10 max-w-3xl">
-                            <h3 className="text-2xl md:text-4xl font-black italic tracking-tighter mb-4 text-glow">{activeRoom?.type} <span className="text-white/30 ml-2">#{currentRoomIdx + 1}</span></h3>
-                            <p className="text-base md:text-xl text-muted leading-relaxed font-light italic">"{activeRoom?.description}"</p>
+                            <h3 className="text-4xl font-black italic tracking-tighter mb-4 text-glow">{activeRoom?.type} <span className="text-white/30 ml-2">#{currentRoomIdx + 1}</span></h3>
+                            <p className="text-xl text-muted leading-relaxed font-light italic">"{activeRoom?.description}"</p>
                             
                             {!isSimulating && (
                                 <div className="mt-8 flex flex-col items-start gap-4">
@@ -262,10 +246,8 @@ const ThePit: React.FC = () => {
                          </div>
                     </div>
 
-                    {/* Battle Visualization */}
                     {(activeRoom?.combatResult || isSimulating) && (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-slide-up">
-                            {/* Party Status */}
                             <div className="glass p-6 rounded-2xl border border-white/5 space-y-4">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-primary-color border-b border-white/5 pb-2 flex items-center gap-2">
                                     <Lucide.Zap size={10} /> THE VANGUARD
@@ -291,7 +273,6 @@ const ThePit: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Hostiles Status */}
                             <div className="glass p-6 rounded-2xl border border-white/5 space-y-4">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-danger-color border-b border-white/5 pb-2 flex items-center gap-2">
                                     <Lucide.Skull size={10} /> HOSTILES DETECTED
@@ -319,14 +300,12 @@ const ThePit: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Tactical Feed */}
-                            <div className="glass p-6 rounded-2xl border border-white/5 flex flex-col h-[250px] lg:h-full min-h-[250px]">
+                            <div className="glass p-6 rounded-2xl border border-white/5 flex flex-col h-full min-h-[250px]">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-warning-color/50 border-b border-white/5 pb-2 flex items-center gap-2">
                                     <Lucide.Zap size={10} /> TACTICAL LOG
                                 </h4>
                                 <div className="flex-1 overflow-y-auto mt-4 space-y-3 custom-scrollbar pr-2">
                                     {(displayedEvents || []).slice(-10).map((ev, i) => {
-                                        // Helper to extract name from marker
                                         const getName = (marker: string) => {
                                             const match = marker.match(/\[\[NAME:([^:]+):([^\]]+)\]\]/);
                                             return match ? match[2] : marker;
@@ -339,10 +318,7 @@ const ThePit: React.FC = () => {
                                         const attackerName = getName(ev.attackerName);
                                         const attackerHouse = getHouse(ev.attackerName);
                                         const attackerClass = attackerHouse === 'none' ? 'noble-default' : `house-${attackerHouse}`;
-
                                         const defenderName = getName(ev.defenderName);
-                                        const defenderHouse = getHouse(ev.defenderName);
-                                        const defenderClass = defenderHouse === 'none' ? 'noble-default' : `house-${defenderHouse}`;
 
                                         const cleanBanter = ev.banter?.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '$1');
                                         
@@ -353,17 +329,9 @@ const ThePit: React.FC = () => {
                                                     <span className={`px-1.5 py-0.5 rounded-[2px] font-black uppercase text-[9px] border border-white/5 ${attackerClass} bg-white/5`}>
                                                         {attackerName}
                                                     </span>
-                                                    {!ev.banter && (
-                                                        <>
-                                                            <span className="text-white/20 text-[8px]">VS</span>
-                                                            <span className={`px-1.5 py-0.5 rounded-[2px] font-black uppercase text-[9px] border border-white/5 ${defenderClass} bg-white/5`}>
-                                                                {defenderName}
-                                                            </span>
-                                                        </>
-                                                    )}
                                                 </div>
                                                 <div className="pl-6 text-white/70 leading-relaxed border-l border-white/5 py-1">
-                                                    {cleanBanter || (ev.damage > 0 ? `Struck for ${ev.damage} damage` : "Missed the strike")}
+                                                    {cleanBanter || (ev.damage > 0 ? `Advances with a strike against ${defenderName}` : `Overextends against ${defenderName}`)}
                                                     {ev.damage > 0 && <span className="text-danger-color font-bold ml-1">-{ev.damage} {ev.isCrit && "💥"}</span>}
                                                 </div>
                                             </div>
@@ -380,7 +348,6 @@ const ThePit: React.FC = () => {
                     )}
                 </div>
             </div>
-            {/* Background Atmosphere */}
             <div className="absolute inset-0 z-[-1] opacity-20 pointer-events-none">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary-color/20 rounded-full blur-[200px] animate-pulse"></div>
             </div>

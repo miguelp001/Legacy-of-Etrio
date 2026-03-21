@@ -75,23 +75,21 @@ const ActionFeed: React.FC<ActionFeedProps> = ({ events, onLayToRest, floor = 1 
               <span className="text-muted opacity-30 font-mono text-[10px] mt-1">[{event.turn}]</span>
               
               <div className="flex-1">
-                {event.banter ? (
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center">
-                      {renderNameBadge(event.attackerName)}
-                      <span className="text-[10px] font-bold text-muted uppercase tracking-widest opacity-50">Narrative</span>
-                    </div>
-                    <div className="text-white/90 italic pl-1 border-l-2 border-white/5 mt-1">
-                      {renderRichText(event.banter, event.damage > 0, event.isCrit)}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center flex-wrap gap-y-1">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center">
                     {renderNameBadge(event.attackerName)}
-                    <span className="text-muted px-1 text-[10px]">⚔️</span>
-                    {renderNameBadge(event.defenderName)}
+                    <span className="text-[10px] font-bold text-muted uppercase tracking-widest opacity-50">
+                      {event.banter ? "Narrative" : "Action"}
+                    </span>
                   </div>
-                )}
+                  <div className="text-white/90 italic pl-1 border-l-2 border-white/5 mt-1">
+                    {renderRichText(
+                      event.banter || `${event.attackerName} ${event.damage > 0 ? "executes a strike" : "misses the mark"} against ${event.defenderName}.`,
+                      event.damage > 0,
+                      event.isCrit
+                    )}
+                  </div>
+                </div>
                 
                 {event.damage > 0 && (
                   <div className="mt-1 flex items-center gap-2">

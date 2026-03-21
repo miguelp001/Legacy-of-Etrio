@@ -25,7 +25,17 @@ attack_stems = [
     "The ${speaker} drives their weight forward,",
     "Spinning their weapon in a deadly arc, the ${speaker}",
     "The ${speaker} waits for a gap in the guard,",
-    "Like a predator closing in, the ${speaker}"
+    "Like a predator closing in, the ${speaker}",
+    "The ${speaker} swings wildly in the dark,",
+    "With a frantic, overextended chop, the ${speaker}",
+    "The ${speaker} lashes out in a raw display of power,",
+    "Sensing the end, the ${speaker} goes for the throat,",
+    "The ${speaker} dances on the edge of destruction,",
+    "With a scream that echoes through the abyss, the ${speaker}",
+    "The ${speaker} barely maintains their grip as they",
+    "Fueled by aetheric corruption, the ${speaker}",
+    "The ${speaker} strikes with a precision that defies nature,",
+    "With a weary but determined motion, the ${speaker}"
 ]
 
 attack_flourishes = [
@@ -43,7 +53,17 @@ attack_flourishes = [
     "the scent of ozone filling the air as they ${verb} the **${target}**.",
     "their weapon biting deep as they ${verb} the **${target}**.",
     "the **${target}**'s scream cut short as they ${verb} them.",
-    "the ground cracking beneath them as they ${verb} the **${target}**."
+    "the ground cracking beneath them as they ${verb} the **${target}**.",
+    "nearly losing their balance as they ${verb} the **${target}**.",
+    "their weapon whistling through the stale air as they ${verb} the **${target}**.",
+    "sending a shower of sparks as they ${verb} the **${target}**'s armor.",
+    "the force of the blow threatening to shatter their weapon as they ${verb} the **${target}**.",
+    "laughing like a madman as they ${verb} the **${target}**.",
+    "their eyes fixed on the empty space where the sun should be as they ${verb} the **${target}**.",
+    "with a strength born of pure desperation as they ${verb} the **${target}**.",
+    "the aetheric ink on their skin burning as they ${verb} the **${target}**.",
+    "their strike weaving a pattern of shadow as they ${verb} the **${target}**.",
+    "carving a story of ruin into the floor as they ${verb} the **${target}**."
 ]
 
 # --- Fragments for Defense ---
@@ -97,13 +117,23 @@ banter_quotes = [
     "'Every step is a gamble with eternity.'",
     "'I can feel the crystals growing in my marrow.'",
     "'The deep has no mercy. Only tests.'",
-    "'The salt in the air... it tastes like tears of the past.'"
+    "'The salt in the air... it tastes like tears of the past.'",
+    "'I saw a face in the smoke. It looked like mine.'",
+    "'Don't look too long at the crystals. They start looking back.'",
+    "'The silence is eating my thoughts.'",
+    "'I can hear the heartbeat of the world. It's slowing down.'",
+    "'We are just fuel for the Deep's cold fire.'",
+    "'Is it possible the surface was just a dream?'",
+    "'The ceiling... it's getting lower every day.'",
+    "'I am becoming part of the architecture.'",
+    "'Blood for the machine. Aether for the void.'",
+    "'There is no path forward, only deeper into the lie.'"
 ]
 
 # --- Generate Templates ---
 
-# 1. Combat Attack (600)
-for i in range(600):
+# 1. Combat Attack (1000)
+for i in range(1000):
     stem = random.choice(attack_stems)
     flourish = random.choice(attack_flourishes)
     trait = random.choice(traits)

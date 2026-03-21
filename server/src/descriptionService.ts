@@ -37,7 +37,10 @@ export class DescriptionService {
         const bestTemplate = scoredTemplates[0]?.template;
 
         if (!bestTemplate) {
-            return `${context.speaker.name} performs ${context.eventType.toLowerCase()}.`;
+            const baseVerbs = context.hitQuality === 'MISS' ? ['overextends', 'misses', 'swings wildly'] : ['advances', 'attacks', 'strikes'];
+            const verb = baseVerbs[Math.floor(Math.random() * baseVerbs.length)];
+            const targetName = this.formatName(context.target?.name || 'the void');
+            return `${this.formatName(context.speaker.name)} ${verb} against ${targetName}.`;
         }
 
         return this.interpolate(bestTemplate.text, context);
