@@ -59,6 +59,12 @@ export class SnapshotService {
         const timeElapsedMin = Math.floor(timeElapsedMs / (1000 * 60));
         const ticks = Math.min(Math.floor(timeElapsedMin / 2), 720); // 1 check every 2 minutes, max 24 hours
         
+        // Deep copy party to avoid mutating the original
+        const partyCopy = party.map(m => ({
+            ...m,
+            stats: { ...m.stats }
+        }));
+        
         let currentGold = 0;
         const foundItems: Item[] = [];
         const allEvents: CombatEvent[] = [];
@@ -72,15 +78,15 @@ export class SnapshotService {
             if (wiped) break;
 
             // Handle Blood Consumption
-            const vampireCount = party.filter(m => m.isVampire).length;
+            const vampireCount = partyCopy.filter(m => m.isVampire).length;
             const rationsNeeded = vampireCount * 5; // 5 rations per vampire per 2-min tick
 
             if (bloodRations >= rationsNeeded) {
                 bloodRations -= rationsNeeded;
-                party.forEach(m => { if (m.isVampire) m.isStarving = false; });
+                partyCopy.forEach(m => { if (m.isVampire) m.isStarving = false; });
             } else {
                 bloodRations = 0;
-                party.forEach(m => { if (m.isVampire) m.isStarving = true; });
+                partyCopy.forEach(m => { if (m.isVampire) m.isStarving = true; });
                 if (i % 30 === 0) { // Log starvation occasionally
                     allEvents.push({
                         id: `starve-${i}`,
@@ -98,7 +104,7 @@ export class SnapshotService {
             }
 
             // Handle Miracles
-            party.forEach(member => {
+            partyCopy.forEach(member => {
                 if (!member.isVampire && member.piety && member.piety > 0) {
                     const miracleChance = (member.piety / 100) * 0.05;
                     if (Math.random() < miracleChance) {
@@ -118,9 +124,9 @@ export class SnapshotService {
                         
                         // Apply temporary buff for this tick simulation if needed
                         if (blessing === 'Saluwan\'s Wrath') {
-                            party.forEach(p => p.stats.strength *= 1.2);
+                            partyCopy.forEach(p => p.stats.strength *= 1.2);
                         } else if (blessing === 'Mark the Path') {
-                            party.forEach(p => p.stats.luck *= 1.5);
+                            partyCopy.forEach(p => p.stats.luck *= 1.5);
                         }
                     }
                 }
@@ -175,12 +181,12 @@ export class SnapshotService {
                 const enemies = (room.enemies || []).map(e => ({ ...e, level: effectiveLevel, isEnemy: true } as Combatant));
                 
                 if (enemies.length > 0) {
-                    const result = CombatEngine.simulate(party, enemies);
+                    const result = CombatEngine.simulate(partyCopy, enemies);
                     
                     // Add GDD-compliant metadata to events
                     result.events.forEach(event => {
                         if (Math.random() > 0.8) {
-                            const speaker = party[Math.floor(Math.random() * party.length)];
+                            const speaker = partyCopy[Math.floor(Math.random() * partyCopy.length)];
                             if (speaker?.trait) {
                                 const banterPool = BANTER[speaker.trait];
                                 const banter = banterPool[Math.floor(Math.random() * banterPool.length)];
@@ -195,16 +201,16 @@ export class SnapshotService {
 
                     if (!result.victory) {
                         wiped = true;
-                        await this.handleWipe(playerId, party[0]?.name || 'Bondi', currentFloor);
+                        await this.handleWipe(playerId, partyCopy[0]?.name || 'Bondi', currentFloor);
                         
                         // Calculate Bloodprice for companions
-                        const companions = party.filter(p => p.id !== 'player-mc');
+                        const companions = partyCopy.filter(p => p.id !== 'player-mc');
                         companions.forEach(c => {
                             bloodpricePenalty += this.calculateBloodprice(c);
                         });
 
                         // Gear loss logic: Non-soulbound gear on all fallen members is lost
-                        party.forEach(member => {
+                        partyCopy.forEach(member => {
                             [member.weapon, member.armor, member.accessory].forEach(item => {
                                 if (item && !item.isSoulBound) {
                                     lostGear.push(item);
@@ -217,7 +223,7 @@ export class SnapshotService {
                             id: `wipe-${i}`,
                             turn: i,
                             attackerName: 'SYSTEM',
-                            defenderName: party[0]?.name || 'Bondi',
+                            defenderName: partyCopy[0]?.name || 'Bondi',
                             damage: 0,
                             isCrit: false,
                             isMiss: false,
@@ -241,7 +247,7 @@ export class SnapshotService {
                 currentFloor++;
                 
                 // Item degradation logic: -1 durability per win
-                party.forEach(member => {
+                partyCopy.forEach(member => {
                     this.degradeGear(member, 1);
                 });
             }

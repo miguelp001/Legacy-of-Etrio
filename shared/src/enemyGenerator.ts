@@ -90,11 +90,11 @@ function selectWeightedRandom<T extends { spawnWeight: number }>(items: T[]): T 
 }
 
 function createEnemyFromTemplate(template: EnemyTemplate, level: number, id: string): Combatant {
-    const baseClass = template.weaponType === 'magic' ? BaseClass.Scholar :
-                       template.weaponType === 'natural' ? BaseClass.Rogue :
-                       template.weaponType === 'fist' ? BaseClass.Brawler :
+    const baseClass = template.weaponType === 'magic' ? BaseClass.Mage :
+                       template.weaponType === 'natural' ? BaseClass.Thief :
+                       template.weaponType === 'fist' ? BaseClass.Warrior :
                        template.baseHpMultiplier > 1.2 ? BaseClass.Warrior :
-                       BaseClass.Mercenary;
+                       BaseClass.Thief;
     
     const stats = StatCalculator.calculateStats(level, baseClass, 0);
     
@@ -103,8 +103,8 @@ function createEnemyFromTemplate(template: EnemyTemplate, level: number, id: str
     const hp = Math.floor(stats.hp * template.baseHpMultiplier);
     const strength = Math.floor(stats.strength * template.strengthMultiplier);
     const vitality = Math.floor(stats.vitality * template.vitalityMultiplier);
-    const defense = Math.floor(stats.defense * template.defenseMultiplier);
-    const speed = Math.floor(stats.speed * template.speedMultiplier);
+    const agility = Math.floor((stats.agility || 5) * template.speedMultiplier);
+    const spirit = Math.floor((stats.spirit || 5) * template.defenseMultiplier);
     const luck = Math.floor(stats.luck * template.luckMultiplier);
     
     return {
@@ -117,14 +117,14 @@ function createEnemyFromTemplate(template: EnemyTemplate, level: number, id: str
         trait: template.trait,
         hp,
         maxHp: hp,
+        mp: stats.mp,
+        maxMp: stats.maxMp,
         stats: {
             strength,
             vitality,
-            defense,
-            speed,
-            luck,
-            maxHp: hp,
-            hp
+            agility,
+            spirit,
+            luck
         },
         weapon: null,
         armor: null,

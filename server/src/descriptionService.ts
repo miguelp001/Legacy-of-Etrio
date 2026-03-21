@@ -1,5 +1,4 @@
-import { VERB_LIBRARY } from '../../shared/src/descriptionTypes.js';
-import type { DescriptorTemplate, EventType, HitQuality } from '../../shared/src/descriptionTypes.js';
+import type { EventType, HitQuality } from '../../shared/src/descriptionTypes.js';
 import type { NightsdeepTrait, SocialClass } from '../../shared/src/combat.js';
 import { BiomeType } from '../../shared/src/dungeon.js';
 import descriptionLibrary from '../../shared/src/descriptionLibrary.json' with { type: 'json' };

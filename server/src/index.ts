@@ -1,12 +1,10 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { NPCGenerator } from '../../shared/src/party.js';
-import { ItemGenerator, Rarity } from '../../shared/src/items.js';
-import { CombatEngine } from '../../shared/src/combat.js';
-import { OfflineEngine } from '../../shared/src/offline.js';
-import { SnapshotService } from './snapshotService.js';
-import { StateService } from './stateService.js';
+import { bearerAuth } from 'hono/bearer-auth';
+import { serveStatic } from 'hono/bun';
+import { CombatEngine, OfflineEngine, GateManager } from '../../shared/src/index.js';
 import { GameService } from './gameService.js';
+import { SnapshotService } from './snapshotService.js';
 import { AuthService } from './authService.js';
 import { initPrisma, prisma } from './db.js';
 
@@ -256,19 +254,8 @@ app.post('/api/game/ascend', async (c) => {
     }
 });
 
-app.get('/api/health', async (c) => {
-    try {
-        const userCount = await (prisma as any).user.count();
-        return c.json({ status: 'ok', database: 'connected', userCount });
-    } catch (e: any) {
-        return c.json({ status: 'error', error: e.message }, 500);
-    }
-});
-
 app.post('/api/auth/register', async (c) => {
     try {
-       // Force re-bundle for auto-progression and unique IDs v3
-console.log('[SERVER] Booting Hono application...');
         const body = await c.req.json();
         console.log('[AUTH] Registration request for:', body.username);
         

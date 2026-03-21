@@ -10,7 +10,6 @@ import {
   Droplets,
   Sparkles,
   Zap,
-  Castle,
   ChevronUp,
   Activity,
   LogOut,
@@ -33,8 +32,6 @@ import VictoryScreen from './components/VictoryScreen';
 import LoginScreen from './components/LoginScreen';
 import VanguardMonitor from './components/VanguardMonitor';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
-
 const App: React.FC = () => {
   const { 
     gold, party, currentFloor, mainCharacter, 
@@ -45,7 +42,6 @@ const App: React.FC = () => {
   } = useGameStore();
 
   const [showMap, setShowMap] = useState(false);
-  const [lastSnapshotData, setLastSnapshotData] = useState<any>(null);
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
   const hasHandledSnapshot = useRef(false);
 
@@ -93,7 +89,7 @@ const App: React.FC = () => {
             })
           });
           const data = await response.json();
-          if (data.events) {
+            if (data.events) {
             addEvents(data.events || []);
             const councilBonus = 1 + (councilMembers.length * 0.05);
             const resonatorBonus = 1 + (resonatorMastery * 0.1);
@@ -101,7 +97,6 @@ const App: React.FC = () => {
             addGold(effectiveGold - (data.bloodpricePenalty || 0));
             setFloor(data.finalFloor);
             if (data.bloodRationsRemaining !== undefined) setBloodRations(data.bloodRationsRemaining);
-            setLastSnapshotData(data);
             setShowMap(true);
             setResonatorActive(false);
 

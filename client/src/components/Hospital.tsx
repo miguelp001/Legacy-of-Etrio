@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { HeartPulse, Clock, Activity, ShieldAlert, Sparkles, Heart, Users, Zap, Plus } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { HeartPulse, Clock, Activity, ShieldAlert, Heart, Users, Zap, Plus } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
 const Hospital: React.FC = () => {
@@ -12,6 +12,12 @@ const Hospital: React.FC = () => {
         const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
         return () => clearInterval(timer);
     }, []);
+
+    const canHeal = useCallback((member: any) => {
+        if (member.hp >= member.maxHp) return false;
+        if (member.recoveryUntil && member.recoveryUntil > currentTime) return false;
+        return true;
+    }, [currentTime]);
 
     const getHealCost = (socialClass: string) => {
         const healCosts: Record<string, number> = {
