@@ -1,7 +1,7 @@
-import { StatCalculator } from './stats.js';
-import type { CharacterStats } from './stats.js';
-import type { Trait } from './party.js';
-import type { SocialClass } from './combat.js';
+import { StatCalculator } from './stats';
+import type { CharacterStats } from './stats';
+import type { Trait } from './party';
+import type { SocialClass } from './combat';
 
 export class LineageManager {
     static createHeir(

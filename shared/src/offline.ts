@@ -1,6 +1,6 @@
-import { DungeonManager } from './dungeon.js';
-import { ItemGenerator } from './items.js';
-import type { Item } from './items.js';
+import { DungeonManager } from './dungeon';
+import { ItemGenerator } from './items';
+import type { Item } from './items';
 
 export interface OfflineGains {
     gold: number;
