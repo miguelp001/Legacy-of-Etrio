@@ -30,6 +30,8 @@ export interface CombatEvent {
     turn: number;
     attackerName: string;
     defenderName: string;
+    attackerId: string;
+    defenderId: string;
     damage: number;
     isCrit: boolean;
     isMiss: boolean;
@@ -122,7 +124,7 @@ export class CombatEngine {
                 }
 
                 const hitQuality = isMissValue ? 'MISS' : (isCrit ? 'CRIT' : 'NORMAL');
-                let banter = "";
+                let banter: string | undefined = "";
 
                 if (options.generator) {
                     banter = options.generator({
@@ -154,6 +156,8 @@ export class CombatEngine {
                     turn: turnCount,
                     attackerName: attacker.name,
                     defenderName: defender.name,
+                    attackerId: attacker.id,
+                    defenderId: defender.id,
                     damage,
                     isCrit,
                     isMiss: isMissValue,

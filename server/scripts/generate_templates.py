@@ -38,32 +38,39 @@ attack_stems = [
     "With a weary but determined motion, the ${speaker}"
 ]
 
-attack_flourishes = [
-    "as they ${verb} the **${target}**.",
-    "finding a weak point as they ${verb} the **${target}**.",
-    "their weapon trailing aether as they ${verb} the **${target}**.",
-    "the impact echoing through the deep as they ${verb} the **${target}**.",
-    "a spray of blood marking where they ${verb} the **${target}**.",
-    "their eyes glowing with malice as they ${verb} the **${target}**.",
-    "the air shimmering around them as they ${verb} the **${target}**.",
-    "with a finality that chills the soul as they ${verb} the **${target}**.",
-    "their movement leaving an afterimage as they ${verb} the **${target}**.",
-    "the darkness itself seeming to aid as they ${verb} the **${target}**.",
-    "unfazed by the resistance as they ${verb} the **${target}**.",
-    "the scent of ozone filling the air as they ${verb} the **${target}**.",
-    "their weapon biting deep as they ${verb} the **${target}**.",
-    "the **${target}**'s scream cut short as they ${verb} them.",
-    "the ground cracking beneath them as they ${verb} the **${target}**.",
-    "nearly losing their balance as they ${verb} the **${target}**.",
-    "their weapon whistling through the stale air as they ${verb} the **${target}**.",
-    "sending a shower of sparks as they ${verb} the **${target}**'s armor.",
-    "the force of the blow threatening to shatter their weapon as they ${verb} the **${target}**.",
-    "laughing like a madman as they ${verb} the **${target}**.",
-    "their eyes fixed on the empty space where the sun should be as they ${verb} the **${target}**.",
-    "with a strength born of pure desperation as they ${verb} the **${target}**.",
-    "the aetheric ink on their skin burning as they ${verb} the **${target}**.",
-    "their strike weaving a pattern of shadow as they ${verb} the **${target}**.",
-    "carving a story of ruin into the floor as they ${verb} the **${target}**."
+attack_hit_flourishes = [
+    "dealing **${value} damage** to the **${target}**.",
+    "finding a weak point and dealing **${value} damage** to the **${target}**.",
+    "their weapon trailing aether as they strike the **${target}** for **${value} damage**.",
+    "the impact echoing through the deep as they hit the **${target}** for **${value} damage**.",
+    "a spray of blood marking where they strike the **${target}** for **${value} damage**.",
+    "their eyes glowing with malice as they deal **${value} damage** to the **${target}**.",
+    "the air shimmering around them as they hit for **${value} damage**.",
+    "with a finality that chills the soul as they strike the **${target}** for **${value} damage**.",
+    "their movement leaving an afterimage as they deal **${value} damage** to the **${target}**.",
+    "the darkness itself seeming to aid as they strike for **${value} damage**.",
+    "unfazed by the resistance as they deal **${value} damage**.",
+    "the scent of ozone filling the air as they hit the **${target}** for **${value} damage**.",
+    "their weapon biting deep as they deal **${value} damage** to the **${target}**.",
+    "the ground cracking beneath them as they hit the **${target}** for **${value} damage**.",
+    "nearly losing their balance as they strike for **${value} damage**.",
+    "sending a shower of sparks as they hit the **${target}**'s armor for **${value} damage**.",
+    "the force of the blow threatening to shatter their weapon, dealing **${value} damage**.",
+    "laughing like a madman as they deal **${value} damage** to the **${target}**.",
+    "their eyes fixed on the empty space where the sun should be as they strike for **${value} damage**.",
+    "with a strength born of pure desperation, hitting the **${target}** for **${value} damage**.",
+    "the aetheric ink on their skin burning as they deal **${value} damage** to the **${target}**.",
+    "carving a story of ruin into the floor as they strike the **${target}** for **${value} damage**."
+]
+
+attack_miss_flourishes = [
+    "but the **${target}** simply weaves out of the way.",
+    "cutting only empty air as the **${target}** evades.",
+    "the strike passing harmlessly over the **${target}**.",
+    "a clumsy swing that finds no purchase on the **${target}**.",
+    "momentum carrying the strike wide of the **${target}**.",
+    "but the **${target}** is already gone, swallowed by the shadows.",
+    "the weapon sparks uselessly against the stone behind the **${target}**."
 ]
 
 # --- Fragments for Defense ---
@@ -135,11 +142,11 @@ banter_quotes = [
 # 1. Combat Attack (Tagged, 5000)
 for i in range(5000):
     stem = random.choice(attack_stems)
-    flourish = random.choice(attack_flourishes)
     trait = random.choice(traits)
     rank = random.choice(ranks)
     biome = random.choice(biomes)
     quality = random.choice(hit_qualities)
+    flourish = random.choice(attack_miss_flourishes) if quality == 'MISS' else random.choice(attack_hit_flourishes)
     
     templates.append({
         "id": "gen_attack_{:04d}".format(i),
@@ -156,8 +163,8 @@ for i in range(5000):
 # 2. Combat Attack (Wildcard, 2000)
 for i in range(2000):
     stem = random.choice(attack_stems)
-    flourish = random.choice(attack_flourishes)
     quality = random.choice(hit_qualities)
+    flourish = random.choice(attack_miss_flourishes) if quality == 'MISS' else random.choice(attack_hit_flourishes)
     templates.append({
         "id": "gen_attack_wc_{:04d}".format(i),
         "text": stem + " " + flourish,
@@ -249,6 +256,7 @@ except Exception as e:
     existing = []
 
 # Filter out old generated ones to avoid duplicates if ID pattern changes, or just append
+existing = [t for t in existing if not t.get("id", "").startswith("gen_")]
 all_templates = existing + templates
 
 # Output to workspace

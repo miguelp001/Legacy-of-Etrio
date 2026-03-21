@@ -7,6 +7,8 @@ interface PitCombatEvent {
     turn: number;
     attackerName: string;
     defenderName: string;
+    attackerId: string;
+    defenderId: string;
     damage: number;
     isCrit: boolean;
     isMiss: boolean;
@@ -164,8 +166,8 @@ const ThePit: React.FC = () => {
         }
     }, [isActive, isSimulating, turnIndex, displayedEvents.length, hasCombat, isVictory, isLastRoom, nextRoom, roomEvents.length, activeRoom, floorReport, setLocation, exitPit]);
 
-    const getHP = useCallback((name: string, maxHp: number) => {
-        const lastEvent = [...displayedEvents].reverse().find(e => e.defenderName === name);
+    const getHP = useCallback((id: string, maxHp: number) => {
+        const lastEvent = [...displayedEvents].reverse().find(e => e.defenderId === id);
         return lastEvent ? Math.max(0, lastEvent.remainingHp) : maxHp;
     }, [displayedEvents]);
 
@@ -262,7 +264,7 @@ const ThePit: React.FC = () => {
                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-danger-color/60 px-1 italic">Vile Elements</h4>
                         <div className="grid grid-cols-2 gap-3">
                            {enemies.map((e: any, i: number) => {
-                               const hp = getHP(e.name, e.maxHp);
+                               const hp = getHP(e.id, e.maxHp);
                                const pct = (hp / e.maxHp) * 100;
                                return (
                                    <div key={i} className={`glass p-3 border-white/5 transition-opacity ${hp <= 0 ? 'opacity-30' : ''}`}>
@@ -284,7 +286,7 @@ const ThePit: React.FC = () => {
                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-color/60 px-1 italic">Vanguard Echoes</h4>
                         <div className="grid grid-cols-2 gap-3">
                            {partyMembers.map((m: any) => {
-                               const hp = getHP(m.name, m.maxHp);
+                               const hp = getHP(m.id, m.maxHp);
                                const pct = (hp / m.maxHp) * 100;
                                return (
                                    <div key={m.id} className={`glass p-3 border-white/5 transition-opacity ${hp <= 0 ? 'opacity-30' : ''}`}>
@@ -311,10 +313,8 @@ const ThePit: React.FC = () => {
                             {displayedEvents.slice(-5).map((ev) => (
                                 <div key={ev.id} className="animate-fade-in flex gap-3 text-[11px] leading-tight">
                                     <span className="text-white/20 font-mono text-[9px] mt-0.5">{ev.turn}</span>
-                                    <p className="text-white/50">
-                                        <span className="text-white/80 font-bold">{ev.attackerName.split(' ')[0]}</span>
-                                        {ev.damage > 0 ? ` strikes ${ev.defenderName.split(' ')[0]} for ${ev.damage}${ev.isCrit ? '!' : '.'}` : ' misses.'}
-                                        {ev.banter && <span className="block mt-1 text-[10px] text-primary-color/60 italic">"{ev.banter.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '$1')}"</span>}
+                                    <p className="text-white/60">
+                                        <span dangerouslySetInnerHTML={{ __html: ev.banter?.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '<span class="text-white/90 font-bold">$1</span>').replace(/\*\*([^*]+)\*\*/g, '<span class="text-danger-color font-bold tracking-widest">$1</span>') || `${ev.attackerName.split(' ')[0]} acts.` }} />
                                     </p>
                                 </div>
                             ))}
@@ -325,12 +325,8 @@ const ThePit: React.FC = () => {
             </main>
 
             {/* Bottom Primary Controls - Thumb Zone Fixed */}
-            <footer className="px-4 py-6 border-t border-white/10 bg-black/60 backdrop-blur-2xl shrink-0">
-                {!combatDone ? (
-                    <div className="h-14 flex items-center justify-center">
-                        <div className="w-1 h-1 rounded-full bg-primary-color/20 animate-pulse" />
-                    </div>
-                ) : (
+            {combatDone && (
+                <footer className="px-4 py-6 border-t border-white/10 bg-black/60 backdrop-blur-2xl shrink-0">
                     <div className="space-y-4">
                         {!isLastRoom && isVictory && (
                             <button
@@ -354,8 +350,8 @@ const ThePit: React.FC = () => {
                             </p>
                         )}
                     </div>
-                )}
-            </footer>
+                </footer>
+            )}
         </div>
     );
 };

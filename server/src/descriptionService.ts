@@ -4,6 +4,7 @@ import type { NightsdeepTrait, SocialClass } from '../../shared/src/combat.js';
 import { BiomeType } from '../../shared/src/dungeon.js';
 import descriptionLibrary from '../../shared/src/descriptionLibrary.json' with { type: 'json' };
 
+// Force HMR reload
 export interface DescriptionContext {
     eventType: EventType;
     speaker: {
