@@ -190,7 +190,6 @@ export class GameService {
 
                 // Award XP to surviving party members
                 const xpPerEnemy = 25 + (room.enemies.length * 10) + (state.currentFloor * 5);
-                const survivors = participants.filter(p => p.hp > 0);
                 
                 for (const survivor of survivors) {
                     const levelResult = this.awardXP(survivor, xpPerEnemy);
