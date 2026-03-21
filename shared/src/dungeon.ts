@@ -68,7 +68,7 @@ export class DungeonManager {
 
         const biomeGroup = descMap[biome] || descMap[BiomeType.Frozen];
         const list = biomeGroup[type] || biomeGroup['Corridor'];
-        return list[Math.floor(Math.random() * list.length)] || "A dark, silent chamber.";
+        return list[Math.floor(Math.random() * list.length)]! || "A dark, silent chamber.";
     }
 
     static generateFloor(floorNumber: number): DungeonFloor {

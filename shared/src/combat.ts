@@ -102,7 +102,26 @@ export interface DescriptorContext {
 
 export type DescriptorGenerator = (context: DescriptorContext) => string;
 
+const WEAPON_TYPE_MAP: Record<string, string> = {
+    'sword': 'sword', 'longsword': 'sword', 'saber': 'sword',
+    'axe': 'axe', 'battleaxe': 'axe', 'hatchet': 'axe',
+    'spear': 'spear', 'lance': 'spear', 'pike': 'spear',
+    'dagger': 'dagger', 'knife': 'dagger',
+    'hammer': 'hammer', 'mace': 'hammer', 'club': 'hammer',
+    'staff': 'magic', 'wand': 'magic', 'orb': 'magic', 'grimoire': 'magic',
+    'fist': 'fist', 'gauntlets': 'fist', 'claws': 'claw'
+};
+
 export class CombatEngine {
+    static getWeaponType(weaponName?: string): string {
+        if (!weaponName) return 'natural';
+        const lower = weaponName.toLowerCase();
+        for (const [key, value] of Object.entries(WEAPON_TYPE_MAP)) {
+            if (lower.includes(key)) return value;
+        }
+        return 'natural';
+    }
+
     static simulate(
         party: Combatant[], 
         enemies: Combatant[], 
@@ -167,7 +186,7 @@ export class CombatEngine {
                             socialClass: attacker.socialClass,
                             tribe: attacker.tribe,
                             weapon: attacker.weapon?.name,
-                            weaponType: attacker.weapon?.type?.toLowerCase(),
+                            weaponType: this.getWeaponType(attacker.weapon?.name),
                             stats: attacker.stats,
                             isEnemy: attacker.isEnemy,
                             isVampire: attacker.isVampire || undefined,
