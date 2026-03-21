@@ -132,8 +132,8 @@ banter_quotes = [
 
 # --- Generate Templates ---
 
-# 1. Combat Attack (Tagged, 1000)
-for i in range(1000):
+# 1. Combat Attack (Tagged, 5000)
+for i in range(5000):
     stem = random.choice(attack_stems)
     flourish = random.choice(attack_flourishes)
     trait = random.choice(traits)
@@ -153,8 +153,8 @@ for i in range(1000):
         }
     })
 
-# 2. Combat Attack (Wildcard, 500)
-for i in range(500):
+# 2. Combat Attack (Wildcard, 2000)
+for i in range(2000):
     stem = random.choice(attack_stems)
     flourish = random.choice(attack_flourishes)
     quality = random.choice(hit_qualities)
@@ -167,8 +167,8 @@ for i in range(500):
         }
     })
 
-# 3. Combat Defend (Tagged, 150)
-for i in range(150):
+# 3. Combat Defend (Tagged, 1000)
+for i in range(1000):
     stem = random.choice(defend_stems)
     flourish = random.choice(defend_flourishes)
     trait = random.choice(traits)
@@ -184,8 +184,8 @@ for i in range(150):
         }
     })
 
-# 4. Combat Defend (Wildcard, 100)
-for i in range(100):
+# 4. Combat Defend (Wildcard, 500)
+for i in range(500):
     stem = random.choice(defend_stems)
     flourish = random.choice(defend_flourishes)
     templates.append({
@@ -196,8 +196,8 @@ for i in range(100):
         }
     })
 
-# 5. Banter Idle (Tagged, 200)
-for i in range(200):
+# 5. Banter Idle (Tagged, 1000)
+for i in range(1000):
     stem = random.choice(banter_stems)
     quote = random.choice(banter_quotes)
     trait = random.choice(traits)
@@ -215,8 +215,8 @@ for i in range(200):
         }
     })
 
-# 6. Banter Idle (Wildcard, 100)
-for i in range(100):
+# 6. Banter Idle (Wildcard, 500)
+for i in range(500):
     stem = random.choice(banter_stems)
     quote = random.choice(banter_quotes)
     templates.append({
