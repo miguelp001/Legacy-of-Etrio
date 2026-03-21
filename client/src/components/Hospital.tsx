@@ -14,6 +14,9 @@ const Hospital: React.FC = () => {
         return () => clearInterval(timer);
     }, []);
     
+    const woundedCount = fullParty.filter((m: any) => m.hp < m.maxHp).length;
+    const canRest = woundedCount > 0;
+    
     useEffect(() => {
         if (!canRest || isResting) return;
         
@@ -29,9 +32,6 @@ const Hospital: React.FC = () => {
         await restParty();
         setIsResting(false);
     }, [restParty]);
-    
-    const woundedCount = fullParty.filter((m: any) => m.hp < m.maxHp).length;
-    const canRest = woundedCount > 0;
 
     const canHeal = useCallback((member: any) => {
         if (member.hp >= member.maxHp) return false;

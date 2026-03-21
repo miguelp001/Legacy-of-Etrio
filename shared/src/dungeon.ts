@@ -89,7 +89,7 @@ export class DungeonManager {
                 else type = 'Rest';
             }
 
-            const enemies: Combatant[] = [];
+            const enemies: GeneratedEnemy[] = [];
             const roomId = `room_${floorNumber}_${i}`;
             
             if (type === 'Encounter' || type === 'Boss') {
