@@ -286,36 +286,23 @@ const NORMAL_PHRASES = [
     "fights with purpose"
 ];
 
-const DIALOGUE_VERBS = ['says', 'mutters', 'grunts', 'hisses', 'growls', 'snarls'];
-const LOUD_VERBS = ['shouts', 'bellows', 'roars', 'screams', 'yells', 'cries out'];
-
 function formatDialogue(banter: string | undefined, ev: PitCombatEvent): string {
-    const attacker = ev.attackerName.split(' ')[0];
-    const isHit = !ev.isMiss;
-    const verb = isHit
-        ? LOUD_VERBS[Math.floor(Math.random() * LOUD_VERBS.length)]
-        : DIALOGUE_VERBS[Math.floor(Math.random() * DIALOGUE_VERBS.length)];
-    
     if (banter && banter.trim()) {
-        return `${attacker} ${verb}, "${banter.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '$1')}"`;
+        return banter.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '$1');
     }
-    
-    const isEnemyAttacking = ev.attackerId?.includes('enemy') || ev.attackerId?.includes('Boss') || ev.attackerId?.includes('Floor');
     
     if (ev.isMiss) {
         const phrase = MISS_PHRASES[Math.floor(Math.random() * MISS_PHRASES.length)];
-        return `${attacker} ${verb}, "${phrase.charAt(0).toUpperCase() + phrase.slice(1)}."`;
+        return phrase.charAt(0).toUpperCase() + phrase.slice(1);
     }
     
     if (ev.isCrit) {
         const phrase = CRIT_PHRASES[Math.floor(Math.random() * CRIT_PHRASES.length)];
-        const subject = isEnemyAttacking ? `The ${attacker.toLowerCase()}` : attacker;
-        return `${subject} ${verb}, "${phrase.charAt(0).toUpperCase() + phrase.slice(1)}!"`;
+        return phrase.charAt(0).toUpperCase() + phrase.slice(1);
     }
     
     const phrase = NORMAL_PHRASES[Math.floor(Math.random() * NORMAL_PHRASES.length)];
-    const subject = isEnemyAttacking ? `The ${attacker.toLowerCase()}` : attacker;
-    return `${subject} ${verb}, "${phrase.charAt(0).toUpperCase() + phrase.slice(1)}."`;
+    return phrase.charAt(0).toUpperCase() + phrase.slice(1);
 }
 
 const ThePit: React.FC = () => {
