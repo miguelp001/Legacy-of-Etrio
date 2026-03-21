@@ -2,9 +2,37 @@ import { prisma } from './db.js';
 import { CombatEngine } from '../../shared/src/combat.js';
 import { DungeonManager } from '../../shared/src/dungeon.js';
 import { ItemGenerator } from '../../shared/src/items.js';
+import { StatCalculator, BaseClass } from '../../shared/src/stats.js';
 import { DescriptionService } from './descriptionService.js';
 
 export class GameService {
+    private static handleLevelUp(character: any): { leveled: boolean; newLevel: number; xpGained: number } {
+        const result = StatCalculator.calculateLevelFromXP(character.xp || 0);
+        const leveled = result.level > character.level;
+        
+        if (leveled) {
+            const oldStats = { ...character.stats };
+            const newStats = StatCalculator.calculateStats(result.level, character.baseClass as BaseClass, character.generation || 0, character.subClass);
+            
+            character.level = result.level;
+            character.stats = newStats;
+            character.maxHp = StatCalculator.calculateHP(newStats);
+            character.hp = character.maxHp;
+            character.maxMp = StatCalculator.calculateMP(newStats);
+            character.mp = character.maxMp;
+            
+            console.log(`[LEVEL UP] ${character.name} reached level ${result.level}!`);
+        }
+        
+        return { leveled, newLevel: result.level, xpGained: 0 };
+    }
+
+    private static awardXP(character: any, xpAmount: number): { leveled: boolean; newLevel: number } {
+        character.xp = (character.xp || 0) + xpAmount;
+        const result = this.handleLevelUp(character);
+        return { leveled: result.leveled, newLevel: result.newLevel };
+    }
+
     // Validate and process a building upgrade
     static async upgradeBuilding(playerId: string, buildingId: string) {
         const player = await (prisma as any).playerState.findFirst({ where: { id: playerId } });
@@ -91,6 +119,10 @@ export class GameService {
                 member.hp = Math.max(member.hp || 0, 150);
                 member.maxHp = Math.max(member.maxHp || 0, 150);
             }
+            // Legacy character XP migration
+            if (member.xp === undefined || member.xp === null) {
+                member.xp = 0;
+            }
             return member;
         });
         let floorVictory = true;
@@ -155,6 +187,17 @@ export class GameService {
                     floorVictory = false;
                     break;
                 }
+
+                // Award XP to surviving party members
+                const xpPerEnemy = 25 + (room.enemies.length * 10) + (state.currentFloor * 5);
+                const survivors = participants.filter(p => p.hp > 0);
+                
+                for (const survivor of survivors) {
+                    const levelResult = this.awardXP(survivor, xpPerEnemy);
+                    if (levelResult.leveled) {
+                        console.log(`[XP] ${survivor.name} gained ${xpPerEnemy} XP and leveled up to ${levelResult.newLevel}!`);
+                    }
+                }
             } else {
                 // Non-combat room
                 roomResults.push({
@@ -172,14 +215,32 @@ export class GameService {
             state.gold += Math.floor(25 * floorData.goldMultiplier);
             state.currentFloor += 1;
             
-            // Sync survival back to state
+            // Sync survival back to state with XP and level
             if (state.mainCharacter) {
                 const mc = participants.find(p => p.id === state.mainCharacter.id);
-                if (mc) state.mainCharacter.hp = mc.hp;
+                if (mc) {
+                    state.mainCharacter.hp = mc.hp;
+                    state.mainCharacter.xp = mc.xp;
+                    state.mainCharacter.level = mc.level;
+                    state.mainCharacter.stats = mc.stats;
+                    state.mainCharacter.maxHp = mc.maxHp;
+                    state.mainCharacter.maxMp = mc.maxMp;
+                }
             }
             state.party = state.party.map((p: any) => {
                 const updated = participants.find((up: any) => up.id === p.id);
-                return updated ? { ...p, hp: updated.hp } : { ...p, hp: 0 };
+                if (updated) {
+                    return { 
+                        ...p, 
+                        hp: updated.hp, 
+                        xp: updated.xp, 
+                        level: updated.level,
+                        stats: updated.stats,
+                        maxHp: updated.maxHp,
+                        maxMp: updated.maxMp
+                    };
+                }
+                return { ...p, hp: 0 };
             });
 
             // Relationships

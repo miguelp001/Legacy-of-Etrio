@@ -29,6 +29,7 @@ export interface Stats {
 
 export interface CharacterStats {
     level: number;
+    xp: number;
     baseClass: BaseClass;
     subClass?: SubClass;
     generation: number;
@@ -77,6 +78,26 @@ export const TRIBE_BONUSES: Record<string, Partial<Stats>> = {
 };
 
 export class StatCalculator {
+    static getXPForLevel(level: number): number {
+        return Math.floor(100 * Math.pow(level, 1.5));
+    }
+    
+    static calculateLevelFromXP(totalXP: number): { level: number; currentXP: number; xpToNextLevel: number } {
+        let level = 1;
+        let xpUsed = 0;
+        
+        while (xpUsed + this.getXPForLevel(level) <= totalXP && level < 100) {
+            xpUsed += this.getXPForLevel(level);
+            level++;
+        }
+        
+        return {
+            level,
+            currentXP: totalXP - xpUsed,
+            xpToNextLevel: this.getXPForLevel(level)
+        };
+    }
+
     static calculateStats(level: number, baseClass: BaseClass, generation: number, subClass?: SubClass): Stats {
         const base = BASE_STATS[baseClass];
         const growth = GROWTH_RATES[baseClass];

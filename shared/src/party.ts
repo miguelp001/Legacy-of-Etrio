@@ -94,6 +94,7 @@ export class NPCGenerator {
             id: Math.random().toString(36).substring(2, 11),
             name,
             level,
+            xp: 0,
             baseClass,
             generation,
             trait: chosenTraitName,
