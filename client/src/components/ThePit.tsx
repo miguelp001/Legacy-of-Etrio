@@ -21,14 +21,86 @@ const EVENT_TICK_MS = 600;
 const AUTO_PROGRESS_MS = 2000;
 
 const MISS_PHRASES = [
-    "lunges through shadow",
-    "swings at phantom air",
-    "stumbles in the dark",
-    "finds only empty void",
-    "strikes at fading echoes",
-    "whips through darkness",
-    "thrusts into nothing",
-    "slashes at dancing shadows"
+    "swings at nothing but air",
+    "misses the target entirely",
+    "strikes only empty space",
+    "finds nothing to hit",
+    "whiffs on the swing",
+    "loses balance completely",
+    "stumbles on the ground",
+    "overextends far too much",
+    "reaches too far ahead",
+    "strikes at fading shadows",
+    "lunges into emptiness",
+    "slips on bloody ground",
+    "fails to connect at all",
+    "hits nothing but air",
+    "swings way too wide",
+    "aims at the wrong spot",
+    "gets the distance wrong",
+    "stumbles over a corpse",
+    "loses their footing",
+    "catches only cobwebs",
+    "hits bare stone instead",
+    "swings at phantom movement",
+    "stumbles over debris",
+    "wavers at the crucial moment",
+    "flails wildly and misses",
+    "strikes the wall behind",
+    "swings at afterimages",
+    "recoils from nothing",
+    "fights shadows in the dark",
+    "lunges at a ghost",
+    "strikes at nothing",
+    "swipes at empty air",
+    "misses by a wide margin",
+    "completely whiffs the strike",
+    "stumbles forward awkwardly",
+    "loses balance entirely",
+    "fails to find the mark",
+    "hits only ancient stone",
+    "strikes the ground instead",
+    "swings behind the target",
+    "aims before the target moves",
+    "reaches into nothing",
+    "loses their footing on blood",
+    "stumbles on loose rubble",
+    "slips on wet stone",
+    "trips on fallen debris",
+    "fumbles the strike",
+    "miscalculates badly",
+    "aims at the wrong enemy",
+    "hits the wall instead",
+    "strikes ancient masonry",
+    "swings at the air behind",
+    "loses the target in darkness",
+    "swings at lingering mist",
+    "misses by inches",
+    "fails to connect properly",
+    "hits nothing but shadow",
+    "strikes where the enemy was",
+    "swings too early",
+    "attacks too late",
+    "aims at empty space",
+    "finds only void",
+    "hits only darkness",
+    "catches nothing but air",
+    "whiffs on the backswing",
+    "misses on the follow-through",
+    "gets the timing wrong",
+    "misjudges the distance",
+    "overcompensates and misses",
+    "swings at the wrong angle",
+    "aims for where they were",
+    "strikes the ground instead of flesh",
+    "hits cold stone",
+    "finds no purchase",
+    "slips at the critical moment",
+    "stumbles and loses the strike",
+    "fails to track the movement",
+    "loses the target in shadows",
+    "swings into empty darkness",
+    "strikes the empty air"
 ];
 
 const CRIT_PHRASES = [
@@ -39,7 +111,78 @@ const CRIT_PHRASES = [
     "delivers a devastating blow",
     "splinters ribs on impact",
     "drives the enemy back",
-    "opens a grievous wound"
+    "opens a grievous wound",
+    "tears through with unstoppable fury",
+    "cleaves the body in two",
+    "obliterates everything in its path",
+    "crushes bone and spirit alike",
+    "shreds through like paper",
+    "mauls savagely beyond recognition",
+    "ends it all in one strike",
+    "tears asunder with brutal force",
+    "demolishes without resistance",
+    "rends flesh from bone",
+    "pulverizes into red mist",
+    "lacerates with ruthless power",
+    "bisects with one clean stroke",
+    "eviscerates in a single blow",
+    "reaches the vital organs",
+    "unleashes devastating fury",
+    "shatters with bone-crushing impact",
+    "pierces straight to the heart",
+    "decimates without mercy",
+    "breaks through all defenses",
+    "leaves nothing but ruin",
+    "inflicts a mortal wound",
+    "delivers a killing blow",
+    "crushes with overwhelming power",
+    "burns with searing force",
+    "destroys with primal rage",
+    "kills without hesitation",
+    "butchers with savage glee",
+    "slaughters with brutal efficiency",
+    "ends the fight decisively",
+    "vaporizes into nothing",
+    "turns flesh to fragments",
+    "crushes all resistance",
+    "finishes them utterly",
+    "dominates without contest",
+    "overwhelms with raw power",
+    "breaks with iron determination",
+    "shatters every defense",
+    "destroys with focused fury",
+    "ravages without mercy",
+    "dismantles completely",
+    "crushes into dust",
+    "demolishes with thunderous force",
+    "wreaks total destruction",
+    "devastates beyond repair",
+    "carves through like butter",
+    "leaves nothing standing",
+    "reduces to nothing",
+    "silences with steel",
+    "speaks with blood and blade",
+    "utters the final curse",
+    "leaves them broken",
+    "tears them apart",
+    "rips them to shreds",
+    "smashes them to pieces",
+    "crushes them utterly",
+    "shatters them completely",
+    "breaks them down",
+    "destroys them entirely",
+    "finishes them off",
+    "ends their suffering",
+    "delivers the deathblow",
+    "strikes the killing blow",
+    "lands the final hit",
+    "deals mortal damage",
+    "causes fatal wounds",
+    "inflicts deadly wounds",
+    "opens fatal wounds",
+    "tears fatal wounds",
+    "rips fatal wounds",
+    "carves fatal wounds"
 ];
 
 const NORMAL_PHRASES = [
@@ -52,32 +195,127 @@ const NORMAL_PHRASES = [
     "swings with precision",
     "chops with savage intent",
     "slashes across the body",
-    "punches through guard"
+    "punches through guard",
+    "drives forward relentlessly",
+    "strikes with determined force",
+    "clashes with fierce intent",
+    "engages with calculated aggression",
+    "batters with relentless pressure",
+    "pummels with fury",
+    "bashes with controlled rage",
+    "beats with fierce intensity",
+    "pounds with focused power",
+    "crushes with iron force",
+    "smashes with brutal impact",
+    "thrashes with wild abandon",
+    "whips with deadly precision",
+    "lashes out viciously",
+    "thwacks with heavy impact",
+    "clobbers with crushing force",
+    "batters with grim determination",
+    "wallops with devastating power",
+    "socks with solid force",
+    "strikes true and hard",
+    "connects with sharp precision",
+    "hits with veteran skill",
+    "lands with professional form",
+    "delivers with warrior precision",
+    "executes with combat mastery",
+    "performs with deadly expertise",
+    "achieves with tactical skill",
+    "scores with strategic timing",
+    "deals a solid hit",
+    "bears down with authority",
+    "pushes with commanding force",
+    "pressures with relentless assault",
+    "dominates the exchange",
+    "controls the fight",
+    "wields steel with deadly grace",
+    "commands the battlefield",
+    "leads the assault",
+    "directs the offensive",
+    "channels deadly power",
+    "focuses deadly intent",
+    "hones deadly technique",
+    "sharpens deadly skill",
+    "refines deadly instincts",
+    "perfects the warrior's art",
+    "elevates combat prowess",
+    "transcends mortal limits",
+    "embodies battle mastery",
+    "unleashes fury",
+    "brings the pain",
+    "deals the damage",
+    "lands the hit",
+    "connects solidly",
+    "strikes effectively",
+    "hits home",
+    "drives it home",
+    "puts them down",
+    "keeps them busy",
+    "wears them down",
+    "chips away at them",
+    "drains their strength",
+    "tests their guard",
+    " probes their defense",
+    "feels for weakness",
+    "searches for gaps",
+    "finds their rhythm",
+    "establishes dominance",
+    "claims the advantage",
+    "gains the upper hand",
+    "controls the pace",
+    "dictates the terms",
+    "sets the tempo",
+    "keeps the pressure on",
+    "maintains the assault",
+    "sustains the attack",
+    "continues the onslaught",
+    "presses the advantage",
+    "follows through",
+    "commits to the strike",
+    "commits to the assault",
+    "dedicates to battle",
+    "gives it everything",
+    "holds nothing back",
+    "fights with fury",
+    "fights with rage",
+    "fights with skill",
+    "fights with cunning",
+    "fights with determination",
+    "fights with purpose"
 ];
 
-function generateCombatText(ev: PitCombatEvent): string {
+const DIALOGUE_VERBS = ['says', 'mutters', 'grunts', 'hisses', 'growls', 'snarls'];
+const LOUD_VERBS = ['shouts', 'bellows', 'roars', 'screams', 'yells', 'cries out'];
+
+function formatDialogue(banter: string | undefined, ev: PitCombatEvent): string {
     const attacker = ev.attackerName.split(' ')[0];
-    const defender = ev.defenderName.split(' ')[0];
+    const isHit = !ev.isMiss;
+    const verb = isHit
+        ? LOUD_VERBS[Math.floor(Math.random() * LOUD_VERBS.length)]
+        : DIALOGUE_VERBS[Math.floor(Math.random() * DIALOGUE_VERBS.length)];
+    
+    if (banter && banter.trim()) {
+        return `${attacker} ${verb}, "${banter.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '$1')}"`;
+    }
+    
     const isEnemyAttacking = ev.attackerId?.includes('enemy') || ev.attackerId?.includes('Boss') || ev.attackerId?.includes('Floor');
     
     if (ev.isMiss) {
         const phrase = MISS_PHRASES[Math.floor(Math.random() * MISS_PHRASES.length)];
-        return `${attacker} ${phrase}.`;
+        return `${attacker} ${verb}, "${phrase.charAt(0).toUpperCase() + phrase.slice(1)}."`;
     }
     
     if (ev.isCrit) {
         const phrase = CRIT_PHRASES[Math.floor(Math.random() * CRIT_PHRASES.length)];
-        if (isEnemyAttacking) {
-            return `The ${attacker.toLowerCase()} ${phrase}, dealing ${ev.damage}!`;
-        }
-        return `${attacker} ${phrase}, dealing ${ev.damage}!`;
+        const subject = isEnemyAttacking ? `The ${attacker.toLowerCase()}` : attacker;
+        return `${subject} ${verb}, "${phrase.charAt(0).toUpperCase() + phrase.slice(1)}!"`;
     }
     
     const phrase = NORMAL_PHRASES[Math.floor(Math.random() * NORMAL_PHRASES.length)];
-    if (isEnemyAttacking) {
-        return `The ${attacker.toLowerCase()} ${phrase}, dealing ${ev.damage}.`;
-    }
-    return `${attacker} ${phrase} for ${ev.damage}.`;
+    const subject = isEnemyAttacking ? `The ${attacker.toLowerCase()}` : attacker;
+    return `${subject} ${verb}, "${phrase.charAt(0).toUpperCase() + phrase.slice(1)}."`;
 }
 
 const ThePit: React.FC = () => {
@@ -371,13 +609,13 @@ const ThePit: React.FC = () => {
                         </div>
                         <div className="space-y-2">
                              {displayedEvents.slice(-5).map((ev) => {
-                                const rawText = ev.banter?.replace(/\[\[NAME:[^:]+:([^\]]+)\]\]/g, '$1') || generateCombatText(ev);
+                                const dialogue = formatDialogue(ev.banter, ev);
                                 return (
                                     <div key={ev.id} className="animate-fade-in flex gap-3 text-[11px] leading-tight">
                                         <span className="text-white/20 font-mono text-[9px] mt-0.5">{ev.turn}</span>
                                         <p className="text-white/60">
                                             <span className={ev.isCrit ? 'text-danger-color font-bold' : ev.isMiss ? 'text-white/40 italic' : ''}>
-                                                {rawText}
+                                                {dialogue}
                                             </span>
                                         </p>
                                     </div>
