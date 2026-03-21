@@ -1,5 +1,4 @@
 import type { Combatant, NightsdeepTrait } from './combat';
-import { BiomeType } from './dungeon';
 import { BaseClass, StatCalculator } from './stats';
 
 interface EnemyTemplate {
@@ -62,10 +61,10 @@ const VOLCANIC_DEPTHS_ENEMIES: EnemyTemplate[] = [
 ];
 
 const BIOME_ENEMIES: Record<string, EnemyTemplate[]> = {
-    [BiomeType.Frozen]: FROZEN_CAVES_ENEMIES,
-    [BiomeType.Crystalline]: CRYSTALLINE_PEAKS_ENEMIES,
-    [BiomeType.Fungal]: FUNGAL_GROTTO_ENEMIES,
-    [BiomeType.Volcanic]: VOLCANIC_DEPTHS_ENEMIES,
+    'Frozen Caves': FROZEN_CAVES_ENEMIES,
+    'Crystalline Peaks': CRYSTALLINE_PEAKS_ENEMIES,
+    'Fungal Grotto': FUNGAL_GROTTO_ENEMIES,
+    'Volcanic Depths': VOLCANIC_DEPTHS_ENEMIES,
 };
 
 function selectWeightedRandom<T extends { spawnWeight: number }>(items: T[]): T {
@@ -121,7 +120,7 @@ function createEnemyFromTemplate(template: EnemyTemplate, level: number, id: str
 export class EnemyGenerator {
     static generateEnemySet(biome: string, level: number, count: number, setId: string): Combatant[] {
         const enemies: Combatant[] = [];
-        const biomeEnemyList = BIOME_ENEMIES[biome] ?? BIOME_ENEMIES[BiomeType.Frozen]!;
+        const biomeEnemyList = BIOME_ENEMIES[biome] ?? BIOME_ENEMIES['Frozen Caves']!;
         const usedTemplates = new Set<string>();
         
         for (let i = 0; i < count; i++) {
@@ -157,7 +156,7 @@ export class EnemyGenerator {
         const level = floorNumber + 2;
         const id = `boss_${floorNumber}_${bossIndex}_${Math.random().toString(36).substring(2, 8)}`;
         
-        const biomeEnemies = BIOME_ENEMIES[biome] ?? BIOME_ENEMIES[BiomeType.Frozen]!;
+        const biomeEnemies = BIOME_ENEMIES[biome] ?? BIOME_ENEMIES['Frozen Caves']!;
         const bossTemplates = biomeEnemies.filter(e => 
             e.name.includes('Elemental') || 
             e.name.includes('Overlord') || 
