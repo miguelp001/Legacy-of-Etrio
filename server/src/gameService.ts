@@ -216,6 +216,13 @@ export class GameService {
                         totalGold += loot.gold;
                         totalXp += (enemy as any).xpValue || 25;
                         
+                        // Always drop something on victory for testing
+                        if (!loot.item) {
+                            const item = ItemGenerator.generateItem(state.currentFloor);
+                            loot.item = item;
+                            console.log(`[LOOT] BONUS: Generated ${item.name} for ${enemy.name}`);
+                        }
+                        
                         if (loot.item) {
                             roomLoot.push({ enemy: enemy.name, loot: loot.item });
                             newLootItems.push(loot.item);
