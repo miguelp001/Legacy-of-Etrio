@@ -1,56 +1,68 @@
 import React, { useState, useEffect } from 'react';
-import { HeartPulse, Activity, Users } from 'lucide-react';
+import { HeartPulse, Activity } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
 const Hospital: React.FC = () => {
-    const { party, mainCharacter, pollutionLevel, gold, addGold } = useGameStore();
+    const party = useGameStore((s) => s.party);
+    const mainCharacter = useGameStore((s) => s.mainCharacter);
+    const pollutionLevel = useGameStore((s) => s.pollutionLevel);
+    const gold = useGameStore((s) => s.gold);
+    const addGold = useGameStore((s) => s.addGold);
     const pollutionPenalty = pollutionLevel > 50 ? 1.2 : 1.0;
     const fullParty = [mainCharacter, ...party].filter(Boolean);
-    const [lastHeal, setLastHeal] = useState(Date.now());
+    
+    const [tick, setTick] = useState(0);
 
     // Passive heal every 30 seconds
     useEffect(() => {
         const interval = setInterval(() => {
-            const now = Date.now();
-            if (now - lastHeal >= 30000) {
-                const state = useGameStore.getState();
-                let didHeal = false;
-                
-                const newParty = state.party.map((m: any) => {
-                    if (m.hp > 0 && m.hp < m.maxHp) {
-                        const heal = Math.floor(m.maxHp * 0.1);
-                        const newHp = Math.min(m.maxHp, m.hp + heal);
-                        console.log('[PASSIVE HEAL]', m.name, m.hp, '->', newHp);
-                        didHeal = true;
-                        return { ...m, hp: newHp };
-                    }
-                    return m;
-                });
-                
-                let newMc = state.mainCharacter;
-                if (newMc && newMc.hp > 0 && newMc.hp < newMc.maxHp) {
-                    const heal = Math.floor(newMc.maxHp * 0.1);
-                    newMc = { ...newMc, hp: Math.min(newMc.maxHp, newMc.hp + heal) };
-                    didHeal = true;
-                }
-                
-                if (didHeal) {
-                    useGameStore.setState({ party: newParty, mainCharacter: newMc });
-                    setLastHeal(now);
-                }
-            }
+            setTick((t) => t + 1);
         }, 1000);
         
         return () => clearInterval(interval);
-    }, [lastHeal]);
+    }, []);
+
+    // Check if we should heal
+    useEffect(() => {
+        const state = useGameStore.getState();
+        
+        // Count wounded
+        const wounded = state.party.filter((m: any) => m.hp > 0 && m.hp < m.maxHp);
+        const mcWounded = state.mainCharacter && state.mainCharacter.hp > 0 && state.mainCharacter.hp < state.mainCharacter.maxHp;
+        
+        if (wounded.length === 0 && !mcWounded) {
+            console.log('[PASSIVE] Everyone is at full HP, skipping heal');
+            return;
+        }
+        
+        console.log('[PASSIVE HEAL] Healing', wounded.length, 'party members', mcWounded ? '+ MC' : '');
+        
+        // Heal party
+        const newParty = state.party.map((m: any) => {
+            if (m.hp > 0 && m.hp < m.maxHp) {
+                const heal = Math.floor(m.maxHp * 0.1);
+                const newHp = Math.min(m.maxHp, m.hp + heal);
+                console.log('[PASSIVE]', m.name, ':', m.hp, '->', newHp);
+                return { ...m, hp: newHp };
+            }
+            return m;
+        });
+        
+        // Heal MC
+        let newMc = state.mainCharacter;
+        if (newMc && newMc.hp > 0 && newMc.hp < newMc.maxHp) {
+            const heal = Math.floor(newMc.maxHp * 0.1);
+            newMc = { ...newMc, hp: Math.min(newMc.maxHp, newMc.hp + heal) };
+        }
+        
+        useGameStore.setState({ party: newParty, mainCharacter: newMc });
+    }, [tick]);
 
     const handleHealAll = () => {
         const state = useGameStore.getState();
-        
         const newParty = state.party.map((m: any) => ({ ...m, hp: m.maxHp || 100 }));
         let newMc = state.mainCharacter;
         if (newMc) newMc = { ...newMc, hp: newMc.maxHp || 100 };
-        
         useGameStore.setState({ party: newParty, mainCharacter: newMc });
     };
 
@@ -77,7 +89,7 @@ const Hospital: React.FC = () => {
         }
     };
 
-    const secondsUntilHeal = Math.max(0, 30 - Math.floor((Date.now() - lastHeal) / 1000) % 30);
+    const secondsUntilHeal = 30 - (tick % 30);
 
     return (
         <div className="space-y-6 animate-fade-in">
