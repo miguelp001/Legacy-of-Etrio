@@ -3,12 +3,48 @@ import { HeartPulse, Clock, Activity, ShieldAlert, Heart, Users, Zap, Plus, Bed 
 import { useGameStore } from '../store/gameStore';
 
 const Hospital: React.FC = () => {
-    const { party, mainCharacter, healCharacter, healAllCharacters, restParty, pollutionLevel, gold, addGold, setLocation } = useGameStore();
+    const { party, mainCharacter, pollutionLevel, gold, addGold } = useGameStore();
+    const set = useGameStore((s) => s);
     const pollutionPenalty = pollutionLevel > 50 ? 1.2 : 1.0;
     const fullParty = [mainCharacter, ...party].filter(Boolean);
     const [currentTime, setCurrentTime] = useState(Date.now());
     const [lastHealTime, setLastHealTime] = useState(Date.now());
     const [nextHealIn, setNextHealIn] = useState(30);
+    
+    // Direct heal function
+    const doPassiveHeal = useCallback(() => {
+        const healPercent = 0.1;
+        const state = useGameStore.getState();
+        let didHeal = false;
+        
+        // Heal main character
+        if (state.mainCharacter && state.mainCharacter.hp > 0 && state.mainCharacter.hp < state.mainCharacter.maxHp) {
+            const healAmount = Math.floor(state.mainCharacter.maxHp * healPercent);
+            const newHp = Math.min(state.mainCharacter.maxHp, state.mainCharacter.hp + healAmount);
+            console.log('[HEAL] MC:', state.mainCharacter.hp, '->', newHp);
+            set({ mainCharacter: { ...state.mainCharacter, hp: newHp } });
+            didHeal = true;
+        }
+        
+        // Heal party members
+        const wounded = state.party.filter((m: any) => m.hp > 0 && m.hp < m.maxHp);
+        if (wounded.length > 0) {
+            console.log('[HEAL] Healing', wounded.length, 'party members');
+            const newParty = state.party.map((m: any) => {
+                if (m.hp > 0 && m.hp < m.maxHp) {
+                    const healAmount = Math.floor(m.maxHp * healPercent);
+                    const newHp = Math.min(m.maxHp, m.hp + healAmount);
+                    console.log('[HEAL]', m.name, ':', m.hp, '->', newHp);
+                    return { ...m, hp: newHp };
+                }
+                return m;
+            });
+            set({ party: newParty });
+            didHeal = true;
+        }
+        
+        return didHeal;
+    }, [set]);
     
     // Passive healing every 30 seconds
     useEffect(() => {
@@ -19,22 +55,25 @@ const Hospital: React.FC = () => {
             setNextHealIn(Math.max(0, 30 - elapsed));
             
             if (elapsed >= 30) {
-                const wounded = fullParty.filter((m: any) => m.hp > 0 && m.hp < m.maxHp);
-                if (wounded.length > 0) {
-                    console.log('[HOSPITAL] Passive heal triggered, healing', wounded.length, 'members');
-                    restParty();
+                console.log('[HOSPITAL] Timer triggered, calling doPassiveHeal');
+                const healed = doPassiveHeal();
+                if (healed) {
                     setLastHealTime(Date.now());
                     setNextHealIn(30);
+                } else {
+                    // Reset timer even if no one was wounded
+                    setLastHealTime(Date.now());
                 }
             }
         }, 1000);
         
         return () => clearInterval(timer);
-    }, [fullParty, lastHealTime, restParty]);
+    }, [lastHealTime, doPassiveHeal]);
     
     const handleRest = useCallback(() => {
-        restParty();
-    }, [restParty]);
+        console.log('[HOSPITAL] Manual rest button clicked');
+        doPassiveHeal();
+    }, [doPassiveHeal]);
 
     const canHeal = useCallback((member: any) => {
         if (member.hp >= member.maxHp) return false;
@@ -54,7 +93,9 @@ const Hospital: React.FC = () => {
     };
 
     const handleHealAll = () => {
+        const state = useGameStore.getState();
         let totalCost = 0;
+        
         fullParty.forEach((m: any) => {
             if (m.hp < m.maxHp && !(m.recoveryUntil && m.recoveryUntil > currentTime)) {
                 totalCost += getHealCost(m.socialClass);
@@ -63,12 +104,23 @@ const Hospital: React.FC = () => {
 
         if (totalCost === 0) return;
         if (gold < totalCost) {
-            alert('Insufficient gold for group recovery!');
+            alert('Insufficient gold!');
             return;
         }
 
+        // Full heal all
+        let newParty = state.party.map((m: any) => ({
+            ...m,
+            hp: m.maxHp
+        }));
+        
+        let newMc = state.mainCharacter;
+        if (newMc && newMc.hp < newMc.maxHp) {
+            newMc = { ...newMc, hp: newMc.maxHp };
+        }
+        
         addGold(-totalCost);
-        healAllCharacters(totalCost);
+        set({ party: newParty, mainCharacter: newMc });
     };
 
     return (
