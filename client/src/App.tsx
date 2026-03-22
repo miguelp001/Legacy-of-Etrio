@@ -122,20 +122,36 @@ const App: React.FC = () => {
 
   if (!isAuthenticated) return <LoginScreen />;
 
+  const [showTechMenu, setShowTechMenu] = useState(false);
+  
   const NavItem = ({ id, icon: Icon, label, mobileOnly = false }: { id: string, icon: any, label: string, mobileOnly?: boolean }) => (
     <button
       onClick={() => setLocation(id)}
-      className={`flex flex-col items-center justify-center gap-1 px-1 py-2 h-full transition-all group relative ${
+      className={`flex flex-col items-center justify-center gap-1 px-2 py-2 h-full transition-all group relative ${
         location === id 
         ? 'text-primary-color' 
-        : 'text-muted hover:text-white'
+        : 'text-muted hover:text-primary-light'
       } ${mobileOnly ? 'md:hidden' : ''} xl:flex-row xl:justify-start xl:px-4 xl:gap-4 xl:w-full`}
     >
-      <Icon size={20} className={location === id ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'} />
-      <span className="font-black text-[8px] uppercase tracking-tighter xl:text-[10px] xl:tracking-[0.1em]">{label}</span>
+      <Icon size={18} className={location === id ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'} />
+      <span className="font-cinzel text-[9px] uppercase tracking-wider">{label}</span>
       {location === id && (
-        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-primary-color rounded-full shadow-[0_0_8px_var(--primary-glow)] xl:left-0 xl:translate-x-0 xl:w-1 xl:h-6 xl:top-1/2 xl:-translate-y-1/2" />
+        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-crimson rounded-full shadow-[0_0_8px_var(--primary-glow)] xl:left-0 xl:translate-x-0 xl:w-1 xl:h-6 xl:top-1/2 xl:-translate-y-1/2" />
       )}
+    </button>
+  );
+  
+  const TechNavItem = ({ id, icon: Icon, label }: { id: string, icon: any, label: string }) => (
+    <button
+      onClick={() => { setLocation(id); setShowTechMenu(false); }}
+      className={`flex items-center gap-3 w-full px-4 py-3 transition-all ${
+        location === id 
+        ? 'text-primary-light bg-crimson/10' 
+        : 'text-muted hover:text-bone hover:bg-iron/30'
+      }`}
+    >
+      <Icon size={16} />
+      <span className="font-cinzel text-xs uppercase tracking-wider">{label}</span>
     </button>
   );
 
@@ -242,13 +258,15 @@ const App: React.FC = () => {
                 <h3 className="px-8 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-3">Operational Hubs</h3>
                 <NavItem id="Tavern" icon={Users} label="Tavern" />
                 <NavItem id="Hospital" icon={HeartPulse} label="Infirmary" />
-                <NavItem id="Blacksmith" icon={Shield} label="Forge" />
-                <NavItem id="Market" icon={Droplets} label="Blood Market" />
+                <NavItem id="Blacksmith" icon={Shield} label="Smith" />
+                <NavItem id="Market" icon={Droplets} label="Blood" />
               </div>
               <div className="space-y-1">
                 <h3 className="px-8 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-3">Ancient Tech</h3>
-                <NavItem id="Forge" icon={Zap} label="Steam Forge" />
+                <NavItem id="Steam Forge" icon={Zap} label="Steam" />
                 <NavItem id="Basilica" icon={Sparkles} label="Basilica" />
+                <NavItem id="Guild Hall" icon={Castle} label="Guild" />
+                <NavItem id="Lineage" icon={Users} label="Lineage" />
               </div>
 
               <div className="space-y-1">
@@ -367,7 +385,7 @@ const App: React.FC = () => {
                 {location === 'Blacksmith' && <Blacksmith />}
                 {location === 'Market' && <BloodMarket />}
                 {location === 'Basilica' && <Basilica />}
-                {location === 'Forge' && <SteamForge />}
+                {location === 'Steam Forge' && <SteamForge />}
                 {location === 'Guild Hall' && <GuildHall />}
                 {location === 'Lineage' && <LineageHall />}
               </section>
@@ -383,13 +401,31 @@ const App: React.FC = () => {
 
       {/* BOTTOM NAVIGATION (Mobile Only) */}
       <nav className="xl:hidden mobile-nav">
-        <div className="flex px-2 gap-1 min-w-max items-center justify-between mx-auto w-full">
+        <div className="flex px-2 gap-1 items-center justify-between mx-auto w-full">
           <NavItem id="Respite" icon={LayoutDashboard} label="Home" />
           <NavItem id="The Pit" icon={Sword} label="The Pit" />
           <NavItem id="Tavern" icon={Users} label="Tavern" />
           <NavItem id="Hospital" icon={HeartPulse} label="Med" />
           <NavItem id="Blacksmith" icon={Shield} label="Smith" />
-          <NavItem id="Market" icon={Droplets} label="Blood" />
+          <div className="relative">
+            <button
+              onClick={() => setShowTechMenu(!showTechMenu)}
+              className={`flex flex-col items-center justify-center gap-1 px-2 py-2 transition-all ${
+                ['Forge', 'Basilica'].includes(location) ? 'text-primary-light' : 'text-muted'
+              }`}
+            >
+              <Sparkles size={18} />
+              <span className="font-cinzel text-[9px] uppercase tracking-wider">Tech</span>
+            </button>
+            {showTechMenu && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 glass rounded-xl border border-crimson/30 overflow-hidden">
+                <TechNavItem id="Steam Forge" icon={Zap} label="Steam Forge" />
+                <TechNavItem id="Basilica" icon={Sparkles} label="Basilica" />
+                <TechNavItem id="Guild Hall" icon={Castle} label="Guild Hall" />
+                <TechNavItem id="Lineage" icon={Users} label="Lineage" />
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
