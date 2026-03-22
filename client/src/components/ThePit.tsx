@@ -477,17 +477,17 @@ const ThePit: React.FC = () => {
                             <div className="w-px bg-white/10" />
                             <div className="text-center">
                                 <div className="text-[10px] uppercase font-black text-white/30 mb-1">Party Size</div>
-                                <div className="text-2xl font-black">{party.length + (mainCharacter ? 1 : 0)}</div>
+                                <div className="text-2xl font-black">{party.length + 1}</div>
                             </div>
                         </div>
                         
                         <button
                             onClick={startDescent}
-                            disabled={loading || party.length === 0}
+                            disabled={loading || !mainCharacter}
                             className="w-full py-5 bg-primary-color hover:bg-primary-color/80 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95"
                         >
                             {loading ? <Lucide.Loader2 size={20} className="animate-spin" /> : <Lucide.Play size={20} fill="currentColor" />}
-                            {party.length === 0 ? "Empty Party" : "Initiate descent"}
+                            {!mainCharacter ? "Create Character First" : "Initiate descent"}
                         </button>
                     </div>
                 </div>
