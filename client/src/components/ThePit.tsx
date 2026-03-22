@@ -491,7 +491,7 @@ const ThePit: React.FC = () => {
                         
                         <button
                             onClick={() => { console.log('[PIT] Button clicked!'); startDescent(); }}
-                            disabled={loading || !mainCharacter}
+                            disabled={loading}
                             className="w-full py-5 bg-primary-color hover:bg-primary-color/80 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95"
                         >
                             {loading ? <Lucide.Loader2 size={20} className="animate-spin" /> : <Lucide.Play size={20} fill="currentColor" />}

@@ -53,6 +53,7 @@ const App: React.FC = () => {
   const hasHandledSnapshot = useRef(false);
   
   const woundedCount = party.filter((m: any) => m.hp < m.maxHp * 0.5).length;
+  const isDead = mainCharacter && mainCharacter.hp <= 0;
   const canEnter = mainCharacter && mainCharacter.hp > 0;
 
   useEffect(() => {
@@ -270,9 +271,22 @@ const App: React.FC = () => {
                         <h3 className="text-2xl md:text-4xl font-cinzel mb-4 uppercase tracking-wide text-bone leading-tight">The Depths<br/>Await Your Will</h3>
                         <p className="text-muted leading-relaxed mb-6 font-crimson">The ancient runes whisper of peril below.</p>
                         {!canEnter ? (
-                            <span className="inline-flex items-center gap-2 text-danger-color text-sm font-cinzel uppercase tracking-tight px-4 py-2 rounded border border-danger-color/30 bg-danger-color/10">
-                              Character Unconscious
-                            </span>
+                            <div className="space-y-3">
+                              <span className="inline-flex items-center gap-2 text-danger-color text-sm font-cinzel uppercase tracking-tight px-4 py-2 rounded border border-danger-color/30 bg-danger-color/10">
+                                {isDead ? 'Character Fallen' : 'Cannot Descend'}
+                              </span>
+                              {isDead && (
+                                <button 
+                                  onClick={() => {
+                                    const newMc = { ...mainCharacter, hp: mainCharacter.maxHp, recoveryUntil: 0 };
+                                    useGameStore.setState({ mainCharacter: newMc });
+                                  }}
+                                  className="block w-full py-3 bg-secondary-color text-white rounded-xl font-black uppercase text-sm"
+                                >
+                                  Rise From Death
+                                </button>
+                              )}
+                            </div>
                           ) : woundedCount > 0 ? (
                             <div className="flex flex-col sm:flex-row gap-3">
                               <button onClick={() => setLocation('The Pit')} className="btn-primary py-4 px-8 text-sm">
