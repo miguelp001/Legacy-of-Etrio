@@ -1,264 +1,99 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { HeartPulse, Clock, Activity, ShieldAlert, Heart, Users, Zap, Plus, Bed } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { HeartPulse, Activity, Users } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
 const Hospital: React.FC = () => {
-    const { party, mainCharacter, pollutionLevel, gold, addGold } = useGameStore();
-    const set = useGameStore((s) => s);
+    const { party, mainCharacter, pollutionLevel, gold } = useGameStore();
+    const state = useGameStore.getState();
     const pollutionPenalty = pollutionLevel > 50 ? 1.2 : 1.0;
     const fullParty = [mainCharacter, ...party].filter(Boolean);
-    const [currentTime, setCurrentTime] = useState(Date.now());
-    const [lastHealTime, setLastHealTime] = useState(Date.now());
-    const [nextHealIn, setNextHealIn] = useState(30);
     
-    // Direct heal function
-    const doPassiveHeal = useCallback(() => {
-        const healPercent = 0.1;
-        const state = useGameStore.getState();
-        let didHeal = false;
-        
-        // Heal main character
-        if (state.mainCharacter && state.mainCharacter.hp > 0 && state.mainCharacter.hp < state.mainCharacter.maxHp) {
-            const healAmount = Math.floor(state.mainCharacter.maxHp * healPercent);
-            const newHp = Math.min(state.mainCharacter.maxHp, state.mainCharacter.hp + healAmount);
-            console.log('[HEAL] MC:', state.mainCharacter.hp, '->', newHp);
-            set({ mainCharacter: { ...state.mainCharacter, hp: newHp } });
-            didHeal = true;
-        }
-        
-        // Heal party members
-        const wounded = state.party.filter((m: any) => m.hp > 0 && m.hp < m.maxHp);
-        if (wounded.length > 0) {
-            console.log('[HEAL] Healing', wounded.length, 'party members');
-            const newParty = state.party.map((m: any) => {
-                if (m.hp > 0 && m.hp < m.maxHp) {
-                    const healAmount = Math.floor(m.maxHp * healPercent);
-                    const newHp = Math.min(m.maxHp, m.hp + healAmount);
-                    console.log('[HEAL]', m.name, ':', m.hp, '->', newHp);
-                    return { ...m, hp: newHp };
-                }
-                return m;
-            });
-            set({ party: newParty });
-            didHeal = true;
-        }
-        
-        return didHeal;
-    }, [set]);
-    
-    // Passive healing every 30 seconds
+    // Debug: log party state
     useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(Date.now());
-            
-            const elapsed = Math.floor((Date.now() - lastHealTime) / 1000);
-            setNextHealIn(Math.max(0, 30 - elapsed));
-            
-            if (elapsed >= 30) {
-                console.log('[HOSPITAL] Timer triggered, calling doPassiveHeal');
-                const healed = doPassiveHeal();
-                if (healed) {
-                    setLastHealTime(Date.now());
-                    setNextHealIn(30);
-                } else {
-                    // Reset timer even if no one was wounded
-                    setLastHealTime(Date.now());
-                }
-            }
-        }, 1000);
-        
-        return () => clearInterval(timer);
-    }, [lastHealTime, doPassiveHeal]);
-    
-    const handleRest = useCallback(() => {
-        console.log('[HOSPITAL] Manual rest button clicked');
-        doPassiveHeal();
-    }, [doPassiveHeal]);
+        console.log('[HOSPITAL] Mounted. Party:', party.length, 'MC:', mainCharacter?.hp);
+    }, []);
 
-    const canHeal = useCallback((member: any) => {
-        if (member.hp >= member.maxHp) return false;
-        if (member.recoveryUntil && member.recoveryUntil > currentTime) return false;
-        return true;
-    }, [currentTime]);
+    const handleHealAll = () => {
+        const currentState = useGameStore.getState();
+        console.log('[HEAL] Before:', currentState.party.map((p: any) => ({ name: p.name, hp: p.hp, maxHp: p.maxHp })));
+        
+        // Create new party with full HP
+        const newParty = currentState.party.map((m: any) => ({
+            ...m,
+            hp: m.maxHp || 100
+        }));
+        
+        // Create new MC with full HP
+        let newMc = currentState.mainCharacter;
+        if (newMc) {
+            newMc = { ...newMc, hp: newMc.maxHp || 100 };
+        }
+        
+        // Update state directly
+        useGameStore.setState({ party: newParty, mainCharacter: newMc });
+        
+        const afterState = useGameStore.getState();
+        console.log('[HEAL] After:', afterState.party.map((p: any) => ({ name: p.name, hp: p.hp })));
+    };
 
     const getHealCost = (socialClass: string) => {
         const healCosts: Record<string, number> = {
-            'Thrall': 25,
-            'Bondi': 50,
-            'Vardr': 100,
-            'Scrifadr': 250,
-            'Drengskapr': 1000
+            'Thrall': 25, 'Bondi': 50, 'Vardr': 100, 'Scrifadr': 250, 'Drengskapr': 1000
         };
         return Math.floor((healCosts[socialClass || 'Bondi'] || 50) * pollutionPenalty);
     };
 
-    const handleHealAll = () => {
-        const state = useGameStore.getState();
-        let totalCost = 0;
-        
-        fullParty.forEach((m: any) => {
-            if (m.hp < m.maxHp && !(m.recoveryUntil && m.recoveryUntil > currentTime)) {
-                totalCost += getHealCost(m.socialClass);
-            }
-        });
-
-        if (totalCost === 0) return;
-        if (gold < totalCost) {
-            alert('Insufficient gold!');
-            return;
-        }
-
-        // Full heal all
-        let newParty = state.party.map((m: any) => ({
-            ...m,
-            hp: m.maxHp
-        }));
-        
-        let newMc = state.mainCharacter;
-        if (newMc && newMc.hp < newMc.maxHp) {
-            newMc = { ...newMc, hp: newMc.maxHp };
-        }
-        
-        addGold(-totalCost);
-        set({ party: newParty, mainCharacter: newMc });
-    };
-
     return (
-        <div className="space-y-6 animate-fade-in pb-32">
-            {/* Header Area */}
-            <div className="px-4 space-y-2">
-                <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-danger-color/20 rounded-xl text-danger-color">
-                        <HeartPulse size={20} />
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-black tracking-tighter uppercase italic">Respite Sanitarium</h2>
-                        <div className="flex items-center gap-2">
-                             <div className="h-1.5 w-1.5 rounded-full bg-secondary-color animate-pulse" />
-                             <span className="text-[10px] text-muted font-bold uppercase tracking-widest leading-none">Operational • {pollutionLevel}% Pollution</span>
-                        </div>
-                    </div>
+        <div className="space-y-6 animate-fade-in">
+            {/* Header */}
+            <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-danger-color/20 rounded-xl text-danger-color">
+                    <HeartPulse size={20} />
+                </div>
+                <div>
+                    <h2 className="text-xl font-black tracking-tighter uppercase italic">Infirmary</h2>
+                    <span className="text-[10px] text-muted font-bold uppercase tracking-widest">{pollutionLevel}% Pollution</span>
                 </div>
             </div>
 
-            {/* Pollution Warning */}
-            {pollutionLevel > 50 && (
-                <div className="mx-4 glass p-3 border-orange-500/20 bg-orange-500/5 flex items-center gap-3">
-                    <Zap size={14} className="text-orange-500" />
-                    <p className="text-[9px] font-black uppercase tracking-tight text-orange-500/80">
-                        Sanitation standards compromised. Healing costs increased by 20%.
-                    </p>
-                </div>
-            )}
-
-            {/* Character List - Vertical Stack for Thumb Reach */}
-            <div className="space-y-4 px-4">
-                {fullParty.length > 0 ? (
-                    fullParty.map((member: any, idx: number) => {
-                        const isInjured = member.recoveryUntil && member.recoveryUntil > currentTime;
-                        const remainingMs = isInjured ? member.recoveryUntil - currentTime : 0;
-                        const remainingSecs = Math.ceil(remainingMs / 1000);
-                        const hpPercent = (member.hp / member.maxHp) * 100;
-                        const cost = getHealCost(member.socialClass);
-
-                        return (
-                            <div key={member.id || idx} className={`glass p-4 rounded-3xl border transition-all ${isInjured ? 'border-danger-color/30 bg-danger-color/5' : 'border-white/5'}`}>
-                                <div className="flex justify-between items-center mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-black text-xs ${isInjured ? 'text-danger-color' : 'text-primary-color'}`}>
-                                            {member.name.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <div className="font-black text-sm tracking-tight">{member.name}</div>
-                                            <span className="text-[9px] text-muted font-bold uppercase tracking-widest">{member.socialClass} • Lvl {member.level}</span>
-                                        </div>
-                                    </div>
-                                    {isInjured ? (
-                                        <div className="badge bg-danger-color/20 text-danger-color">Injured</div>
-                                    ) : (
-                                        <div className={`badge ${hpPercent < 40 ? 'bg-warning-color/20 text-warning-color' : 'bg-secondary-color/20 text-secondary-color'}`}>
-                                            {hpPercent < 40 ? 'Critical' : 'Stable'}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-tighter">
-                                        <span className="text-white/20">Vitality Map</span>
-                                        <span className={hpPercent < 30 ? 'text-danger-color' : 'text-white/60'}>{Math.floor(member.hp)} / {member.maxHp}</span>
-                                    </div>
-                                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                                        <div 
-                                            className={`h-full transition-all duration-700 ${hpPercent < 30 ? 'bg-danger-color' : 'bg-secondary-color'}`}
-                                            style={{ width: `${hpPercent}%` }}
-                                        />
-                                    </div>
-
-                                    {isInjured ? (
-                                        <div className="flex items-center justify-between p-3 bg-black/40 rounded-2xl border border-white/5">
-                                            <div className="flex items-center gap-2">
-                                                <Clock size={12} className="text-danger-color" />
-                                                <span className="text-[9px] font-black uppercase text-danger-color/80">Healing Lockdown</span>
-                                            </div>
-                                            <span className="font-black text-lg text-white font-mono">{Math.floor(remainingSecs / 60)}:{(remainingSecs % 60).toString().padStart(2, '0')}</span>
-                                        </div>
-                                    ) : (
-                                        <button 
-                                            disabled={hpPercent >= 100 || gold < cost}
-                                            onClick={() => {
-                                                addGold(-cost);
-                                                healCharacter(member.id, member.maxHp);
-                                            }}
-                                            className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all disabled:opacity-30 active:scale-95 flex items-center justify-center gap-2"
-                                        >
-                                            {hpPercent >= 100 ? 'Peak Form' : `Apply Balms (${cost}g)`}
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })
-                ) : (
-                    <div className="py-20 text-center glass rounded-3xl border-dashed border-white/10 border-2">
-                        <Users size={32} className="mx-auto text-white/5 mb-3" />
-                        <h3 className="text-sm font-black text-muted uppercase tracking-tighter">No Echoes Found</h3>
-                    </div>
-                )}
-            </div>
-
-            {/* Mobile Sticky Action Bar */}
-            <div className="fixed bottom-24 left-4 right-4 z-50 pointer-events-none flex gap-3 justify-end">
-                <button 
-                    onClick={handleRest}
-                    className="pointer-events-auto w-14 h-14 bg-secondary-color/20 hover:bg-secondary-color/30 border border-secondary-color/30 rounded-full shadow-xl flex items-center justify-center text-secondary-color active:scale-90 transition-all"
-                    title="Heal 10% HP"
-                >
-                    <Bed size={24} />
-                </button>
+            {/* TEST BUTTON */}
+            <div className="p-4 bg-green-500/20 border border-green-500/30 rounded-xl">
                 <button 
                     onClick={handleHealAll}
-                    disabled={fullParty.every((m: any) => m.hp >= m.maxHp || (m.recoveryUntil && m.recoveryUntil > currentTime))}
-                    className="pointer-events-auto w-14 h-14 bg-secondary-color rounded-full shadow-xl flex items-center justify-center text-white active:scale-90 transition-transform disabled:opacity-30"
+                    className="w-full py-4 bg-green-600 text-white rounded-xl font-black uppercase"
                 >
-                    <div className="relative">
-                        <HeartPulse size={22} />
-                        <Plus size={10} className="absolute -top-1 -right-1 bg-black rounded-full" />
-                    </div>
+                    TEST HEAL ALL
                 </button>
+                <p className="text-[10px] text-green-400 mt-2 text-center">Debug: Click to heal all party members</p>
             </div>
 
-            {/* Info Panel */}
-            <div className="mx-4 p-5 glass border-white/5 rounded-3xl flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-secondary-color/10 text-secondary-color flex items-center justify-center shrink-0">
-                    <Activity size={20} />
-                </div>
-                <div className="space-y-0.5">
-                    <h4 className="font-black text-xs uppercase tracking-tight">Passive Convalescence</h4>
-                    <p className="text-[9px] text-muted leading-relaxed uppercase font-bold tracking-tighter">Nearby ley-lines provide 10% HP recovery every 30 seconds.</p>
-                </div>
-                <div className="ml-auto text-center">
-                    <div className="text-lg font-black text-secondary-color">{nextHealIn}s</div>
-                    <div className="text-[7px] text-muted uppercase">Next</div>
+            {/* Party List */}
+            <div className="space-y-3">
+                {fullParty.map((member: any) => (
+                    <div key={member.id} className="glass p-4 rounded-xl border border-white/5">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="font-black">{member.name}</span>
+                            <span className="text-sm text-white/60">{member.socialClass} Lv{member.level}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-muted mb-2">
+                            <span>HP</span>
+                            <span>{Math.floor(member.hp)} / {member.maxHp}</span>
+                        </div>
+                        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                            <div 
+                                className="h-full bg-secondary-color transition-all"
+                                style={{ width: `${(member.hp / member.maxHp) * 100}%` }}
+                            />
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Info */}
+            <div className="p-4 glass rounded-xl border-white/5">
+                <div className="flex items-center gap-3">
+                    <Activity size={16} className="text-secondary-color" />
+                    <span className="text-xs text-muted">Ley-lines restore 10% HP every 30 seconds</span>
                 </div>
             </div>
         </div>
