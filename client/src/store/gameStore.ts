@@ -403,8 +403,6 @@ export const useGameStore = create<GameState>()(
       
       restParty: async () => {
         const state = useGameStore.getState();
-        
-        // Apply healing locally first for immediate feedback
         const healAmount = 0.1; // 10%
         
         set((currentState) => {
@@ -414,19 +412,25 @@ export const useGameStore = create<GameState>()(
           // Heal main character
           if (currentState.mainCharacter && currentState.mainCharacter.hp > 0 && currentState.mainCharacter.hp < currentState.mainCharacter.maxHp) {
             const heal = Math.floor(currentState.mainCharacter.maxHp * healAmount);
+            const newHp = Math.min(currentState.mainCharacter.maxHp, currentState.mainCharacter.hp + heal);
+            console.log(`[REST] Healing ${currentState.mainCharacter.name}: ${currentState.mainCharacter.hp} -> ${newHp}`);
             newState.mainCharacter = {
               ...currentState.mainCharacter,
-              hp: Math.min(currentState.mainCharacter.maxHp, currentState.mainCharacter.hp + heal)
+              hp: newHp
             };
             updated = true;
           }
           
           // Heal party members
-          if (currentState.party.some((m: any) => m.hp > 0 && m.hp < m.maxHp)) {
+          const woundedParty = currentState.party.filter((m: any) => m.hp > 0 && m.hp < m.maxHp);
+          if (woundedParty.length > 0) {
+            console.log(`[REST] Healing ${woundedParty.length} party members`);
             newState.party = currentState.party.map((m: any) => {
               if (m.hp > 0 && m.hp < m.maxHp) {
                 const heal = Math.floor(m.maxHp * healAmount);
-                return { ...m, hp: Math.min(m.maxHp, m.hp + heal) };
+                const newHp = Math.min(m.maxHp, m.hp + heal);
+                console.log(`[REST] Healing ${m.name}: ${m.hp} -> ${newHp}`);
+                return { ...m, hp: newHp };
               }
               return m;
             });
@@ -436,7 +440,7 @@ export const useGameStore = create<GameState>()(
           return updated ? newState : currentState;
         });
 
-        // Also sync to server
+        // Sync to server
         if (state.playerId) {
           try {
             await fetch(`${API_BASE}/api/game/rest`, {

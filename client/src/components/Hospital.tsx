@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { HeartPulse, Clock, Activity, ShieldAlert, Heart, Users, Zap, Plus, Bed } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
@@ -8,6 +8,8 @@ const Hospital: React.FC = () => {
     const fullParty = [mainCharacter, ...party].filter(Boolean);
     const [currentTime, setCurrentTime] = useState(Date.now());
     const [isResting, setIsResting] = useState(false);
+    const restPartyRef = useRef(restParty);
+    restPartyRef.current = restParty;
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
@@ -17,15 +19,24 @@ const Hospital: React.FC = () => {
     const woundedCount = fullParty.filter((m: any) => m.hp < m.maxHp).length;
     const canRest = woundedCount > 0;
     
+    // Passive healing: every 30 seconds
     useEffect(() => {
-        if (!canRest || isResting) return;
+        if (!canRest) return;
         
-        const interval = setInterval(async () => {
-            await restParty();
+        // Heal immediately on mount
+        if (!isResting) {
+            restPartyRef.current();
+        }
+        
+        const interval = setInterval(() => {
+            if (!isResting) {
+                console.log('[HOSPITAL] Passive heal triggered');
+                restPartyRef.current();
+            }
         }, 30000);
         
         return () => clearInterval(interval);
-    }, [canRest, isResting, restParty]);
+    }, [canRest, isResting]);
     
     const handleRest = useCallback(async () => {
         setIsResting(true);
@@ -202,8 +213,14 @@ const Hospital: React.FC = () => {
                 </div>
                 <div className="space-y-0.5">
                     <h4 className="font-black text-xs uppercase tracking-tight">Passive Convalescence</h4>
-                    <p className="text-[9px] text-muted leading-relaxed uppercase font-bold tracking-tighter">Nearby ley-lines provide 10% HP recovery every 30 seconds while in hospital.</p>
+                    <p className="text-[9px] text-muted leading-relaxed uppercase font-bold tracking-tighter">Nearby ley-lines provide 10% HP recovery every 30 seconds.</p>
                 </div>
+                {canRest && (
+                    <div className="ml-auto text-center">
+                        <div className="text-lg font-black text-secondary-color">{Math.ceil((30000 - (Date.now() % 30000)) / 1000)}s</div>
+                        <div className="text-[7px] text-muted uppercase">Next</div>
+                    </div>
+                )}
             </div>
         </div>
     );
