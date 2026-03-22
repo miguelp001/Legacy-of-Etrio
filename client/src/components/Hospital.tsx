@@ -26,6 +26,13 @@ const Hospital: React.FC = () => {
     useEffect(() => {
         const state = useGameStore.getState();
         
+        console.log('[PASSIVE] Check:', {
+            partyCount: state.party.length,
+            party: state.party.map((m: any) => ({ name: m.name, hp: m.hp, maxHp: m.maxHp })),
+            mcHp: state.mainCharacter?.hp,
+            mcMaxHp: state.mainCharacter?.maxHp
+        });
+        
         // Count wounded
         const wounded = state.party.filter((m: any) => m.hp > 0 && m.hp < m.maxHp);
         const mcWounded = state.mainCharacter && state.mainCharacter.hp > 0 && state.mainCharacter.hp < state.mainCharacter.maxHp;
