@@ -15,14 +15,16 @@ const Tavern: React.FC = () => {
     const fetchCandidates = async () => {
         setLoading(true);
         try {
-            const results = await Promise.all([
-                fetch(`${API_BASE}/api/generate-npc?level=1`).then(res => res.json()),
-                fetch(`${API_BASE}/api/generate-npc?level=1`).then(res => res.json()),
-                fetch(`${API_BASE}/api/generate-npc?level=1`).then(res => res.json()),
-            ]);
+            const fetchNPC = async () => {
+                const res = await fetch(`${API_BASE}/api/generate-npc?level=1`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            };
+            const results = await Promise.all([fetchNPC(), fetchNPC(), fetchNPC()]);
             setCandidates(results);
         } catch (error) {
-            console.error('Failed to fetch candidates', error);
+            console.error('Failed to fetch candidates:', error);
+            setCandidates([]);
         } finally {
             setLoading(false);
         }
@@ -55,7 +57,7 @@ const Tavern: React.FC = () => {
         }
         addGold(-cost);
         addToParty(npc);
-        setCandidates(prev => prev.filter(c => c.name !== npc.name));
+        setCandidates(prev => prev.filter(c => c.id !== npc.id));
     };
 
     const handleDismiss = (id: string) => {

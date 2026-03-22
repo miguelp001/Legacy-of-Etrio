@@ -1,36 +1,75 @@
-import React, { useState } from 'react';
-import { Hammer, Trash2, ShieldCheck, ShoppingCart, Loader2, Zap, AlertTriangle, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Hammer, Trash2, ShieldCheck, ShoppingCart, Loader2, Zap, AlertTriangle } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
+
+const RARITY_ORDER = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Corrupted', 'Abyssal'];
+const FORGE_COST = 100;
+const SELL_VALUES: Record<string, number> = {
+    'Common': 25,
+    'Uncommon': 50,
+    'Rare': 150,
+    'Epic': 400,
+    'Legendary': 1000,
+    'Corrupted': 300,
+    'Abyssal': 2500
+};
 
 const Blacksmith: React.FC = () => {
     const { 
         inventory, mainCharacter, party, addGold, 
         removeFromInventory, isAutoSellEnabled, toggleAutoSell, 
         autoSellRarityThreshold, setAutoSellThreshold, equipItem,
-        gold, infuseItem
+        gold, infuseItem, addToInventory
     } = useGameStore();
     const fullParty = [mainCharacter, ...party].filter(Boolean);
     const [newItemLoading, setNewItemLoading] = useState(false);
 
+    useEffect(() => {
+        if (!isAutoSellEnabled || inventory.length === 0) return;
+        
+        const thresholdIndex = RARITY_ORDER.indexOf(autoSellRarityThreshold);
+        if (thresholdIndex < 0) return;
+        
+        const toSell = inventory.filter((item: any) => {
+            const itemIndex = RARITY_ORDER.indexOf(item.rarity);
+            return itemIndex >= 0 && itemIndex <= thresholdIndex;
+        });
+        
+        toSell.forEach((item: any) => {
+            const sellValue = SELL_VALUES[item.rarity] || 25;
+            addGold(sellValue);
+            removeFromInventory(item.id);
+        });
+    }, [inventory, isAutoSellEnabled, autoSellRarityThreshold]);
+
     const generateTestItem = async () => {
+        if (gold < FORGE_COST) {
+            alert('Not enough gold to forge! Need ' + FORGE_COST + 'g');
+            return;
+        }
+        
         setNewItemLoading(true);
+        addGold(-FORGE_COST);
+        
         try {
             const res = await fetch(`${API_BASE}/api/generate-item?level=1`);
             const item = await res.json();
             if (item) {
-                useGameStore.getState().addToInventory(item);
+                addToInventory(item);
             }
         } catch (error) {
             console.error(error);
+            addGold(FORGE_COST);
         } finally {
             setNewItemLoading(false);
         }
     };
 
     const handleSell = (item: any) => {
-        addGold(50);
+        const sellValue = SELL_VALUES[item.rarity] || 25;
+        addGold(sellValue);
         removeFromInventory(item.id);
     };
 
@@ -48,18 +87,18 @@ const Blacksmith: React.FC = () => {
                         <Hammer size={20} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-black tracking-tighter uppercase italic">Iron & Ember Forge</h2>
-                        <span className="text-[10px] text-muted font-bold uppercase tracking-widest leading-none">Status: Searing Hot</span>
+                        <h2 className="text-xl font-cinzel uppercase">Iron & Ember Forge</h2>
+                        <span className="text-[10px] text-muted font-cinzel uppercase leading-none">Status: Searing Hot</span>
                     </div>
                 </div>
 
                 <button 
                   onClick={generateTestItem} 
-                  className="btn-primary w-full py-5 flex justify-center text-[10px] font-black uppercase tracking-[0.2em] gap-3 rounded-2xl shadow-xl shadow-primary-color/20 active:scale-95 transition-transform" 
-                  disabled={newItemLoading}
+                  className="btn-primary w-full py-4 flex justify-center items-center gap-3 rounded-xl" 
+                  disabled={newItemLoading || gold < FORGE_COST}
                 >
-                    {newItemLoading ? <Loader2 className="animate-spin" size={20} /> : <Hammer size={20} />}
-                    Forge Experimental Gear
+                    {newItemLoading ? <Loader2 className="animate-spin" size={18} /> : <Hammer size={18} />}
+                    <span className="font-cinzel text-xs uppercase tracking-wider">Forge ({FORGE_COST}g)</span>
                 </button>
             </div>
 
@@ -130,7 +169,7 @@ const Blacksmith: React.FC = () => {
                                         onClick={() => handleSell(item)} 
                                         className="flex-1 py-4 bg-danger-color/10 border border-danger-color/20 rounded-2xl text-[10px] font-black uppercase tracking-widest text-danger-color flex items-center justify-center gap-2 active:scale-95"
                                     >
-                                        <Trash2 size={16} /> Liquefy (50g)
+                                        <Trash2 size={16} /> Liquefy ({SELL_VALUES[item.rarity] || 25}g)
                                     </button>
                                     
                                     {!item.isInfused && (

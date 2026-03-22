@@ -1,11 +1,11 @@
 import React from 'react';
 import { Shield, Sword, Zap, User } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
+import Tooltip from './Tooltip';
 
 const VanguardMonitor: React.FC = () => {
     const { party, mainCharacter } = useGameStore();
     
-    // Type-safe filter for the party including the main character
     const fullParty = [mainCharacter, ...party].filter((m): m is NonNullable<typeof m> => m !== null);
 
     return (
@@ -23,17 +23,23 @@ const VanguardMonitor: React.FC = () => {
                                 <div className="w-6 h-6 rounded-md bg-white/5 flex items-center justify-center">
                                     <User size={12} className={member.id === 'player-mc' ? 'text-accent-color' : 'text-primary-color'} />
                                 </div>
-                                <span className="text-[10px] font-black uppercase tracking-tight truncate w-24">{member.name}</span>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-black uppercase tracking-tight truncate w-24">{member.name}</span>
+                                    <span className="text-[7px] text-primary-color/60 font-bold uppercase">{(member.baseClass || '???').substring(0, 4)}</span>
+                                </div>
                             </div>
-                            <span className="text-[9px] font-bold text-white/30 italic">L{member.level}</span>
+                            <Tooltip content={`Level ${member.level} ${member.baseClass || 'Unknown'}`} position="left">
+                            <span className="text-[9px] font-bold text-white/30 italic cursor-help">L{member.level}</span>
+                            </Tooltip>
                         </div>
 
-                        {/* HP / MP Mini bars */}
                         <div className="space-y-1.5 px-0.5">
+                            <Tooltip content={`${Math.floor(member.hp)} / ${Math.floor(member.maxHp)} HP`} position="left">
                             <div className="flex justify-between text-[8px] font-black uppercase text-white/20">
                                 <span>Health</span>
                                 <span className="text-white/60">{Math.floor(member.hp)}/{Math.floor(member.maxHp)}</span>
                             </div>
+                            </Tooltip>
                             <div className="h-1 bg-white/5 rounded-full overflow-hidden">
                                 <div 
                                     className="h-full bg-primary-color transition-all duration-500" 
@@ -42,17 +48,22 @@ const VanguardMonitor: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Equipment Icons */}
                         <div className="flex gap-2 px-1">
-                            <div className={`p-1 rounded-md border ${member.weapon ? 'border-accent-color/40 bg-accent-color/5 text-accent-color' : 'border-white/5 text-white/10'}`} title={member.weapon?.name || 'No Weapon'}>
+                            <Tooltip content={member.weapon?.name || 'No Weapon equipped'} position="top">
+                            <div className={`p-1 rounded-md border cursor-help ${member.weapon ? 'border-accent-color/40 bg-accent-color/5 text-accent-color' : 'border-white/5 text-white/10'}`}>
                                 <Sword size={10} />
                             </div>
-                            <div className={`p-1 rounded-md border ${member.armor ? 'border-secondary-color/40 bg-secondary-color/5 text-secondary-color' : 'border-white/5 text-white/10'}`} title={member.armor?.name || 'No Armor'}>
+                            </Tooltip>
+                            <Tooltip content={member.armor?.name || 'No Armor equipped'} position="top">
+                            <div className={`p-1 rounded-md border cursor-help ${member.armor ? 'border-secondary-color/40 bg-secondary-color/5 text-secondary-color' : 'border-white/5 text-white/10'}`}>
                                 <Shield size={10} />
                             </div>
-                            <div className={`p-1 rounded-md border ${member.accessory ? 'border-primary-color/40 bg-primary-color/5 text-primary-color' : 'border-white/5 text-white/10'}`} title={member.accessory?.name || 'No Accessory'}>
+                            </Tooltip>
+                            <Tooltip content={member.accessory?.name || 'No Accessory equipped'} position="top">
+                            <div className={`p-1 rounded-md border cursor-help ${member.accessory ? 'border-primary-color/40 bg-primary-color/5 text-primary-color' : 'border-white/5 text-white/10'}`}>
                                 <Zap size={10} />
                             </div>
+                            </Tooltip>
                         </div>
                     </div>
                 ))}

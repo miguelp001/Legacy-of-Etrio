@@ -328,4 +328,8 @@ export class ItemGenerator {
             level: floorLevel
         };
     }
+
+    static shouldAutoSell(item: Item, threshold: Rarity): boolean {
+        return this.getRarityValue(item.rarity) <= this.getRarityValue(threshold);
+    }
 }

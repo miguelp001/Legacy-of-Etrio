@@ -246,7 +246,14 @@ export class GameService {
                 }
 
                 // Award XP to surviving party members
-                const xpPerEnemy = totalXp;
+                // Solo bonus: +50% XP if only main character fights
+                const isSolo = participants.length === 1 && mainChar !== null;
+                const soloMultiplier = isSolo ? 1.5 : 1;
+                const xpPerEnemy = Math.floor(totalXp * soloMultiplier);
+                
+                if (isSolo) {
+                    console.log(`[XP] SOLO BONUS: ${mainChar?.name} fighting alone! XP multiplier: ${soloMultiplier}x`);
+                }
                 
                 for (const survivor of survivors) {
                     const levelResult = this.awardXP(survivor, xpPerEnemy);

@@ -32,6 +32,8 @@ import DepthMap from './components/DepthMap';
 import VictoryScreen from './components/VictoryScreen';
 import LoginScreen from './components/LoginScreen';
 import VanguardMonitor from './components/VanguardMonitor';
+import Help from './components/Help';
+import Tooltip from './components/Tooltip';
 
 const App: React.FC = () => {
   const { 
@@ -44,6 +46,7 @@ const App: React.FC = () => {
 
   const [showMap, setShowMap] = useState(false);
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const hasHandledSnapshot = useRef(false);
   
   const canDelve = party.every((m: any) => m.hp >= m.maxHp * 0.5) && 
@@ -124,36 +127,42 @@ const App: React.FC = () => {
 
   const [showTechMenu, setShowTechMenu] = useState(false);
   
-  const NavItem = ({ id, icon: Icon, label, mobileOnly = false }: { id: string, icon: any, label: string, mobileOnly?: boolean }) => (
-    <button
-      onClick={() => setLocation(id)}
-      className={`flex flex-col items-center justify-center gap-1 px-2 py-2 h-full transition-all group relative ${
-        location === id 
-        ? 'text-primary-color' 
-        : 'text-muted hover:text-primary-light'
-      } ${mobileOnly ? 'md:hidden' : ''} xl:flex-row xl:justify-start xl:px-4 xl:gap-4 xl:w-full`}
-    >
-      <Icon size={18} className={location === id ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'} />
-      <span className="font-cinzel text-[9px] uppercase tracking-wider">{label}</span>
-      {location === id && (
-        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-crimson rounded-full shadow-[0_0_8px_var(--primary-glow)] xl:left-0 xl:translate-x-0 xl:w-1 xl:h-6 xl:top-1/2 xl:-translate-y-1/2" />
-      )}
-    </button>
-  );
+  const NavItem = ({ id, icon: Icon, label, mobileOnly = false, tooltip }: { id: string, icon: any, label: string, mobileOnly?: boolean, tooltip?: string }) => {
+    const navButton = (
+      <button
+        onClick={() => setLocation(id)}
+        className={`flex flex-col items-center justify-center gap-1 px-2 py-2 h-full transition-all group relative ${
+          location === id 
+          ? 'text-primary-color' 
+          : 'text-muted hover:text-primary-light'
+        } ${mobileOnly ? 'md:hidden' : ''} xl:flex-row xl:justify-start xl:px-4 xl:gap-4 xl:w-full`}
+      >
+        <Icon size={18} className={location === id ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'} />
+        <span className="font-cinzel text-[9px] uppercase tracking-wider">{label}</span>
+        {location === id && (
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-crimson rounded-full shadow-[0_0_8px_var(--primary-glow)] xl:left-0 xl:translate-x-0 xl:w-1 xl:h-6 xl:top-1/2 xl:-translate-y-1/2" />
+        )}
+      </button>
+    );
+    return tooltip ? <Tooltip content={tooltip} position="top">{navButton}</Tooltip> : navButton;
+  };
   
-  const TechNavItem = ({ id, icon: Icon, label }: { id: string, icon: any, label: string }) => (
-    <button
-      onClick={() => { setLocation(id); setShowTechMenu(false); }}
-      className={`flex items-center gap-3 w-full px-4 py-3 transition-all ${
-        location === id 
-        ? 'text-primary-light bg-crimson/10' 
-        : 'text-muted hover:text-bone hover:bg-iron/30'
-      }`}
-    >
-      <Icon size={16} />
-      <span className="font-cinzel text-xs uppercase tracking-wider">{label}</span>
-    </button>
-  );
+  const TechNavItem = ({ id, icon: Icon, label, tooltip }: { id: string, icon: any, label: string, tooltip?: string }) => {
+    const button = (
+      <button
+        onClick={() => { setLocation(id); setShowTechMenu(false); }}
+        className={`flex items-center gap-3 w-full px-4 py-3 transition-all ${
+          location === id 
+          ? 'text-primary-light bg-crimson/10' 
+          : 'text-muted hover:text-bone hover:bg-iron/30'
+        }`}
+      >
+        <Icon size={16} />
+        <span className="font-cinzel text-xs uppercase tracking-wider">{label}</span>
+      </button>
+    );
+    return tooltip ? <Tooltip content={tooltip} position="right">{button}</Tooltip> : button;
+  };
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col font-sans selection:bg-primary-color selection:text-white overflow-hidden relative">
@@ -175,12 +184,14 @@ const App: React.FC = () => {
                 <span className="font-black text-[10px] text-accent-color">{gold.toLocaleString()}</span>
              </div>
              
-             <button 
-                onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
-                className="p-1.5 rounded-full bg-white/5 border border-white/10 text-muted active:scale-95 transition-transform"
-             >
-                <ChevronUp size={16} className={`transition-transform duration-300 ${isHeaderExpanded ? '' : 'rotate-180'}`} />
-             </button>
+              <Tooltip content={isHeaderExpanded ? "Collapse header" : "Expand header for more options"} position="bottom">
+              <button 
+                 onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+                 className="p-1.5 rounded-full bg-white/5 border border-white/10 text-muted active:scale-95 transition-transform"
+              >
+                 <ChevronUp size={16} className={`transition-transform duration-300 ${isHeaderExpanded ? '' : 'rotate-180'}`} />
+              </button>
+              </Tooltip>
           </div>
         </div>
 
@@ -190,26 +201,34 @@ const App: React.FC = () => {
               <Droplets size={12} className="text-red-500 mb-1" />
               <span className="font-black text-xs">{Math.floor(bloodRations)}</span>
            </div>
-           <button 
-             onClick={() => setResonatorActive(!isResonatorActive)}
-             className={`flex-1 glass p-2 flex flex-col justify-center items-center transition-colors ${isResonatorActive ? 'border-primary-color bg-primary-color/10' : 'border-white/5'}`}
-           >
-              <Zap size={12} className={isResonatorActive ? 'text-primary-color' : 'text-muted'} />
-              <span className="font-black text-[8px] uppercase mt-1">Resonator</span>
-           </button>
+            <Tooltip content={isResonatorActive ? "Deactivate resonator bonus" : "Activate resonator for +10% bonus gains"} position="top">
+            <button 
+              onClick={() => setResonatorActive(!isResonatorActive)}
+              className={`flex-1 glass p-2 flex flex-col justify-center items-center transition-colors ${isResonatorActive ? 'border-primary-color bg-primary-color/10' : 'border-white/5'}`}
+            >
+               <Zap size={12} className={isResonatorActive ? 'text-primary-color' : 'text-muted'} />
+               <span className="font-black text-[8px] uppercase mt-1">Resonator</span>
+            </button>
+            </Tooltip>
            <div className="flex-1 flex gap-2">
-             <button className="flex-1 glass p-2 flex flex-col justify-center items-center border-white/5 active:bg-white/10" title="Help">
-               <HelpCircle size={12} className="text-muted" />
-               <span className="font-black text-[8px] uppercase mt-1 text-muted">Help</span>
-             </button>
+<Tooltip content="Open the Grimoire of Etrio - comprehensive game guide" position="top">
+              <button onClick={() => setShowHelp(true)} className="flex-1 glass p-2 flex flex-col justify-center items-center border-white/5 active:bg-white/10" title="Help">
+                <HelpCircle size={12} className="text-muted" />
+                <span className="font-black text-[8px] uppercase mt-1 text-muted">Help</span>
+              </button>
+            </Tooltip>
+             <Tooltip content="View your profile and settings" position="top">
              <button className="flex-1 glass p-2 flex flex-col justify-center items-center border-white/5 active:bg-white/10" title="Profile">
-               <User size={12} className="text-muted" />
-               <span className="font-black text-[8px] uppercase mt-1 text-muted">User</span>
-             </button>
-             <button onClick={() => logout()} className="flex-1 glass p-2 flex flex-col justify-center items-center border-red-500/20 active:bg-red-500/10" title="Logout">
-               <LogOut size={12} className="text-red-500" />
-               <span className="font-black text-[8px] uppercase mt-1 text-red-500">Exit</span>
-             </button>
+                <User size={12} className="text-muted" />
+                <span className="font-black text-[8px] uppercase mt-1 text-muted">User</span>
+              </button>
+              </Tooltip>
+              <Tooltip content="Save progress and logout" position="top">
+              <button onClick={() => logout()} className="flex-1 glass p-2 flex flex-col justify-center items-center border-red-500/20 active:bg-red-500/10" title="Logout">
+                <LogOut size={12} className="text-red-500" />
+                <span className="font-black text-[8px] uppercase mt-1 text-red-500">Exit</span>
+              </button>
+              </Tooltip>
            </div>
         </div>
       </header>
@@ -251,43 +270,50 @@ const App: React.FC = () => {
           <nav className="flex-1 overflow-y-auto py-6 space-y-8 custom-scrollbar">
               <div className="space-y-1">
                 <h3 className="px-8 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-3">Expedition</h3>
-                <NavItem id="Respite" icon={LayoutDashboard} label="Overview" />
-                <NavItem id="The Pit" icon={Sword} label="The Pit" />
+                <NavItem id="Respite" icon={LayoutDashboard} label="Overview" tooltip="Return to the Respite hub" />
+                <NavItem id="The Pit" icon={Sword} label="The Pit" tooltip="Enter the dungeon and fight enemies" />
               </div>
               <div className="space-y-1">
                 <h3 className="px-8 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-3">Operational Hubs</h3>
-                <NavItem id="Tavern" icon={Users} label="Tavern" />
-                <NavItem id="Hospital" icon={HeartPulse} label="Infirmary" />
-                <NavItem id="Blacksmith" icon={Shield} label="Smith" />
-                <NavItem id="Market" icon={Droplets} label="Blood" />
+                <NavItem id="Tavern" icon={Users} label="Tavern" tooltip="Recruit mercenaries and manage your party" />
+                <NavItem id="Hospital" icon={HeartPulse} label="Infirmary" tooltip="Heal wounded party members" />
+                <NavItem id="Blacksmith" icon={Shield} label="Smith" tooltip="Forge equipment and manage inventory" />
+                <NavItem id="Market" icon={Droplets} label="Blood" tooltip="Trade resources at the Blood Market" />
               </div>
               <div className="space-y-1">
                 <h3 className="px-8 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-3">Ancient Tech</h3>
-                <NavItem id="Steam Forge" icon={Zap} label="Steam" />
-                <NavItem id="Basilica" icon={Sparkles} label="Basilica" />
-                <NavItem id="Guild Hall" icon={Castle} label="Guild" />
-                <NavItem id="Lineage" icon={Users} label="Lineage" />
+                <NavItem id="Steam Forge" icon={Zap} label="Steam" tooltip="Enhance items with industrial processes" />
+                <NavItem id="Basilica" icon={Sparkles} label="Basilica" tooltip="Perform rituals and ascend members" />
+                <NavItem id="Guild Hall" icon={Castle} label="Guild" tooltip="Upgrade guild buildings and donate to The Gate" />
+                <NavItem id="Lineage" icon={Users} label="Lineage" tooltip="Manage relationships and succession" />
               </div>
 
               <div className="space-y-1">
                 <h3 className="px-8 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-3">System</h3>
-                <button className="w-full flex items-center gap-4 px-8 py-3.5 text-muted hover:text-white hover:bg-white/5 transition-all group">
+                <Tooltip content="Open the comprehensive game guide" position="right">
+                <button onClick={() => setShowHelp(true)} className="w-full flex items-center gap-4 px-8 py-3.5 text-muted hover:text-white hover:bg-white/5 transition-all group">
                   <HelpCircle size={18} className="opacity-50 group-hover:opacity-100 transition-opacity" />
                   <span className="text-xs font-black uppercase tracking-widest">Help Center</span>
                 </button>
+                </Tooltip>
+                <Tooltip content="View your profile and settings" position="right">
                 <button className="w-full flex items-center gap-4 px-8 py-3.5 text-muted hover:text-white hover:bg-white/5 transition-all group">
                   <User size={18} className="opacity-50 group-hover:opacity-100 transition-opacity" />
                   <span className="text-xs font-black uppercase tracking-widest">{user?.username || 'Profile'}</span>
                 </button>
+                </Tooltip>
+                <Tooltip content="Save progress and end your session" position="right">
                 <button onClick={() => logout()} className="w-full flex items-center gap-4 px-8 py-3.5 text-red-500/50 hover:text-red-500 hover:bg-red-500/5 transition-all group">
                   <LogOut size={18} className="opacity-50 group-hover:opacity-100 transition-opacity" />
                   <span className="text-xs font-black uppercase tracking-widest">Terminate Session</span>
                 </button>
+                </Tooltip>
               </div>
           </nav>
 
           {/* Resonator Desktop Toggle */}
           <div className="p-6 mt-auto border-t border-white/5">
+            <Tooltip content={isResonatorActive ? "Deactivate resonator - disables +10% bonus" : "Activate resonator - gain +10% on all rewards"} position="right">
             <button 
               onClick={() => setResonatorActive(!isResonatorActive)}
               className={`w-full p-4 glass rounded-2xl flex items-center justify-between transition-all group ${isResonatorActive ? 'border-primary-color/50 bg-primary-color/10 shadow-[0_0_20px_rgba(168,85,247,0.1)]' : 'border-white/5 hover:bg-white/5'}`}
@@ -305,6 +331,7 @@ const App: React.FC = () => {
                 <div className={`absolute top-1 w-2 h-2 rounded-full bg-white transition-all ${isResonatorActive ? 'left-5' : 'left-1'}`} />
               </div>
             </button>
+            </Tooltip>
           </div>
         </aside>
 
@@ -341,7 +368,9 @@ const App: React.FC = () => {
                               {woundedCount} {woundedCount === 1 ? 'Member' : 'Members'} Wounded
                             </div>
                           ) : (
+                            <Tooltip content="Start descending into The Pit to fight enemies and collect loot" position="top">
                             <button onClick={() => setLocation('The Pit')} className="btn-primary py-4 px-8 text-sm justify-center flex-1 sm:flex-none">Descend Into The Deep</button>
+                            </Tooltip>
                           )}
                         </div>
                       </div>
@@ -402,11 +431,11 @@ const App: React.FC = () => {
       {/* BOTTOM NAVIGATION (Mobile Only) */}
       <nav className="xl:hidden mobile-nav">
         <div className="flex px-2 gap-1 items-center justify-between mx-auto w-full">
-          <NavItem id="Respite" icon={LayoutDashboard} label="Home" />
-          <NavItem id="The Pit" icon={Sword} label="The Pit" />
-          <NavItem id="Tavern" icon={Users} label="Tavern" />
-          <NavItem id="Hospital" icon={HeartPulse} label="Med" />
-          <NavItem id="Blacksmith" icon={Shield} label="Smith" />
+          <NavItem id="Respite" icon={LayoutDashboard} label="Home" tooltip="Return to Respite hub" />
+          <NavItem id="The Pit" icon={Sword} label="The Pit" tooltip="Enter the dungeon" />
+          <NavItem id="Tavern" icon={Users} label="Tavern" tooltip="Recruit party members" />
+          <NavItem id="Hospital" icon={HeartPulse} label="Med" tooltip="Heal wounded" />
+          <NavItem id="Blacksmith" icon={Shield} label="Smith" tooltip="Forge equipment" />
           <div className="relative">
             <button
               onClick={() => setShowTechMenu(!showTechMenu)}
@@ -419,10 +448,10 @@ const App: React.FC = () => {
             </button>
             {showTechMenu && (
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 glass rounded-xl border border-crimson/30 overflow-hidden">
-                <TechNavItem id="Steam Forge" icon={Zap} label="Steam Forge" />
-                <TechNavItem id="Basilica" icon={Sparkles} label="Basilica" />
-                <TechNavItem id="Guild Hall" icon={Castle} label="Guild Hall" />
-                <TechNavItem id="Lineage" icon={Users} label="Lineage" />
+                <TechNavItem id="Steam Forge" icon={Zap} label="Steam Forge" tooltip="Industrial item enhancement" />
+                <TechNavItem id="Basilica" icon={Sparkles} label="Basilica" tooltip="Rituals and ascension" />
+                <TechNavItem id="Guild Hall" icon={Castle} label="Guild Hall" tooltip="Guild upgrades and donations" />
+                <TechNavItem id="Lineage" icon={Users} label="Lineage" tooltip="Relationships and heirs" />
               </div>
             )}
           </div>
@@ -432,6 +461,7 @@ const App: React.FC = () => {
       {/* Overlays / Modals */}
       {!mainCharacter && <CharacterCreation />}
       {isGameWon && <VictoryScreen />}
+      {showHelp && <Help onClose={() => setShowHelp(false)} />}
       
       {showMap && lastSnapshotData && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in">
