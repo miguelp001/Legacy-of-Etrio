@@ -199,12 +199,12 @@ export class CombatEngine {
                     
                     if (weaponType === 'magic' || attacker.baseClass === 'Mage') {
                         attackType = 'magic';
-                        baseDamage = atkInt * 2.2 + atkSpirit * 0.5;
-                        defense = defSpirit * 0.6;
+                        baseDamage = atkInt * 2.5 + atkSpirit * 0.5;
+                        defense = defSpirit * 0.4;
                     } else {
                         attackType = 'physical';
-                        baseDamage = atkStr * 2 + atkAgil * 0.3;
-                        defense = defVit * 0.5 + defAgil * 0.2;
+                        baseDamage = atkStr * 2.5 + atkAgil * 0.3;
+                        defense = defVit * 0.4 + defAgil * 0.1;
                     }
                     
                     damage = Math.max(1, baseDamage - defense);

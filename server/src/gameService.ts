@@ -116,6 +116,11 @@ export class GameService {
         // Filter party members - only those who can fight
         const now = Date.now();
         const healableParty = state.party.filter((p: any) => {
+            // Revive if recovery expired
+            if (p.hp <= 0 && p.recoveryUntil && p.recoveryUntil <= now) {
+                p.hp = p.maxHp;
+                p.recoveryUntil = 0;
+            }
             // Skip if dead or in recovery
             if (p.hp <= 0) return false;
             if (p.recoveryUntil && p.recoveryUntil > now) return false;
@@ -124,10 +129,17 @@ export class GameService {
             return true;
         });
         
-        // Main character always fights if alive
+        // Main character always fights if alive (revive if recovery expired)
         let mainChar = state.mainCharacter;
         if (mainChar) {
-            if (mainChar.hp <= 0 || (mainChar.recoveryUntil && mainChar.recoveryUntil > now)) {
+            // Revive if recovery time has passed
+            if (mainChar.hp <= 0 && mainChar.recoveryUntil && mainChar.recoveryUntil <= now) {
+                mainChar = { ...mainChar, hp: mainChar.maxHp, recoveryUntil: 0 };
+                state.mainCharacter = mainChar;
+            }
+            if (mainChar.hp <= 0) {
+                mainChar = null;
+            } else if (mainChar.recoveryUntil && mainChar.recoveryUntil > now) {
                 mainChar = null;
             }
         }
@@ -164,15 +176,15 @@ export class GameService {
 
         for (const room of floorData.rooms) {
             if (room.enemies && room.enemies.length > 0) {
-                // Scale enemy HP based on floor level - reduced for better balance
-                const hpMultiplier = 1 + (state.currentFloor * 0.08);
+                // Scale enemy HP based on floor level - minimal scaling for balance
+                const hpMultiplier = 1 + (state.currentFloor * 0.03);
                 room.enemies.forEach((e: any) => {
-                    const baseHp = Math.max(e.hp || 100, 50);
+                    const baseHp = Math.max(e.hp || 100, 30);
                     e.hp = Math.floor(baseHp * hpMultiplier);
                     e.maxHp = Math.floor((e.maxHp || baseHp) * hpMultiplier);
-                    // Scale defense modestly
+                    // Keep enemy stats low for early floors
                     if (e.stats) {
-                        e.stats.vitality = Math.max(e.stats.vitality || 10, 10 + Math.floor(state.currentFloor * 0.5));
+                        e.stats.vitality = Math.max(5, 5 + Math.floor(state.currentFloor * 0.2));
                     }
                 });
 
