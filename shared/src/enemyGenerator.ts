@@ -446,13 +446,14 @@ export class EnemyGenerator {
         
         const result: LootResult = {
             item: null,
-            gold: Math.floor(goldDrop * (1 + (enemy.level - 1) * 0.2))
+            gold: Math.floor(goldDrop * (1 + (enemy.level - 1) * 0.15))
         };
         
-        const dropChance = loot.dropChance * (1 + playerLuck * 0.01);
+        // Increased drop chance: base + luck bonus, minimum 15%
+        const dropChance = Math.max(0.15, loot.dropChance * (1 + playerLuck * 0.015));
         
         if (Math.random() < dropChance) {
-            const itemLevel = Math.floor(loot.minLevel + Math.random() * (loot.maxLevel - loot.minLevel));
+            const itemLevel = Math.floor(loot.minLevel + Math.random() * (loot.maxLevel - loot.minLevel + 1));
             result.item = ItemGenerator.generateItem(itemLevel);
             result.item.type = loot.type;
             result.item.level = itemLevel;

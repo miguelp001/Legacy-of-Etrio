@@ -158,20 +158,21 @@ export class GameService {
         }
         
         let floorVictory = true;
+        const newLootItems: any[] = [];
 
         console.log(`[BATTLE] Floor ${state.currentFloor}: ${participants.length} participants.`);
 
         for (const room of floorData.rooms) {
             if (room.enemies && room.enemies.length > 0) {
-                // Scale enemy HP based on floor level for consistent difficulty
-                const hpMultiplier = 1 + (state.currentFloor * 0.15);
+                // Scale enemy HP based on floor level - reduced for better balance
+                const hpMultiplier = 1 + (state.currentFloor * 0.08);
                 room.enemies.forEach((e: any) => {
                     const baseHp = Math.max(e.hp || 100, 50);
                     e.hp = Math.floor(baseHp * hpMultiplier);
                     e.maxHp = Math.floor((e.maxHp || baseHp) * hpMultiplier);
-                    // Scale defense to avoid 1-turn battles
+                    // Scale defense modestly
                     if (e.stats) {
-                        e.stats.vitality = Math.max(e.stats.vitality || 10, 10 + state.currentFloor);
+                        e.stats.vitality = Math.max(e.stats.vitality || 10, 10 + Math.floor(state.currentFloor * 0.5));
                     }
                 });
 
@@ -195,7 +196,6 @@ export class GameService {
                 let roomLoot: { enemy: any; loot: any }[] = [];
                 let totalGold = 0;
                 let totalXp = 0;
-
                 if (combatResult.victory) {
                     for (const enemy of room.enemies as GeneratedEnemy[]) {
                         const mainChar = participants.find(p => p.id === state.mainCharacter?.id);
@@ -206,6 +206,7 @@ export class GameService {
                         
                         if (loot.item) {
                             roomLoot.push({ enemy: enemy.name, loot: loot.item });
+                            newLootItems.push(loot.item);
                             console.log(`[LOOT] ${enemy.name} dropped: ${loot.item.name}!`);
                         }
                         
@@ -282,6 +283,12 @@ export class GameService {
         if (floorVictory) {
             state.gold += Math.floor(25 * floorData.goldMultiplier);
             state.currentFloor += 1;
+            
+            // Add loot items to inventory
+            if (newLootItems.length > 0) {
+                state.inventory = [...(state.inventory || []), ...newLootItems];
+                console.log(`[LOOT] Added ${newLootItems.length} items to inventory`);
+            }
             
             // Sync survival back to state with XP and level
             if (state.mainCharacter) {
