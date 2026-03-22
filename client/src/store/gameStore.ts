@@ -403,25 +403,50 @@ export const useGameStore = create<GameState>()(
       
       restParty: async () => {
         const state = useGameStore.getState();
-        if (!state.playerId) return;
-
-        try {
-          const response = await fetch(`${API_BASE}/api/game/rest`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ playerId: state.playerId })
-          });
-
-          if (!response.ok) {
-              const error = await response.json();
-              console.error('Rest failed:', error.error);
-              return;
+        
+        // Apply healing locally first for immediate feedback
+        const healAmount = 0.1; // 10%
+        
+        set((currentState) => {
+          let updated = false;
+          const newState = { ...currentState };
+          
+          // Heal main character
+          if (currentState.mainCharacter && currentState.mainCharacter.hp > 0 && currentState.mainCharacter.hp < currentState.mainCharacter.maxHp) {
+            const heal = Math.floor(currentState.mainCharacter.maxHp * healAmount);
+            newState.mainCharacter = {
+              ...currentState.mainCharacter,
+              hp: Math.min(currentState.mainCharacter.maxHp, currentState.mainCharacter.hp + heal)
+            };
+            updated = true;
           }
+          
+          // Heal party members
+          if (currentState.party.some((m: any) => m.hp > 0 && m.hp < m.maxHp)) {
+            newState.party = currentState.party.map((m: any) => {
+              if (m.hp > 0 && m.hp < m.maxHp) {
+                const heal = Math.floor(m.maxHp * healAmount);
+                return { ...m, hp: Math.min(m.maxHp, m.hp + heal) };
+              }
+              return m;
+            });
+            updated = true;
+          }
+          
+          return updated ? newState : currentState;
+        });
 
-          const { state: updatedState } = await response.json();
-          set(updatedState);
-        } catch (error) {
-          console.error('Failed to rest:', error);
+        // Also sync to server
+        if (state.playerId) {
+          try {
+            await fetch(`${API_BASE}/api/game/rest`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playerId: state.playerId })
+            });
+          } catch (error) {
+            console.error('Failed to sync rest to server:', error);
+          }
         }
       },
       
