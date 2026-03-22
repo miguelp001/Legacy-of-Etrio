@@ -25,44 +25,42 @@ const Hospital: React.FC = () => {
     // Check if we should heal
     useEffect(() => {
         const state = useGameStore.getState();
+        const now = Date.now();
         
-        console.log('[PASSIVE] Check:', {
-            partyCount: state.party.length,
-            party: state.party.map((m: any) => ({ name: m.name, hp: m.hp, maxHp: m.maxHp })),
-            mcHp: state.mainCharacter?.hp,
-            mcMaxHp: state.mainCharacter?.maxHp
-        });
+        let didChange = false;
+        let newParty = state.party;
+        let newMc = state.mainCharacter;
         
-        // Count wounded
-        const wounded = state.party.filter((m: any) => m.hp > 0 && m.hp < m.maxHp);
-        const mcWounded = state.mainCharacter && state.mainCharacter.hp > 0 && state.mainCharacter.hp < state.mainCharacter.maxHp;
-        
-        if (wounded.length === 0 && !mcWounded) {
-            console.log('[PASSIVE] Everyone is at full HP, skipping heal');
-            return;
+        // Check for revival (recovery expired)
+        // Main character
+        if (newMc && newMc.hp <= 0 && newMc.recoveryUntil && newMc.recoveryUntil <= now) {
+            console.log('[PASSIVE] Reviving MC:', newMc.name);
+            newMc = { ...newMc, hp: newMc.maxHp, recoveryUntil: 0 };
+            didChange = true;
+        } else if (newMc && newMc.hp > 0 && newMc.hp < newMc.maxHp) {
+            // 10% heal if wounded
+            const heal = Math.floor(newMc.maxHp * 0.1);
+            newMc = { ...newMc, hp: Math.min(newMc.maxHp, newMc.hp + heal) };
+            didChange = true;
         }
         
-        console.log('[PASSIVE HEAL] Healing', wounded.length, 'party members', mcWounded ? '+ MC' : '');
-        
-        // Heal party
-        const newParty = state.party.map((m: any) => {
-            if (m.hp > 0 && m.hp < m.maxHp) {
+        // Party members
+        const updatedParty = state.party.map((m: any) => {
+            if (m.hp <= 0 && m.recoveryUntil && m.recoveryUntil <= now) {
+                console.log('[PASSIVE] Reviving:', m.name);
+                didChange = true;
+                return { ...m, hp: m.maxHp, recoveryUntil: 0 };
+            } else if (m.hp > 0 && m.hp < m.maxHp) {
                 const heal = Math.floor(m.maxHp * 0.1);
-                const newHp = Math.min(m.maxHp, m.hp + heal);
-                console.log('[PASSIVE]', m.name, ':', m.hp, '->', newHp);
-                return { ...m, hp: newHp };
+                didChange = true;
+                return { ...m, hp: Math.min(m.maxHp, m.hp + heal) };
             }
             return m;
         });
         
-        // Heal MC
-        let newMc = state.mainCharacter;
-        if (newMc && newMc.hp > 0 && newMc.hp < newMc.maxHp) {
-            const heal = Math.floor(newMc.maxHp * 0.1);
-            newMc = { ...newMc, hp: Math.min(newMc.maxHp, newMc.hp + heal) };
+        if (didChange) {
+            useGameStore.setState({ party: updatedParty, mainCharacter: newMc });
         }
-        
-        useGameStore.setState({ party: newParty, mainCharacter: newMc });
     }, [tick]);
 
     const handleHealAll = () => {
