@@ -50,10 +50,8 @@ const App: React.FC = () => {
   const [showHelp, setShowHelp] = useState(false);
   const hasHandledSnapshot = useRef(false);
   
-  const canDelve = party.every((m: any) => m.hp >= m.maxHp * 0.5) && 
-    (!mainCharacter || mainCharacter.hp >= mainCharacter.maxHp * 0.5);
-  const woundedCount = party.filter((m: any) => m.hp < m.maxHp * 0.5).length + 
-    (mainCharacter && mainCharacter.hp < mainCharacter.maxHp * 0.5 ? 1 : 0);
+  const woundedCount = party.filter((m: any) => m.hp < m.maxHp * 0.5).length;
+  const canEnter = mainCharacter && mainCharacter.hp > 0;
 
   useEffect(() => {
     if (isAuthenticated && playerId) {
@@ -269,15 +267,24 @@ const App: React.FC = () => {
                       <div className="max-w-lg">
                         <h3 className="text-2xl md:text-4xl font-cinzel mb-4 uppercase tracking-wide text-bone leading-tight">The Depths<br/>Await Your Will</h3>
                         <p className="text-muted leading-relaxed mb-6 font-crimson">The ancient runes whisper of peril below.</p>
-                        {!canDelve && woundedCount > 0 ? (
-                          <div className="inline-flex items-center gap-2 text-warning-color text-sm font-cinzel uppercase tracking-tight px-4 py-2 rounded border border-warning-color/30 bg-warning-color/10">
-                            {woundedCount} {woundedCount === 1 ? 'Member' : 'Members'} Wounded
-                          </div>
-                        ) : (
-                          <button onClick={() => setLocation('The Pit')} className="btn-primary py-4 px-8 text-sm">
-                            Descend Into The Deep
-                          </button>
-                        )}
+                        {!canEnter ? (
+                            <span className="inline-flex items-center gap-2 text-danger-color text-sm font-cinzel uppercase tracking-tight px-4 py-2 rounded border border-danger-color/30 bg-danger-color/10">
+                              Character Unconscious
+                            </span>
+                          ) : woundedCount > 0 ? (
+                            <div className="flex flex-col sm:flex-row gap-3">
+                              <button onClick={() => setLocation('The Pit')} className="btn-primary py-4 px-8 text-sm">
+                                Descend Solo ({woundedCount} wounded)
+                              </button>
+                              <span className="inline-flex items-center gap-2 text-warning-color text-sm font-cinzel uppercase tracking-tight px-4 py-2 rounded border border-warning-color/30 bg-warning-color/10">
+                                {woundedCount} {woundedCount === 1 ? 'Member' : 'Members'} Wounded
+                              </span>
+                            </div>
+                          ) : (
+                            <button onClick={() => setLocation('The Pit')} className="btn-primary py-4 px-8 text-sm">
+                              Descend Into The Deep
+                            </button>
+                          )}
                       </div>
                     </div>
                   </div>
