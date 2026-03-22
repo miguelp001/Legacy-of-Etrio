@@ -18,6 +18,8 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { useGameStore } from './store/gameStore';
+
+const API_BASE = import.meta.env.VITE_API_URL || '';
 import Tavern from './components/Tavern';
 import Blacksmith from './components/Blacksmith';
 import Hospital from './components/Hospital';
