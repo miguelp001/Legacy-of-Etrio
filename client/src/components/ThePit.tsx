@@ -306,7 +306,9 @@ function formatDialogue(banter: string | undefined, ev: PitCombatEvent): string 
 }
 
 const ThePit: React.FC = () => {
+    console.log('[PIT] ThePit component mounted');
     const { currentFloor, biome, party, mainCharacter, processCombatTick, addEvents, setLocation } = useGameStore();
+    console.log('[PIT] mainCharacter:', mainCharacter?.name, 'hp:', mainCharacter?.hp);
 
     const [isActive, setIsActive] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -488,7 +490,7 @@ const ThePit: React.FC = () => {
                         </div>
                         
                         <button
-                            onClick={startDescent}
+                            onClick={() => { console.log('[PIT] Button clicked!'); startDescent(); }}
                             disabled={loading || !mainCharacter}
                             className="w-full py-5 bg-primary-color hover:bg-primary-color/80 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95"
                         >
