@@ -241,6 +241,7 @@ export const useGameStore = create<GameState>()(
             }
 
             const { state: updatedState, victory } = data;
+            console.log('[TICK] Received state with inventory:', updatedState.inventory?.length, 'items');
             
             if (updatedState) {
               // Sync with server state but preserve local-only auth fields and UI location
@@ -252,6 +253,7 @@ export const useGameStore = create<GameState>()(
                 token: state.token,
                 location: state.location // PRESERVE UI LOCATION
               });
+              console.log('[TICK] State synced. New inventory count:', updatedState.inventory?.length);
             }
             
             const logEntry = victory 

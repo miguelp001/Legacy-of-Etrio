@@ -110,8 +110,10 @@ export class GameService {
         }
 
         const state = JSON.parse(player.state);
+        console.log('[TICK] Starting tick for floor', state.currentFloor, 'with', state.party.length, 'party members');
         const floorData = DungeonManager.generateFloor(state.currentFloor);
         const roomResults: any[] = [];
+        console.log('[TICK] Floor has', floorData.rooms.length, 'rooms');
         
         // Filter party members - only those who can fight
         const now = Date.now();
@@ -374,6 +376,8 @@ export class GameService {
             data: { state: JSON.stringify(state), updatedAt: new Date() }
         });
 
+        console.log('[TICK] Done. Victory:', floorVictory, 'Inventory:', state.inventory?.length, 'items');
+        
         return { floorData, roomResults, state, victory: floorVictory };
     }
 
