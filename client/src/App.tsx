@@ -291,75 +291,71 @@ const App: React.FC = () => {
         </aside>
 
         {/* 2. CENTER COLUMN: Active Content */}
-        <main className="flex-1 flex flex-col min-w-0 bg-[#050505] relative overflow-hidden">
+        <main className="flex-1 flex flex-col min-w-0 bg-[var(--bg-color)] relative overflow-hidden">
           <div className="flex-1 overflow-y-auto custom-scrollbar thumb-scroll scroll-smooth">
-            <div className="max-w-4xl mx-auto p-4 md:p-10 space-y-10">
+            <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
               {location !== 'The Pit' && (
-                <header className="flex items-end justify-between border-b border-white/5 pb-6">
+                <header className="flex items-end justify-between border-b border-crimson/20 pb-4">
                   <div>
-                    <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase text-gradient leading-none">{location}</h2>
+                    <h2 className="text-3xl md:text-4xl font-cinzel uppercase tracking-wider text-bone leading-none">{location}</h2>
                     <div className="flex items-center gap-2 mt-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary-color animate-pulse" />
-                      <span className="text-[10px] uppercase font-black tracking-[0.3em] text-white/30">Module Synchronized</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-crimson animate-pulse" />
+                      <span className="text-[10px] uppercase font-cinzel tracking-[0.2em] text-muted">Active</span>
                     </div>
                   </div>
                   <div className="hidden md:block text-right pb-1">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-white/20">Floor Depth</div>
-                    <div className="text-2xl font-black italic">{currentFloor}F</div>
+                    <div className="text-[10px] font-cinzel uppercase tracking-widest text-muted">Floor</div>
+                    <div className="text-2xl font-cinzel text-gold">{currentFloor}F</div>
                   </div>
                 </header>
               )}
 
               <section className="animate-fade-in relative">
                 {location === 'Respite' && (
-                  <div className="space-y-8">
-                    <div className="glass p-10 md:p-16 rounded-[3rem] border border-white/5 relative overflow-hidden group bg-gradient-to-br from-white/[0.03] to-transparent">
+                  <div className="space-y-6">
+                    <div className="glass p-8 md:p-12 rounded-2xl border border-crimson/20 relative overflow-hidden group" style={{background: 'linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-color) 100%)'}}>
                       <div className="relative z-10 max-w-lg">
-                        <h3 className="text-3xl md:text-5xl font-black mb-4 italic tracking-tighter leading-tight uppercase">The Depths <br/>Await Your Will</h3>
-                        <p className="text-muted leading-relaxed mb-10 text-lg opacity-80 font-medium">Monitoring aetheric levels... Your vanguard is primed for the next expedition. Shall we descend?</p>
+                        <h3 className="text-2xl md:text-4xl font-cinzel mb-4 uppercase tracking-wide text-bone leading-tight">The Depths<br/>Await Your Will</h3>
+                        <p className="text-muted leading-relaxed mb-8 font-crimson">The ancient runes whisper of peril below. Your vanguard stands ready.</p>
                         <div className="flex flex-wrap gap-4">
                           {!canDelve && woundedCount > 0 ? (
-                            <div className="text-warning-color text-sm font-black uppercase tracking-tight">
-                              {woundedCount} {woundedCount === 1 ? 'Member' : 'Members'} Need Recovery First
+                            <div className="text-warning-color text-sm font-cinzel uppercase tracking-tight px-4 py-2 rounded border border-warning-color/30 bg-warning-color/10">
+                              {woundedCount} {woundedCount === 1 ? 'Member' : 'Members'} Wounded
                             </div>
                           ) : (
-                            <button onClick={() => setLocation('The Pit')} className="btn-primary py-5 px-10 text-lg justify-center flex-1 sm:flex-none">Initiate Expedition</button>
+                            <button onClick={() => setLocation('The Pit')} className="btn-primary py-4 px-8 text-sm justify-center flex-1 sm:flex-none">Descend Into The Deep</button>
                           )}
                         </div>
                       </div>
-                      
-                      {/* Decorative Element */}
-                      <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/4 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
-                        <Mountain size={400} />
-                      </div>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-2 md:gap-6">
-                      <div className="glass p-3 md:p-6 rounded-2xl md:rounded-[2rem] border border-white/5 flex flex-col justify-between h-32 md:h-44 hover:border-primary-color/40 transition-colors group">
-                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-primary-color/10 flex items-center justify-center text-primary-color transition-transform group-hover:scale-110">
+                    <div className="grid grid-cols-3 gap-3 md:gap-4">
+                      <div className="glass p-4 rounded-xl border border-crimson/10 flex flex-col justify-between min-h-[100px]">
+                        <div className="w-8 h-8 rounded bg-crimson/10 flex items-center justify-center text-crimson">
+                          <Users size={16} />
                           <Users size={16} className="md:w-5 md:h-5" />
                         </div>
                         <div>
-                          <div className="text-xl md:text-4xl font-black italic tracking-tighter">{party.length + (mainCharacter ? 1 : 0)}<span className="text-xs md:text-xl opacity-20 ml-0.5 md:ml-1">/4</span></div>
-                          <div className="text-[7px] md:text-[10px] text-muted uppercase font-black tracking-[0.1em] md:tracking-[0.2em] mt-0.5 md:mt-1">Vanguard</div>
+                          <div className="text-2xl font-cinzel tracking-tight">{party.length + (mainCharacter ? 1 : 0)}<span className="text-xs text-muted ml-1">/4</span></div>
+                          <div className="text-[8px] text-muted uppercase font-cinzel tracking-wider">Vanguard</div>
                         </div>
                       </div>
-                      <div className="glass p-3 md:p-6 rounded-2xl md:rounded-[2rem] border border-white/5 flex flex-col justify-between h-32 md:h-44 hover:border-secondary-color/40 transition-colors group">
-                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-secondary-color/10 flex items-center justify-center text-secondary-color transition-transform group-hover:scale-110">
-                          <Activity size={16} className="md:w-5 md:h-5" />
+                      <div className="glass p-4 rounded-xl border border-crimson/10 flex flex-col justify-between min-h-[100px]">
+                        <div className="w-8 h-8 rounded bg-blood/30 flex items-center justify-center text-primary-light">
+                          <Activity size={16} />
                         </div>
                         <div>
-                          <div className="text-xl md:text-4xl font-black italic tracking-tighter truncate">{biome.split(' ')[0]}</div>
-                          <div className="text-[7px] md:text-[10px] text-muted uppercase font-black tracking-[0.1em] md:tracking-[0.2em] mt-0.5 md:mt-1">Biome</div>
+                          <div className="text-2xl font-cinzel tracking-tight truncate">{biome.split(' ')[0]}</div>
+                          <div className="text-[8px] text-muted uppercase font-cinzel tracking-wider">Biome</div>
                         </div>
                       </div>
-                      <div className="glass p-3 md:p-6 rounded-2xl md:rounded-[2rem] border border-white/5 flex flex-col justify-between h-32 md:h-44 hover:border-accent-color/40 transition-colors group">
-                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-accent-color/10 flex items-center justify-center text-accent-color transition-transform group-hover:scale-110">
-                          <Castle size={16} className="md:w-5 md:h-5" />
+                      <div className="glass p-4 rounded-xl border border-gold/20 flex flex-col justify-between min-h-[100px]">
+                        <div className="w-8 h-8 rounded bg-gold/10 flex items-center justify-center text-gold">
+                          <Castle size={16} />
                         </div>
                         <div>
-                          <div className="text-xl md:text-4xl font-black italic tracking-tighter">{councilMembers.length}</div>
-                          <div className="text-[7px] md:text-[10px] text-muted uppercase font-black tracking-[0.1em] md:tracking-[0.2em] mt-0.5 md:mt-1">Council</div>
+                          <div className="text-2xl font-cinzel tracking-tight">{councilMembers.length}</div>
+                          <div className="text-[8px] text-muted uppercase font-cinzel tracking-wider">Council</div>
                         </div>
                       </div>
                     </div>
@@ -386,16 +382,14 @@ const App: React.FC = () => {
       </div>
 
       {/* BOTTOM NAVIGATION (Mobile Only) */}
-      <nav className="xl:hidden fixed bottom-0 left-0 right-0 z-[110] bg-black/60 backdrop-blur-3xl border-t border-white/10 px-2 h-20 flex items-center pb-safe-bottom overflow-x-auto hide-scrollbar touch-pan-x snap-x snap-mandatory">
-        <div className="flex px-2 gap-2 min-w-max items-center justify-between mx-auto w-full md:justify-center md:gap-6">
-          <div className="snap-start shrink-0"><NavItem id="Respite" icon={LayoutDashboard} label="Home" /></div>
-          <div className="snap-start shrink-0"><NavItem id="The Pit" icon={Sword} label="The Pit" /></div>
-          <div className="snap-start shrink-0"><NavItem id="Tavern" icon={Users} label="Tavern" /></div>
-          <div className="snap-start shrink-0"><NavItem id="Hospital" icon={HeartPulse} label="Med" /></div>
-          <div className="snap-start shrink-0"><NavItem id="Blacksmith" icon={Shield} label="Smith" /></div>
-          <div className="snap-start shrink-0"><NavItem id="Market" icon={Droplets} label="Blood" /></div>
-          <div className="snap-start shrink-0"><NavItem id="Forge" icon={Zap} label="Steam" /></div>
-          <div className="snap-start shrink-0"><NavItem id="Basilica" icon={Sparkles} label="Basilica" /></div>
+      <nav className="xl:hidden mobile-nav">
+        <div className="flex px-2 gap-1 min-w-max items-center justify-between mx-auto w-full">
+          <NavItem id="Respite" icon={LayoutDashboard} label="Home" />
+          <NavItem id="The Pit" icon={Sword} label="The Pit" />
+          <NavItem id="Tavern" icon={Users} label="Tavern" />
+          <NavItem id="Hospital" icon={HeartPulse} label="Med" />
+          <NavItem id="Blacksmith" icon={Shield} label="Smith" />
+          <NavItem id="Market" icon={Droplets} label="Blood" />
         </div>
       </nav>
 
