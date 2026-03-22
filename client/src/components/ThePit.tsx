@@ -341,17 +341,23 @@ const ThePit: React.FC = () => {
     }, []);
 
     const startDescent = async () => {
+        console.log('[PIT] startDescent called');
         setLoading(true);
         clearTimers();
         try {
+            console.log('[PIT] Calling processCombatTick');
             const res = await processCombatTick();
+            console.log('[PIT] processCombatTick returned:', res);
             if (res?.floorData?.rooms?.length) {
+                console.log('[PIT] Setting floor report, rooms:', res.floorData.rooms.length);
                 setFloorReport(res);
                 setCurrentRoomIdx(0);
                 setDisplayedEvents([]);
                 setTurnIndex(0);
                 setIsSimulating(false);
                 setIsActive(true);
+            } else {
+                console.log('[PIT] No rooms in response');
             }
         } catch (err: any) {
             console.error('[PIT] Descent failed:', err.message);
