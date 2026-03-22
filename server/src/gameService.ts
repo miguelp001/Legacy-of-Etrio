@@ -305,10 +305,27 @@ export class GameService {
             state.gold += Math.floor(25 * floorData.goldMultiplier);
             state.currentFloor += 1;
             
+            // Always add a test item for now
+            const testItem = {
+                id: `test-${Date.now()}`,
+                name: 'Test Sword',
+                baseName: 'Sword',
+                type: 'Weapon',
+                rarity: 'Common',
+                stats: { strength: 10 },
+                durability: 100,
+                maxDurability: 100,
+                level: 1
+            };
+            
+            if (!state.inventory) state.inventory = [];
+            state.inventory.push(testItem);
+            console.log(`[LOOT] Added test item. Total: ${state.inventory.length}`);
+            
             // Add loot items to inventory
             if (newLootItems.length > 0) {
-                state.inventory = [...(state.inventory || []), ...newLootItems];
-                console.log(`[LOOT] Added ${newLootItems.length} items to inventory`);
+                state.inventory = [...state.inventory, ...newLootItems];
+                console.log(`[LOOT] Added ${newLootItems.length} items. Total: ${state.inventory.length}`);
             }
             
             // Sync survival back to state with XP and level
