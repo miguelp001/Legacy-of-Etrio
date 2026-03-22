@@ -402,55 +402,58 @@ export const useGameStore = create<GameState>()(
       },
       
       restParty: async () => {
-        const state = useGameStore.getState();
         const healAmount = 0.1; // 10%
         
-        set((currentState) => {
-          let updated = false;
-          const newState = { ...currentState };
+        // Apply healing locally
+        set((state) => {
+          let hasUpdates = false;
+          
+          // Create new state object
+          const newState = { ...state };
           
           // Heal main character
-          if (currentState.mainCharacter && currentState.mainCharacter.hp > 0 && currentState.mainCharacter.hp < currentState.mainCharacter.maxHp) {
-            const heal = Math.floor(currentState.mainCharacter.maxHp * healAmount);
-            const newHp = Math.min(currentState.mainCharacter.maxHp, currentState.mainCharacter.hp + heal);
-            console.log(`[REST] Healing ${currentState.mainCharacter.name}: ${currentState.mainCharacter.hp} -> ${newHp}`);
-            newState.mainCharacter = {
-              ...currentState.mainCharacter,
-              hp: newHp
-            };
-            updated = true;
+          if (state.mainCharacter && state.mainCharacter.hp > 0) {
+            const maxHp = state.mainCharacter.maxHp || 100;
+            if (state.mainCharacter.hp < maxHp) {
+              const heal = Math.floor(maxHp * healAmount);
+              const newHp = Math.min(maxHp, state.mainCharacter.hp + heal);
+              console.log(`[REST] Healing MC: ${state.mainCharacter.hp} -> ${newHp}`);
+              newState.mainCharacter = {
+                ...state.mainCharacter,
+                hp: newHp
+              };
+              hasUpdates = true;
+            }
           }
           
           // Heal party members
-          const woundedParty = currentState.party.filter((m: any) => m.hp > 0 && m.hp < m.maxHp);
-          if (woundedParty.length > 0) {
-            console.log(`[REST] Healing ${woundedParty.length} party members`);
-            newState.party = currentState.party.map((m: any) => {
-              if (m.hp > 0 && m.hp < m.maxHp) {
-                const heal = Math.floor(m.maxHp * healAmount);
-                const newHp = Math.min(m.maxHp, m.hp + heal);
-                console.log(`[REST] Healing ${m.name}: ${m.hp} -> ${newHp}`);
-                return { ...m, hp: newHp };
-              }
-              return m;
-            });
-            updated = true;
+          const newParty = state.party.map((m: any) => {
+            if (m.hp > 0 && m.hp < (m.maxHp || 100)) {
+              const maxHp = m.maxHp || 100;
+              const heal = Math.floor(maxHp * healAmount);
+              const newHp = Math.min(maxHp, m.hp + heal);
+              console.log(`[REST] Healing ${m.name}: ${m.hp} -> ${newHp}`);
+              hasUpdates = true;
+              return { ...m, hp: newHp };
+            }
+            return m;
+          });
+          
+          if (hasUpdates) {
+            newState.party = newParty;
           }
           
-          return updated ? newState : currentState;
+          return newState;
         });
 
         // Sync to server
-        if (state.playerId) {
-          try {
-            await fetch(`${API_BASE}/api/game/rest`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ playerId: state.playerId })
-            });
-          } catch (error) {
-            console.error('Failed to sync rest to server:', error);
-          }
+        const { playerId } = useGameStore.getState();
+        if (playerId) {
+          fetch(`${API_BASE}/api/game/rest`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ playerId })
+          }).catch(err => console.error('Rest sync failed:', err));
         }
       },
       

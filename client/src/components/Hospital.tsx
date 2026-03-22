@@ -1,47 +1,39 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { HeartPulse, Clock, Activity, ShieldAlert, Heart, Users, Zap, Plus, Bed } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
 const Hospital: React.FC = () => {
-    const { party, mainCharacter, healCharacter, healAllCharacters, restParty, pollutionLevel, gold, addGold } = useGameStore();
+    const { party, mainCharacter, healCharacter, healAllCharacters, restParty, pollutionLevel, gold, addGold, setLocation } = useGameStore();
     const pollutionPenalty = pollutionLevel > 50 ? 1.2 : 1.0;
     const fullParty = [mainCharacter, ...party].filter(Boolean);
     const [currentTime, setCurrentTime] = useState(Date.now());
-    const [isResting, setIsResting] = useState(false);
-    const restPartyRef = useRef(restParty);
-    restPartyRef.current = restParty;
-
-    useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
-        return () => clearInterval(timer);
-    }, []);
+    const [lastHealTime, setLastHealTime] = useState(Date.now());
+    const [nextHealIn, setNextHealIn] = useState(30);
     
-    const woundedCount = fullParty.filter((m: any) => m.hp < m.maxHp).length;
-    const canRest = woundedCount > 0;
-    
-    // Passive healing: every 30 seconds
+    // Passive healing every 30 seconds
     useEffect(() => {
-        if (!canRest) return;
-        
-        // Heal immediately on mount
-        if (!isResting) {
-            restPartyRef.current();
-        }
-        
-        const interval = setInterval(() => {
-            if (!isResting) {
-                console.log('[HOSPITAL] Passive heal triggered');
-                restPartyRef.current();
+        const timer = setInterval(() => {
+            setCurrentTime(Date.now());
+            
+            const elapsed = Math.floor((Date.now() - lastHealTime) / 1000);
+            setNextHealIn(Math.max(0, 30 - elapsed));
+            
+            if (elapsed >= 30) {
+                const wounded = fullParty.filter((m: any) => m.hp > 0 && m.hp < m.maxHp);
+                if (wounded.length > 0) {
+                    console.log('[HOSPITAL] Passive heal triggered, healing', wounded.length, 'members');
+                    restParty();
+                    setLastHealTime(Date.now());
+                    setNextHealIn(30);
+                }
             }
-        }, 30000);
+        }, 1000);
         
-        return () => clearInterval(interval);
-    }, [canRest, isResting]);
+        return () => clearInterval(timer);
+    }, [fullParty, lastHealTime, restParty]);
     
-    const handleRest = useCallback(async () => {
-        setIsResting(true);
-        await restParty();
-        setIsResting(false);
+    const handleRest = useCallback(() => {
+        restParty();
     }, [restParty]);
 
     const canHeal = useCallback((member: any) => {
@@ -184,16 +176,13 @@ const Hospital: React.FC = () => {
 
             {/* Mobile Sticky Action Bar */}
             <div className="fixed bottom-24 left-4 right-4 z-50 pointer-events-none flex gap-3 justify-end">
-                {canRest && (
-                    <button 
-                        onClick={handleRest}
-                        disabled={isResting}
-                        className="pointer-events-auto w-14 h-14 bg-secondary-color/20 hover:bg-secondary-color/30 border border-secondary-color/30 rounded-full shadow-xl flex items-center justify-center text-secondary-color active:scale-90 transition-all disabled:opacity-50"
-                        title="Auto-recovering (every 30s)"
-                    >
-                        <Bed size={24} className={isResting ? 'animate-pulse' : ''} />
-                    </button>
-                )}
+                <button 
+                    onClick={handleRest}
+                    className="pointer-events-auto w-14 h-14 bg-secondary-color/20 hover:bg-secondary-color/30 border border-secondary-color/30 rounded-full shadow-xl flex items-center justify-center text-secondary-color active:scale-90 transition-all"
+                    title="Heal 10% HP"
+                >
+                    <Bed size={24} />
+                </button>
                 <button 
                     onClick={handleHealAll}
                     disabled={fullParty.every((m: any) => m.hp >= m.maxHp || (m.recoveryUntil && m.recoveryUntil > currentTime))}
@@ -215,12 +204,10 @@ const Hospital: React.FC = () => {
                     <h4 className="font-black text-xs uppercase tracking-tight">Passive Convalescence</h4>
                     <p className="text-[9px] text-muted leading-relaxed uppercase font-bold tracking-tighter">Nearby ley-lines provide 10% HP recovery every 30 seconds.</p>
                 </div>
-                {canRest && (
-                    <div className="ml-auto text-center">
-                        <div className="text-lg font-black text-secondary-color">{Math.ceil((30000 - (Date.now() % 30000)) / 1000)}s</div>
-                        <div className="text-[7px] text-muted uppercase">Next</div>
-                    </div>
-                )}
+                <div className="ml-auto text-center">
+                    <div className="text-lg font-black text-secondary-color">{nextHealIn}s</div>
+                    <div className="text-[7px] text-muted uppercase">Next</div>
+                </div>
             </div>
         </div>
     );
