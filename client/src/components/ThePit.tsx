@@ -614,38 +614,34 @@ const ThePit: React.FC = () => {
                 </div>
             </main>
 
-            {/* Bottom Primary Controls - Thumb Zone Fixed */}
+            {/* Bottom Controls - Auto-progress */}
             {combatDone && (
-                <footer className="px-4 py-6 border-t border-white/10 bg-black/60 backdrop-blur-2xl shrink-0">
-                    <div className="space-y-4">
-                        {!isVictory ? (
-                            <>
-                                <p className="text-center text-[10px] text-danger-color font-black uppercase tracking-widest animate-pulse">
-                                    Defeat Imminent... Relocating to Infirmary
-                                </p>
-                                <button
-                                    onClick={exitPit}
-                                    className="w-full py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-transform"
-                                >
-                                    Flee <Lucide.ArrowUp size={20} />
-                                </button>
-                            </>
-                        ) : isLastRoom ? (
+                <footer className="px-4 py-4 border-t border-white/10 bg-black/60 backdrop-blur-2xl shrink-0">
+                    {!isVictory ? (
+                        <div className="text-center space-y-2">
+                            <p className="text-[10px] text-danger-color font-black uppercase tracking-widest animate-pulse">
+                                Defeat Imminent...
+                            </p>
                             <button
                                 onClick={exitPit}
-                                className="w-full py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-transform"
+                                className="w-full py-4 bg-white/5 border border-white/10 text-white rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-transform"
                             >
-                                Surface <Lucide.ArrowUp size={20} />
+                                Flee <Lucide.ArrowUp size={16} />
                             </button>
-                        ) : (
-                            <button
-                                onClick={nextRoom}
-                                className="w-full py-5 bg-primary-color text-white rounded-2xl font-black uppercase tracking-widest shadow-2xl shadow-primary-color/30 flex items-center justify-center gap-3 active:scale-95 transition-transform"
-                            >
-                                Press On <Lucide.ChevronRight size={20} />
-                            </button>
-                        )}
-                    </div>
+                        </div>
+                    ) : isLastRoom ? (
+                        <button
+                            onClick={exitPit}
+                            className="w-full py-4 bg-primary-color text-white rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                        >
+                            Surface <Lucide.ArrowUp size={16} />
+                        </button>
+                    ) : (
+                        <div className="flex items-center justify-center gap-3 text-white/40">
+                            <div className="w-2 h-2 bg-primary-color rounded-full animate-pulse" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Advancing...</span>
+                        </div>
+                    )}
                 </footer>
             )}
         </div>
