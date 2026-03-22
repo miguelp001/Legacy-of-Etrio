@@ -3,7 +3,7 @@ import { HeartPulse, Clock, Activity, ShieldAlert, Heart, Users, Zap, Plus, Bed 
 import { useGameStore } from '../store/gameStore';
 
 const Hospital: React.FC = () => {
-    const { party, mainCharacter, healCharacter, restParty, pollutionLevel, gold, addGold } = useGameStore();
+    const { party, mainCharacter, healCharacter, healAllCharacters, restParty, pollutionLevel, gold, addGold } = useGameStore();
     const pollutionPenalty = pollutionLevel > 50 ? 1.2 : 1.0;
     const fullParty = [mainCharacter, ...party].filter(Boolean);
     const [currentTime, setCurrentTime] = useState(Date.now());
@@ -65,11 +65,7 @@ const Hospital: React.FC = () => {
         }
 
         addGold(-totalCost);
-        fullParty.forEach((m: any) => {
-            if (m.hp < m.maxHp && !(m.recoveryUntil && m.recoveryUntil > currentTime)) {
-                healCharacter(m.id, m.maxHp);
-            }
-        });
+        healAllCharacters(totalCost);
     };
 
     return (

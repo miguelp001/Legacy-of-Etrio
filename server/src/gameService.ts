@@ -432,6 +432,39 @@ export class GameService {
         });
         return state;
     }
+    
+    static async healAllCharacters(playerId: string, cost: number) {
+        const player = await (prisma as any).playerState.findFirst({ where: { id: playerId } });
+        const state = JSON.parse(player.state);
+        if (state.gold < cost) throw new Error('Insufficient gold');
+        state.gold -= cost;
+        
+        const now = Date.now();
+        
+        // Heal main character
+        if (state.mainCharacter && state.mainCharacter.hp < state.mainCharacter.maxHp) {
+            if (!state.mainCharacter.recoveryUntil || state.mainCharacter.recoveryUntil <= now) {
+                state.mainCharacter.hp = state.mainCharacter.maxHp;
+                state.mainCharacter.recoveryUntil = 0;
+            }
+        }
+        
+        // Heal all party members
+        state.party = state.party.map((m: any) => {
+            if (m.hp < m.maxHp) {
+                if (!m.recoveryUntil || m.recoveryUntil <= now) {
+                    return { ...m, hp: m.maxHp, recoveryUntil: 0 };
+                }
+            }
+            return m;
+        });
+        
+        await (prisma as any).playerState.update({
+            where: { id: playerId },
+            data: { state: JSON.stringify(state), updatedAt: new Date() }
+        });
+        return state;
+    }
 
     static async processPassiveHealing(playerId: string) {
         const player = await (prisma as any).playerState.findFirst({ where: { id: playerId } });

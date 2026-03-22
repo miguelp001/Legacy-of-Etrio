@@ -71,6 +71,7 @@ interface GameState {
   createMainCharacter: (name: string, baseClass: any, personality: string) => void;
   equipItem: (targetId: string, item: Item, slot: 'weapon' | 'armor' | 'accessory') => void;
   healCharacter: (targetId: string, cost: number) => void;
+  healAllCharacters: (cost: number) => void;
   restParty: () => Promise<void>;
   setEvents: (events: CombatEvent[]) => void;
   addEvents: (events: CombatEvent[]) => void;
@@ -373,6 +374,30 @@ export const useGameStore = create<GameState>()(
           set(updatedState);
         } catch (error) {
           console.error('Failed to heal character:', error);
+        }
+      },
+      
+      healAllCharacters: async (cost) => {
+        const state = useGameStore.getState();
+        if (!state.playerId) return;
+
+        try {
+          const response = await fetch(`${API_BASE}/api/game/heal-all`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ playerId: state.playerId, cost })
+          });
+
+          if (!response.ok) {
+              const error = await response.json();
+              console.error('Heal all failed:', error.error);
+              return;
+          }
+
+          const updatedState = await response.json();
+          set(updatedState);
+        } catch (error) {
+          console.error('Failed to heal all:', error);
         }
       },
       
