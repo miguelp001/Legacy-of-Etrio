@@ -33,7 +33,7 @@ import Profile from './components/Profile';
 const App: React.FC = () => {
   const { 
     gold, party, currentFloor, mainCharacter,
-    isGameWon, playerId, isAuthenticated, loadProgress, saveProgress, syncGuildSettings,
+    isGameWon, playerId, isAuthenticated, loadProgress, saveProgress,
     addEvents, addGold, setFloor, setLastLogout, councilMembers, removeItems, lastLogout,
     location, setLocation, logout
   } = useGameStore();
@@ -50,7 +50,6 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated && playerId) {
       loadProgress(playerId);
-      syncGuildSettings();
     }
   }, [isAuthenticated, playerId]);
 
@@ -114,8 +113,6 @@ const App: React.FC = () => {
 
   if (!isAuthenticated) return <LoginScreen />;
 
-  const [showTechMenu, setShowTechMenu] = useState(false);
-  
   const NavItem = ({ id, icon: Icon, label, mobileOnly = false, tooltip }: { id: string, icon: any, label: string, mobileOnly?: boolean, tooltip?: string }) => {
     const navButton = (
       <button
