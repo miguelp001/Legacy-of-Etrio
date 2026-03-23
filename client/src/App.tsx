@@ -9,7 +9,8 @@ import {
   Castle,
   User,
   HeartPulse,
-  HelpCircle
+  HelpCircle,
+  Menu
 } from 'lucide-react';
 import { useGameStore } from './store/gameStore';
 
@@ -39,6 +40,7 @@ const App: React.FC = () => {
   const [showMap, setShowMap] = useState(false);
   const [lastSnapshotData, setLastSnapshotData] = useState<any>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const hasHandledSnapshot = useRef(false);
   
   const woundedCount = party.filter((m: any) => m.hp < m.maxHp * 0.5).length;
@@ -271,14 +273,39 @@ const App: React.FC = () => {
 
       {/* BOTTOM NAVIGATION (Mobile Only) */}
       <nav className="xl:hidden mobile-nav">
-        <div className="flex px-2 gap-1 items-center justify-between mx-auto w-full">
+        <div className="flex px-2 gap-1 items-center justify-between mx-auto w-full relative">
           <NavItem id="Respite" icon={LayoutDashboard} label="Home" tooltip="Return to Respite hub" />
           <NavItem id="The Pit" icon={Sword} label="Pit" tooltip="Enter the dungeon" />
           <NavItem id="Shops" icon={Shield} label="Shops" tooltip="Smith & Alchemist" />
           <NavItem id="Town Square" icon={Users} label="Town" tooltip="Tavern & Infirmary" />
-          <NavItem id="The Guildhall" icon={Castle} label="Guild" tooltip="Guild upgrades" />
-          <NavItem id="Lineage Hall" icon={Sparkles} label="Lineage" tooltip="Lineage & Trophies" />
-          <NavItem id="Profile" icon={User} label="Profile" tooltip="Profile and settings" />
+          
+          <button 
+             onClick={() => setShowMobileMenu(!showMobileMenu)}
+             className={`flex flex-col items-center justify-center gap-1 px-2 py-2 h-full transition-all group relative ${showMobileMenu ? 'text-primary-color' : 'text-muted hover:text-primary-light'}`}
+          >
+             <Menu size={18} className={showMobileMenu ? 'scale-110 transition-transform' : ''} />
+             <span className="font-cinzel text-[9px] uppercase tracking-wider">More</span>
+             {showMobileMenu && (
+               <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-crimson rounded-full shadow-[0_0_8px_var(--primary-glow)]" />
+             )}
+          </button>
+
+          {showMobileMenu && (
+             <div className="absolute bottom-[110%] right-2 bg-black/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 flex flex-col gap-1 shadow-2xl animate-fade-in w-36 z-[100]">
+                 <button onClick={() => { setLocation('The Guildhall'); setShowMobileMenu(false); }} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-left group">
+                     <Castle size={16} className="text-secondary-color group-hover:scale-110 transition-transform" />
+                     <span className="text-[10px] font-black uppercase tracking-wider text-white">Guild</span>
+                 </button>
+                 <button onClick={() => { setLocation('Lineage Hall'); setShowMobileMenu(false); }} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-left group">
+                     <Sparkles size={16} className="text-primary-color group-hover:scale-110 transition-transform" />
+                     <span className="text-[10px] font-black uppercase tracking-wider text-white">Lineage</span>
+                 </button>
+                 <button onClick={() => { setLocation('Profile'); setShowMobileMenu(false); }} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-left group">
+                     <User size={16} className="text-muted group-hover:scale-110 transition-transform" />
+                     <span className="text-[10px] font-black uppercase tracking-wider text-white">Profile</span>
+                 </button>
+             </div>
+          )}
         </div>
       </nav>
 
