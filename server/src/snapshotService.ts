@@ -41,10 +41,7 @@ export class SnapshotService {
         timeElapsedMs: number,
         party: Combatant[],
         startFloor: number,
-        playerId: string,
-        initialBloodRations: number,
-        isResonatorActive: boolean = false,
-        resonatorMastery: number = 0
+        playerId: string
     ): Promise<{ 
         events: CombatEvent[]; 
         gold: number; 
@@ -52,8 +49,6 @@ export class SnapshotService {
         lostGear?: Item[];
         wiped: boolean; 
         finalFloor: number; 
-        bloodpricePenalty: number; 
-        bloodRationsRemaining: number 
     }> {
         const timeElapsedMin = Math.floor(timeElapsedMs / (1000 * 60));
         const ticks = Math.min(Math.floor(timeElapsedMin / 2), 720); // 1 check every 2 minutes, max 24 hours
@@ -69,8 +64,6 @@ export class SnapshotService {
         const allEvents: CombatEvent[] = [];
         let currentFloor = startFloor;
         let wiped = false;
-        let bloodpricePenalty = 0;
-        let bloodRations = initialBloodRations;
         const lostGear: Item[] = [];
 
         for (let i = 0; i < ticks; i++) {
@@ -89,33 +82,6 @@ export class SnapshotService {
                 }
             });
 
-            // Handle Blood Consumption
-            const vampireCount = partyCopy.filter(m => m.isVampire).length;
-            const rationsNeeded = vampireCount * 5; // 5 rations per vampire per 2-min tick
-
-            if (bloodRations >= rationsNeeded) {
-                bloodRations -= rationsNeeded;
-                partyCopy.forEach(m => { if (m.isVampire) m.isStarving = false; });
-            } else {
-                bloodRations = 0;
-                partyCopy.forEach(m => { if (m.isVampire) m.isStarving = true; });
-                if (i % 30 === 0) { // Log starvation occasionally
-                    allEvents.push({
-                        id: `starve-${i}`,
-                        turn: i,
-                        attackerName: 'SYSTEM',
-                        defenderName: 'Party',
-                        attackerId: 'system',
-                        defenderId: 'party',
-                        damage: 0,
-                        isCrit: false,
-                        isMiss: false,
-                        remainingHp: 0,
-                        banter: "The vampires are starving... their strength fades.",
-                        emojiTag: '🩸'
-                    });
-                }
-            }
 
             // Handle Miracles
             partyCopy.forEach(member => {
@@ -149,7 +115,7 @@ export class SnapshotService {
             });
 
             // Handle Aether Breach (Rare high-risk event)
-            let floorMultiplier = (isResonatorActive ? 1.5 : 1.0) * (1 + resonatorMastery * 0.1);
+            let floorMultiplier = 1.0;
             const isBreach = Math.random() < 0.01; // 1% chance
             
             if (isBreach) {
@@ -192,7 +158,7 @@ export class SnapshotService {
             }
 
             const floorData = DungeonManager.generateFloor(currentFloor);
-            floorMultiplier = (isResonatorActive ? 1.5 : 1.0) * (1 + resonatorMastery * 0.1);
+            floorMultiplier = 1.0;
             
             for (const room of floorData.rooms) {
                 if (wiped) break;
@@ -222,12 +188,6 @@ export class SnapshotService {
                     if (!result.victory) {
                         wiped = true;
                         await this.handleWipe(playerId, partyCopy[0]?.name || 'Bondi', currentFloor);
-                        
-                        // Calculate Bloodprice for companions
-                        const companions = partyCopy.filter(p => p.id !== 'player-mc');
-                        companions.forEach(c => {
-                            bloodpricePenalty += this.calculateBloodprice(c);
-                        });
 
                         // Gear loss logic: Non-soulbound gear on all fallen members is lost
                         partyCopy.forEach(member => {
@@ -281,22 +241,10 @@ export class SnapshotService {
             items: foundItems,
             lostGear,
             wiped,
-            finalFloor: currentFloor,
-            bloodpricePenalty,
-            bloodRationsRemaining: bloodRations
+            finalFloor: currentFloor
         };
     }
 
-    private static calculateBloodprice(member: Combatant): number {
-        const prices = {
-            'Thrall': 100,
-            'Bondi': 500,
-            'Vardr': 1000,
-            'Scrifadr': 2500,
-            'Drengskapr': 10000
-        };
-        return prices[member.socialClass || 'Thrall'];
-    }
 
     private static degradeGear(member: Combatant, amount: number) {
         [member.weapon, member.armor, member.accessory].forEach(item => {

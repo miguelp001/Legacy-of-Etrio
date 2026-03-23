@@ -32,11 +32,7 @@ interface GameState {
   mainCharacterPersonality: string | null;
   events: CombatEvent[];
   lastLogout: number;
-  bloodRations: number;
-  pollutionLevel: number;
-  isResonatorActive: boolean;
   councilMembers: Combatant[];
-  resonatorMastery: number;
   isGameWon: boolean;
   playerId: string | null;
   location: string;
@@ -53,9 +49,7 @@ interface GameState {
   setLocation: (loc: string) => void;
   saveProgress: () => Promise<void>;
   loadProgress: (id: string) => Promise<void>;
-  syncGuildSettings: () => Promise<void>;
   processCombatTick: () => Promise<any>;
-  buyRations: (amount: number, cost: number) => Promise<void>;
   addGold: (amount: number) => void;
   addToInventory: (item: Item) => void;
   removeFromInventory: (itemId: string) => void;
@@ -76,17 +70,11 @@ interface GameState {
   setEvents: (events: CombatEvent[]) => void;
   addEvents: (events: CombatEvent[]) => void;
   setLastLogout: (time: number) => void;
-  addBloodRations: (amount: number) => void;
-  setBloodRations: (amount: number) => void;
   addPiety: (targetId: string, amount: number) => void;
-  addPollution: (amount: number) => void;
-  massProduceItems: (level: number, quantity: number, cost: number) => void;
-  setResonatorActive: (active: boolean) => void;
   infuseItem: (inventoryIndex: number, cost: number) => void;
   bindItemToSoul: (itemId: string, cost: number) => void;
   removeItems: (itemIds: string[]) => void;
   ascendCharacter: (memberId: string) => void;
-  upgradeResonator: () => void;
   confrontHeart: () => void;
 }
 
@@ -111,11 +99,7 @@ export const useGameStore = create<GameState>()(
       mainCharacterPersonality: null,
       events: [],
       lastLogout: Date.now(),
-      bloodRations: 100,
-      pollutionLevel: 0,
-      isResonatorActive: false,
       councilMembers: [],
-      resonatorMastery: 0,
       isGameWon: false,
       playerId: null, // Set during login/register
       isAuthenticated: false,
@@ -462,8 +446,6 @@ export const useGameStore = create<GameState>()(
       setEvents: (events) => set({ events }),
       addEvents: (newEvents) => set((state) => ({ events: [...state.events, ...newEvents].slice(-200) })), // Keep last 200
       setLastLogout: (time) => set({ lastLogout: time }),
-      addBloodRations: (amount: number) => set((state) => ({ bloodRations: state.bloodRations + amount })),
-      setBloodRations: (amount: number) => set({ bloodRations: amount }),
       addPiety: (targetId, amount) => set((state) => {
         if (targetId === 'player-mc' && state.mainCharacter) {
           return { mainCharacter: { ...state.mainCharacter, piety: Math.min(100, (state.mainCharacter.piety || 0) + amount) } };
@@ -472,20 +454,6 @@ export const useGameStore = create<GameState>()(
           party: state.party.map(m => m.id === targetId ? { ...m, piety: Math.min(100, (m.piety || 0) + amount) } : m)
         };
       }),
-      addPollution: (amount) => set((state) => ({ pollutionLevel: Math.min(100, Math.max(0, state.pollutionLevel + amount)) })),
-      massProduceItems: (level, quantity, cost) => set((state) => {
-        if (state.gold < cost) return state;
-        const newItems: Item[] = [];
-        for (let i = 0; i < quantity; i++) {
-          newItems.push(ItemGenerator.generateItem(level, true));
-        }
-        return {
-          gold: state.gold - cost,
-          inventory: [...state.inventory, ...newItems],
-          pollutionLevel: Math.min(100, state.pollutionLevel + (quantity * 2))
-        };
-      }),
-      setResonatorActive: (active) => set({ isResonatorActive: active }),
       infuseItem: async (inventoryIndex, cost) => {
         const state = useGameStore.getState();
         if (!state.playerId) return;
@@ -617,29 +585,6 @@ export const useGameStore = create<GameState>()(
           console.error('Failed to ascend character:', error);
         }
       },
-      upgradeResonator: () => set((state) => {
-        const cost = 10000 * Math.pow(2, state.resonatorMastery);
-        if (state.gold < cost || state.resonatorMastery >= 10) return state;
-
-        const event: CombatEvent = {
-          id: `resonator-${Date.now()}`,
-          turn: 0,
-          attackerName: 'STEAM FORGE',
-          defenderName: 'RESONATOR',
-          damage: 0,
-          isCrit: false,
-          isMiss: false,
-          remainingHp: 0,
-          banter: `Aetheric Resonator tuned to Level ${state.resonatorMastery + 1}. Frequency stability increased.`,
-          emojiTag: '🎚️'
-        };
-
-        return {
-          gold: state.gold - cost,
-          resonatorMastery: state.resonatorMastery + 1,
-          events: [event, ...state.events]
-        };
-      }),
       confrontHeart: () => set((state) => {
         if (state.currentFloor < 1000 || state.councilMembers.length < 4 || state.isGameWon) return state;
 
@@ -667,16 +612,6 @@ export const useGameStore = create<GameState>()(
         if (!state.playerId) return;
         
         try {
-          // Sync Guild Settings too
-          await fetch(`${API_BASE}/api/guild-settings`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              pollutionLevel: state.pollutionLevel,
-              masteryLevel: state.resonatorMastery
-            })
-          });
-
           // Save Player State
           await fetch(`${API_BASE}/api/state`, {
             method: 'POST',
@@ -704,46 +639,6 @@ export const useGameStore = create<GameState>()(
         } catch (error) {
           console.error('Failed to load progress:', error);
         }
-      },
-
-      syncGuildSettings: async () => {
-        try {
-          const response = await fetch(`${API_BASE}/api/guild-settings`);
-          const settings = await response.json();
-          if (settings) {
-            set({ 
-              pollutionLevel: settings.pollutionLevel, 
-              resonatorMastery: settings.masteryLevel 
-            });
-          }
-        } catch (error) {
-          console.error('Failed to sync guild settings:', error);
-        }
-      },
-
-      buyRations: async (amount: number, cost: number) => {
-          const state = useGameStore.getState();
-          if (!state.playerId) return;
-
-          try {
-            const response = await fetch(`${API_BASE}/api/game/buy-rations`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ playerId: state.playerId, amount, cost })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                console.error('Market purchase failed:', error.error);
-                return;
-            }
-
-            const updatedState = await response.json();
-            set(updatedState);
-            console.log(`Purchased ${amount} rations on server.`);
-          } catch (error) {
-            console.error('Failed to buy rations:', error);
-          }
       },
 
       login: async (username: string, password: string) => {

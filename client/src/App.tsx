@@ -4,16 +4,10 @@ import {
   Sword, 
   HeartPulse, 
   Shield, 
-  Mountain, 
   LayoutDashboard,
   Coins,
-  Droplets,
   Sparkles,
-  Zap,
   Castle,
-  ChevronUp,
-  Activity,
-  LogOut,
   User,
   HelpCircle
 } from 'lucide-react';
@@ -26,9 +20,7 @@ import Hospital from './components/Hospital';
 import GuildHall from './components/GuildHall';
 import ThePit from './components/ThePit';
 import LineageHall from './components/LineageHall';
-import BloodMarket from './components/BloodMarket';
 import Basilica from './components/Basilica';
-import SteamForge from './components/SteamForge';
 import CharacterCreation from './components/CharacterCreation';
 import DepthMap from './components/DepthMap';
 import VictoryScreen from './components/VictoryScreen';
@@ -40,15 +32,14 @@ import Profile from './components/Profile';
 
 const App: React.FC = () => {
   const { 
-    gold, party, currentFloor, mainCharacter, 
-    bloodRations, isResonatorActive, setResonatorActive, biome,
-    isGameWon, playerId, isAuthenticated, user, loadProgress, saveProgress, syncGuildSettings,
-    addEvents, addGold, setFloor, setLastLogout, setBloodRations, councilMembers, resonatorMastery, removeItems, lastLogout,
+    gold, party, currentFloor, mainCharacter,
+    isGameWon, playerId, isAuthenticated, loadProgress, saveProgress, syncGuildSettings,
+    addEvents, addGold, setFloor, setLastLogout, councilMembers, removeItems, lastLogout,
     location, setLocation, logout
   } = useGameStore();
 
   const [showMap, setShowMap] = useState(false);
-  const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
+  const [lastSnapshotData, setLastSnapshotData] = useState<any>(null);
   const [showHelp, setShowHelp] = useState(false);
   const hasHandledSnapshot = useRef(false);
   
@@ -94,22 +85,18 @@ const App: React.FC = () => {
               currentTime: now,
               party: [mainCharacter, ...party],
               startFloor: currentFloor,
-              playerId: playerId,
-              bloodRations,
-              isResonatorActive
+              playerId: playerId
             })
           });
           const data = await response.json();
             if (data.events) {
             addEvents(data.events || []);
             const councilBonus = 1 + (councilMembers.length * 0.05);
-            const resonatorBonus = 1 + (resonatorMastery * 0.1);
-            const effectiveGold = Math.floor(data.gold * councilBonus * resonatorBonus);
-            addGold(effectiveGold - (data.bloodpricePenalty || 0));
+            const effectiveGold = Math.floor(data.gold * councilBonus);
+            addGold(effectiveGold);
             setFloor(data.finalFloor);
-            if (data.bloodRationsRemaining !== undefined) setBloodRations(data.bloodRationsRemaining);
+            setLastSnapshotData(data);
             setShowMap(true);
-            setResonatorActive(false);
 
             if (data.lostGear && data.lostGear.length > 0) {
               removeItems(data.lostGear.map((i: any) => i.id));
@@ -123,7 +110,7 @@ const App: React.FC = () => {
     };
 
     handleSnapshot();
-  }, [isAuthenticated, mainCharacter, lastLogout, party, currentFloor, addEvents, addGold, setFloor, setLastLogout, bloodRations, isResonatorActive, setBloodRations, setResonatorActive, councilMembers, resonatorMastery, removeItems]);
+  }, [isAuthenticated, mainCharacter, lastLogout, party, currentFloor, addEvents, addGold, setFloor, setLastLogout, councilMembers, removeItems]);
 
   if (!isAuthenticated) return <LoginScreen />;
 
@@ -147,23 +134,6 @@ const App: React.FC = () => {
       </button>
     );
     return tooltip ? <Tooltip content={tooltip} position="top">{navButton}</Tooltip> : navButton;
-  };
-  
-  const TechNavItem = ({ id, icon: Icon, label, tooltip }: { id: string, icon: any, label: string, tooltip?: string }) => {
-    const button = (
-      <button
-        onClick={() => { setLocation(id); setShowTechMenu(false); }}
-        className={`flex items-center gap-3 w-full px-4 py-3 transition-all ${
-          location === id 
-          ? 'text-primary-light bg-crimson/10' 
-          : 'text-muted hover:text-bone hover:bg-iron/30'
-        }`}
-      >
-        <Icon size={16} />
-        <span className="font-cinzel text-xs uppercase tracking-wider">{label}</span>
-      </button>
-    );
-    return tooltip ? <Tooltip content={tooltip} position="right">{button}</Tooltip> : button;
   };
 
   return (
@@ -214,27 +184,11 @@ const App: React.FC = () => {
             <NavItem id="Guild Hall" icon={Castle} label="Guild" tooltip="Upgrades & donations" />
             <NavItem id="Lineage" icon={Users} label="Lineage" tooltip="Relationships" />
             <NavItem id="Basilica" icon={Sparkles} label="Basilica" tooltip="Rituals" />
-            <NavItem id="Market" icon={Droplets} label="Blood" tooltip="Resources" />
-            <NavItem id="Steam Forge" icon={Zap} label="Steam" tooltip="Enhancements" />
             <NavItem id="Profile" icon={User} label="Profile" tooltip="Settings & account" />
           </nav>
 
           {/* Bottom Actions */}
           <div className="p-4 border-t border-white/5 space-y-2">
-            <Tooltip content={isResonatorActive ? "Deactivate resonator" : "Activate resonator (+10% bonus)"} position="right">
-              <button 
-                onClick={() => setResonatorActive(!isResonatorActive)}
-                className={`w-full py-3 px-4 rounded-xl flex items-center justify-between transition-all ${
-                  isResonatorActive ? 'bg-primary-color/20 border border-primary-color/30' : 'bg-white/5 border border-white/10'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Zap size={14} className={isResonatorActive ? 'text-primary-color' : 'text-muted'} />
-                  <span className="text-xs font-black uppercase tracking-wide">{isResonatorActive ? 'Resonator On' : 'Resonator'}</span>
-                </div>
-                <div className={`w-2 h-2 rounded-full ${isResonatorActive ? 'bg-primary-color' : 'bg-white/20'}`} />
-              </button>
-            </Tooltip>
             <Tooltip content="Help guide" position="right">
               <button onClick={() => setShowHelp(true)} className="w-full py-3 px-4 rounded-xl bg-white/5 border border-white/10 text-muted hover:bg-white/10 transition-all">
                 <span className="text-xs font-black uppercase tracking-wide">Help</span>
@@ -309,9 +263,7 @@ const App: React.FC = () => {
                 {location === 'Tavern' && <Tavern />}
                 {location === 'Hospital' && <Hospital />}
                 {location === 'Blacksmith' && <Blacksmith />}
-                {location === 'Market' && <BloodMarket />}
                 {location === 'Basilica' && <Basilica />}
-                {location === 'Steam Forge' && <SteamForge />}
                 {location === 'Guild Hall' && <GuildHall />}
                 {location === 'Lineage' && <LineageHall />}
                 {location === 'Profile' && <Profile />}

@@ -118,7 +118,7 @@ app.post('/api/simulate-combat', async (c) => {
 });
 
 app.post('/api/calculate-snapshot', async (c) => {
-    const { lastLogout, currentTime, party, startFloor, playerId, bloodRations, isResonatorActive, resonatorMastery } = await c.req.json();
+    const { lastLogout, currentTime, party, startFloor, playerId } = await c.req.json();
     
     if (!lastLogout || !currentTime || !party || startFloor === undefined || !playerId) {
         return c.json({ error: 'Missing required fields for snapshot calculation.' }, 400);
@@ -128,10 +128,7 @@ app.post('/api/calculate-snapshot', async (c) => {
         currentTime - lastLogout,
         party,
         startFloor,
-        playerId,
-        bloodRations || 0,
-        isResonatorActive || false,
-        resonatorMastery || 0
+        playerId
     );
 
     return c.json(result);
@@ -163,27 +160,7 @@ app.post('/api/state', async (c) => {
     return c.json({ success: true });
 });
 
-app.get('/api/guild-settings', async (c) => {
-    try {
-        const settings = await StateService.getGuildSettings();
-        return c.json(settings);
-    } catch (e: any) {
-        console.error('GUILD SETTINGS ERROR:', e.message);
-        c.header('Access-Control-Allow-Origin', '*');
-        return c.json({ error: e.message || 'Failed to fetch guild settings' }, 500);
-    }
-});
 
-app.post('/api/guild-settings', async (c) => {
-    try {
-        const { pollutionLevel, masteryLevel } = await c.req.json();
-        await StateService.updateGuildSettings(pollutionLevel, masteryLevel);
-        return c.json({ success: true });
-    } catch (e: any) {
-        c.header('Access-Control-Allow-Origin', '*');
-        return c.json({ error: e.message || 'Failed to update guild settings' }, 500);
-    }
-});
 
 // Authoritative Actions
 app.post('/api/game/upgrade', async (c) => {
