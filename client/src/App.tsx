@@ -2,25 +2,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Users, 
   Sword, 
-  HeartPulse, 
   Shield, 
   LayoutDashboard,
   Coins,
   Sparkles,
   Castle,
   User,
+  HeartPulse,
   HelpCircle
 } from 'lucide-react';
 import { useGameStore } from './store/gameStore';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
-import Tavern from './components/Tavern';
-import Blacksmith from './components/Blacksmith';
-import Hospital from './components/Hospital';
-import GuildHall from './components/GuildHall';
 import ThePit from './components/ThePit';
-import LineageHall from './components/LineageHall';
-import Basilica from './components/Basilica';
+import ShopsView from './components/views/ShopsView';
+import TownSquareView from './components/views/TownSquareView';
+import GuildhallView from './components/views/GuildhallView';
+import LineageHallView from './components/views/LineageHallView';
 import CharacterCreation from './components/CharacterCreation';
 import DepthMap from './components/DepthMap';
 import VictoryScreen from './components/VictoryScreen';
@@ -175,12 +173,10 @@ const App: React.FC = () => {
           <nav className="flex-1 overflow-y-auto py-4 space-y-1 custom-scrollbar">
             <NavItem id="Respite" icon={LayoutDashboard} label="Overview" tooltip="Return to the Respite hub" />
             <NavItem id="The Pit" icon={Sword} label="The Pit" tooltip="Enter the dungeon" />
-            <NavItem id="Tavern" icon={Users} label="Tavern" tooltip="Recruit mercenaries" />
-            <NavItem id="Hospital" icon={HeartPulse} label="Infirmary" tooltip="Heal wounded" />
-            <NavItem id="Blacksmith" icon={Shield} label="Smith" tooltip="Forge equipment" />
-            <NavItem id="Guild Hall" icon={Castle} label="Guild" tooltip="Upgrades & donations" />
-            <NavItem id="Lineage" icon={Users} label="Lineage" tooltip="Relationships" />
-            <NavItem id="Basilica" icon={Sparkles} label="Basilica" tooltip="Rituals" />
+            <NavItem id="Shops" icon={Shield} label="Shops" tooltip="Smith & Alchemist" />
+            <NavItem id="Town Square" icon={Users} label="Town Square" tooltip="Tavern & Infirmary" />
+            <NavItem id="The Guildhall" icon={Castle} label="The Guildhall" tooltip="Infrastructure, Gate, Basilica" />
+            <NavItem id="Lineage Hall" icon={Sparkles} label="Lineage Hall" tooltip="Lineage & Trophies" />
             <NavItem id="Profile" icon={User} label="Profile" tooltip="Settings & account" />
           </nav>
 
@@ -257,12 +253,10 @@ const App: React.FC = () => {
                   </div>
                 )}
                 {location === 'The Pit' && <ThePit />}
-                {location === 'Tavern' && <Tavern />}
-                {location === 'Hospital' && <Hospital />}
-                {location === 'Blacksmith' && <Blacksmith />}
-                {location === 'Basilica' && <Basilica />}
-                {location === 'Guild Hall' && <GuildHall />}
-                {location === 'Lineage' && <LineageHall />}
+                {location === 'Shops' && <ShopsView />}
+                {location === 'Town Square' && <TownSquareView />}
+                {location === 'The Guildhall' && <GuildhallView />}
+                {location === 'Lineage Hall' && <LineageHallView />}
                 {location === 'Profile' && <Profile />}
               </section>
             </div>
@@ -280,9 +274,10 @@ const App: React.FC = () => {
         <div className="flex px-2 gap-1 items-center justify-between mx-auto w-full">
           <NavItem id="Respite" icon={LayoutDashboard} label="Home" tooltip="Return to Respite hub" />
           <NavItem id="The Pit" icon={Sword} label="Pit" tooltip="Enter the dungeon" />
-          <NavItem id="Tavern" icon={Users} label="Tavern" tooltip="Recruit party members" />
-          <NavItem id="Blacksmith" icon={Shield} label="Smith" tooltip="Forge equipment" />
-          <NavItem id="Guild Hall" icon={Castle} label="Guild" tooltip="Guild upgrades" />
+          <NavItem id="Shops" icon={Shield} label="Shops" tooltip="Smith & Alchemist" />
+          <NavItem id="Town Square" icon={Users} label="Town" tooltip="Tavern & Infirmary" />
+          <NavItem id="The Guildhall" icon={Castle} label="Guild" tooltip="Guild upgrades" />
+          <NavItem id="Lineage Hall" icon={Sparkles} label="Lineage" tooltip="Lineage & Trophies" />
           <NavItem id="Profile" icon={User} label="Profile" tooltip="Profile and settings" />
         </div>
       </nav>
