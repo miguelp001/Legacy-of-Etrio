@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { User, Settings, Trash2, Shield, Coins, Droplets, AlertTriangle, Check, X, LogOut, RefreshCw, Trophy, Lock, Star, Sword, Crown, Skull, Heart, Zap, Castle } from 'lucide-react';
+import { User, Settings, Trash2, Shield, Coins, Droplets, AlertTriangle, Check, X, LogOut, RefreshCw, Trophy, Lock, Star, Sword, Crown, Skull, Heart, Zap, Castle, Users } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
