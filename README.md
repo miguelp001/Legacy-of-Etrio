@@ -27,6 +27,7 @@ Legacy of Etrio is a dungeon-crawler roguelike where you command a vanguard of w
 - **Party Management**: Recruit up to 3 NPC companions to fight alongside your main character
 - **Equipment System**: Forge and collect weapons, armor, and accessories with varying rarities
 - **Guild System**: Contribute to a global guild hall that benefits all players
+- **Profile & Achievements**: Track your progress with 20 trophies and manage your account
 
 ---
 
@@ -100,6 +101,7 @@ Your main base of operations with access to all facilities:
 | **Hospital** | Monitor party health, heal injured members (10% HP every 30s passively) |
 | **Blood Market** | Trade resources, manage blood rations and pollution |
 | **Guild Hall** | Contribute Gold to upgrade town infrastructure |
+| **Profile** | View achievements (trophies), manage account settings |
 
 ### The Pit (Dungeon Loop)
 
