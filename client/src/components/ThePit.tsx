@@ -437,11 +437,16 @@ const ThePit: React.FC = () => {
             : true;
 
         if (shouldProgress) {
-            // Auto-progress to next room, but NOT auto-exit after last room
+            // Auto-progress to next room
             if (!isLastRoom) {
                 autoTimerRef.current = setTimeout(nextRoom, AUTO_PROGRESS_MS);
             }
-            // After last room: wait for player to choose Surface or Continue
+            // After last room: auto-continue to next floor after delay (unless player surfaces)
+            if (isLastRoom && isVictory) {
+                autoTimerRef.current = setTimeout(() => {
+                    startDescent();
+                }, 3000); // Auto-descend after 3 seconds
+            }
             return () => {
                 if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
             };
@@ -680,20 +685,26 @@ const ThePit: React.FC = () => {
                         <div className="space-y-3">
                             <div className="text-center">
                                 <p className="text-[10px] text-primary-color font-black uppercase tracking-widest">
-                                    Floor {currentFloor} Complete
+                                    Floor {currentFloor} Complete — Descending in 3s
                                 </p>
                             </div>
                             <div className="flex gap-2">
                                 <button
-                                    onClick={startDescent}
+                                    onClick={() => {
+                                        if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+                                        startDescent();
+                                    }}
                                     className="flex-1 py-3 bg-danger-color/80 text-white rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-transform"
                                 >
                                     <Lucide.Skull size={16} />
-                                    Continue
+                                    Continue Now
                                 </button>
                                 <button
-                                    onClick={exitPit}
-                                    className="flex-1 py-3 bg-primary-color text-white rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                                    onClick={() => {
+                                        if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+                                        exitPit();
+                                    }}
+                                    className="flex-1 py-3 bg-white/10 border border-white/20 text-white rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-transform"
                                 >
                                     Surface <Lucide.ArrowUp size={16} />
                                 </button>
