@@ -22,8 +22,11 @@ const Hospital: React.FC = () => {
         return () => clearInterval(interval);
     }, []);
 
-    // Check if we should heal
+    // Check if we should heal (every 30 seconds)
     useEffect(() => {
+        // Only heal every 30 seconds (skip initial tick 0)
+        if (tick === 0) return;
+        
         const state = useGameStore.getState();
         const now = Date.now();
         
@@ -60,15 +63,17 @@ const Hospital: React.FC = () => {
         
         if (didChange) {
             useGameStore.setState({ party: updatedParty, mainCharacter: newMc });
+            state.saveProgress();
         }
     }, [tick]);
 
-    const handleHealAll = () => {
+    const handleHealAll = async () => {
         const state = useGameStore.getState();
         const newParty = state.party.map((m: any) => ({ ...m, hp: m.maxHp || 100 }));
         let newMc = state.mainCharacter;
         if (newMc) newMc = { ...newMc, hp: newMc.maxHp || 100 };
         useGameStore.setState({ party: newParty, mainCharacter: newMc });
+        state.saveProgress();
     };
 
     const getHealCost = (socialClass: string) => {
@@ -78,7 +83,7 @@ const Hospital: React.FC = () => {
         return Math.floor((healCosts[socialClass || 'Bondi'] || 50) * pollutionPenalty);
     };
 
-    const handleInstantHeal = (member: any) => {
+    const handleInstantHeal = async (member: any) => {
         const cost = getHealCost(member.socialClass);
         if (gold < cost) return;
         addGold(-cost);
@@ -92,6 +97,7 @@ const Hospital: React.FC = () => {
             );
             useGameStore.setState({ party: newParty });
         }
+        state.saveProgress();
     };
 
     const secondsUntilHeal = 30 - (tick % 30);

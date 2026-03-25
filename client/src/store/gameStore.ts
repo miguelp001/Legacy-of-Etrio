@@ -432,14 +432,29 @@ export const useGameStore = create<GameState>()(
           return newState;
         });
 
-        // Sync to server
+        // Sync to server and use server's response
         const { playerId } = useGameStore.getState();
         if (playerId) {
-          fetch(`${API_BASE}/api/game/rest`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ playerId })
-          }).catch(err => console.error('Rest sync failed:', err));
+          try {
+            const response = await fetch(`${API_BASE}/api/game/rest`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ playerId })
+            });
+            if (response.ok) {
+              const { state: serverState } = await response.json();
+              set((s) => ({
+                ...serverState,
+                playerId: s.playerId,
+                isAuthenticated: s.isAuthenticated,
+                user: s.user,
+                token: s.token,
+                location: s.location
+              }));
+            }
+          } catch (err) {
+            console.error('Rest sync failed:', err);
+          }
         }
       },
       
