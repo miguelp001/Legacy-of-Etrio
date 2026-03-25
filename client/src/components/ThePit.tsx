@@ -598,13 +598,22 @@ const ThePit: React.FC = () => {
 
                      {/* Combat Log */}
                     <div className={`glass p-4 border-white/5 min-h-[140px] shadow-inner ${
-                        currentFloor >= 50 ? 'bg-red-950/30' : currentFloor >= 25 ? 'bg-purple-950/20' : 'bg-black/40'
+                        currentFloor >= 750 ? 'bg-red-950/50 border-danger-color/30' :
+                        currentFloor >= 500 ? 'bg-red-950/30 border-danger-color/20' :
+                        currentFloor >= 250 ? 'bg-purple-950/20' :
+                        currentFloor >= 100 ? 'bg-gray-900/40' : 'bg-black/40'
                     }`}>
                         <div className="flex items-center justify-between mb-3">
                             <span className={`text-[10px] font-black uppercase tracking-widest ${
-                                currentFloor >= 50 ? 'text-danger-color/60' : currentFloor >= 25 ? 'text-purple-400/60' : 'text-white/20'
+                                currentFloor >= 750 ? 'text-danger-color animate-pulse' :
+                                currentFloor >= 500 ? 'text-danger-color/70' :
+                                currentFloor >= 250 ? 'text-purple-400/60' :
+                                currentFloor >= 100 ? 'text-gray-400/60' : 'text-white/20'
                             }`}>
-                                {currentFloor >= 50 ? 'THE ABYSS WATCHES' : currentFloor >= 25 ? 'DARKNESS DEEPENS' : 'Aetheric Resonance'}
+                                {currentFloor >= 750 ? '✧ ETERNAL DARKNESS ✧' :
+                                 currentFloor >= 500 ? 'THE ABYSS GAWKS' :
+                                 currentFloor >= 250 ? 'DARKNESS DEEPENS' :
+                                 currentFloor >= 100 ? 'THE DESCENT' : 'Aetheric Resonance'}
                             </span>
                             {isSimulating && <span className="w-1.5 h-1.5 bg-primary-color rounded-full animate-ping" />}
                         </div>
@@ -612,7 +621,8 @@ const ThePit: React.FC = () => {
                              {displayedEvents.slice(-5).map((ev, idx) => {
                                 const dialogue = formatDialogue(ev.banter, ev);
                                 const isFatal = ev.remainingHp !== undefined && ev.remainingHp <= 0;
-                                const isDeepFloor = currentFloor >= 25;
+                                const isDeepFloor = currentFloor >= 100;
+                                const isVeryDeep = currentFloor >= 500;
                                 
                                 return (
                                     <div key={ev.id} className={`animate-fade-in flex gap-2 text-[10px] leading-tight ${
@@ -621,7 +631,7 @@ const ThePit: React.FC = () => {
                                         <span className="text-white/10 font-mono text-[8px] mt-0.5 shrink-0">{ev.turn}</span>
                                         <p className={`
                                             ${ev.isCrit 
-                                                ? (isDeepFloor ? 'text-danger-color font-bold tracking-wide' : 'text-danger-color font-bold') + (currentFloor >= 50 ? ' text-shadow-glow' : '')
+                                                ? (isDeepFloor ? 'text-danger-color font-bold tracking-wide' : 'text-danger-color font-bold') + (isVeryDeep ? ' text-shadow-glow' : '')
                                                 : ev.isMiss 
                                                     ? 'text-white/30 italic' 
                                                     : isFatal 
@@ -635,9 +645,15 @@ const ThePit: React.FC = () => {
                             })}
                             {displayedEvents.length === 0 && (
                                 <div className={`text-center py-4 text-xs italic tracking-widest ${
-                                    currentFloor >= 50 ? 'text-danger-color/20' : 'text-white/10'
+                                    currentFloor >= 750 ? 'text-danger-color/30' :
+                                    currentFloor >= 500 ? 'text-danger-color/20' :
+                                    currentFloor >= 250 ? 'text-purple-400/20' :
+                                    currentFloor >= 100 ? 'text-gray-400/20' : 'text-white/10'
                                 }`}>
-                                    {currentFloor >= 50 ? 'The void awaits...' : currentFloor >= 25 ? 'Shadows stir in the deep...' : 'Shadows stir...'}
+                                    {currentFloor >= 750 ? 'The void hungers...' :
+                                     currentFloor >= 500 ? 'The abyss gazes back...' :
+                                     currentFloor >= 250 ? 'Shadows stir in the deep...' :
+                                     currentFloor >= 100 ? 'Darkness gathers below...' : 'Shadows stir...'}
                                 </div>
                             )}
                         </div>

@@ -215,7 +215,7 @@ const KILL_PHRASES = [
     '${target} breathes their last as ${speaker} strikes true!'
 ];
 
-const DREAD_KILL_PHRASES = [
+const DREAD_KILL_PHRASES_T2 = [ // 250-499
     '${target} becomes another forgotten soul in the dark.',
     'The abyss claims ${target}.',
     '${target} falls—another sacrifice to The Pit.',
@@ -224,6 +224,28 @@ const DREAD_KILL_PHRASES = [
     'The darkness swallows ${target} whole.',
     '${target}\'s death echoes in the void.',
     'The Deep grows hungrier...'
+];
+
+const DREAD_KILL_PHRASES_T3 = [ // 500-749
+    '${target} is devoured by the endless hunger.',
+    'The Abyss consumes ${target} wholly.',
+    '${target}\'s scream fades into eternal silence.',
+    'Blood feeds the hungry void below.',
+    '${target} becomes one with the darkness.',
+    'The ancient evil grows stronger with ${target}\'s essence.',
+    '${target} is lost to the screaming depths.',
+    'Nothing remains but echoes in the deep...'
+];
+
+const DREAD_KILL_PHRASES_T4 = [ // 750-1000+
+    'ETERNITY CLAIMS ${target}!',
+    'THE VOID DEVOURS ${target} FOREVER!',
+    '${target}\'s SOUL IS LOST TO THE ABYSS!',
+    'THE DARKNESS WILL NEVER RELEASE ${target}!',
+    '${target} BECOMES ETERNAL TORMENT!',
+    'THE SCREAMING DEPTHS CLAIM ANOTHER!',
+    'NOT EVEN MEMORY OF ${target} REMAINS!',
+    'THE VOID FEEDS! IT FEEDS! IT FEEDS!'
 ];
 
 const DREAD_AMBIENCE: Record<string, string[]> = {
@@ -269,7 +291,7 @@ const DREAD_AMBIENCE: Record<string, string[]> = {
     ]
 };
 
-const DREAD_CRIT_PHRASES = [
+const DREAD_CRIT_PHRASES_T2 = [
     'THE STRIKE RESONATES WITH DEATH!',
     'DARKNESS ITSELF ANSWERS!',
     'THE ABYSS GASPS IN AWE!',
@@ -278,6 +300,28 @@ const DREAD_CRIT_PHRASES = [
     'A CRITICAL WOUND—THE DEEP SATISFIED!',
     'THE PIT REMEMBERS!',
     'ETERNITY WITNESSES THIS BLOOD!'
+];
+
+const DREAD_CRIT_PHRASES_T3 = [
+    'THE ABYSS SHUDDERS!',
+    'BLOOD BANQUET FOR THE VOID!',
+    'THE DEEP CRYES OUT IN JOY!',
+    'A SOUL TORN FROM THE FLESH!',
+    'ETERNAL DARKNESS ACCEPTES THIS TRIBUTE!',
+    'THE SCREAMING DEPTHS GROW STRONGER!',
+    'DARKNESS DRINKS DEEPLY!',
+    'THE VOID OPENS ITS MAW!'
+];
+
+const DREAD_CRIT_PHRASES_T4 = [
+    '✧ THE ETERNAL VOID ROARS! ✧',
+    'SOULS CRY OUT IN AGONY!',
+    'THE ABYSS CONSUMES ALL!',
+    '✧ NOT EVEN HOPE REMAINS! ✧',
+    'DARKNESS BECOMES ABSOLUTE!',
+    'THE SCREAMING DEPTHS FEAST!',
+    '✧ ETERNAL TORMENT BEGINS! ✧',
+    'THE VOID! THE VOID! THE VOID!'
 ];
 
 const DREAD_MISS_PHRASES = [
@@ -371,10 +415,18 @@ export class DescriptionService {
     }
 
     private static getDreadLevel(dreadLevel: number): number {
-        if (dreadLevel < 10) return 0;
-        if (dreadLevel < 25) return 1;
-        if (dreadLevel < 50) return 2;
-        return 3;
+        // Scale dread from floor 1 to floor 1000
+        if (dreadLevel < 100) return 0;       // 1-99: Normal exploration
+        if (dreadLevel < 250) return 1;        // 100-249: Growing unease
+        if (dreadLevel < 500) return 2;        // 250-499: Heavy dread
+        if (dreadLevel < 750) return 3;        // 500-749: The Abyss
+        return 4;                              // 750-1000+: Eternal darkness
+    }
+    
+    private static getDreadName(dreadLevel: number): string {
+        const tier = this.getDreadLevel(dreadLevel);
+        const names = ['The Surface', 'The Descent', 'The Deep', 'The Abyss', 'Eternal Darkness'];
+        return names[tier] || 'The Surface';
     }
 
     private static buildAttackPhrase(ctx: DescriptorContext): string {
@@ -393,7 +445,10 @@ export class DescriptionService {
         
         // CRITICAL: Use dread phrases at deeper levels
         if (hitQuality === 'CRIT' && dreadTier >= 2) {
-            const critPhrase = DREAD_CRIT_PHRASES[Math.floor(Math.random() * DREAD_CRIT_PHRASES.length)];
+            let critPool = DREAD_CRIT_PHRASES_T2;
+            if (dreadTier >= 4) critPool = DREAD_CRIT_PHRASES_T4;
+            else if (dreadTier >= 3) critPool = DREAD_CRIT_PHRASES_T3;
+            const critPhrase = critPool[Math.floor(Math.random() * critPool.length)];
             return `${speakerName} ${this.pickRandom(weaponData.crit)} ${targetName}—${critPhrase}`;
         }
         
@@ -503,9 +558,13 @@ export class DescriptionService {
         
         let phrase: string;
         
-        // Use dread kill phrases at deeper levels
-        if (dreadTier >= 2) {
-            phrase = this.pickRandom(DREAD_KILL_PHRASES);
+        // Use dread kill phrases based on tier
+        if (dreadTier >= 4) {
+            phrase = this.pickRandom(DREAD_KILL_PHRASES_T4);
+        } else if (dreadTier >= 3) {
+            phrase = this.pickRandom(DREAD_KILL_PHRASES_T3);
+        } else if (dreadTier >= 2) {
+            phrase = this.pickRandom(DREAD_KILL_PHRASES_T2);
         } else {
             phrase = this.pickRandom(KILL_PHRASES);
         }
@@ -528,14 +587,20 @@ export class DescriptionService {
         
         // Add extra visceral descriptor at higher dread levels
         if (dreadTier >= 3 && Math.random() > 0.5) {
-            const extra = [
+            const extra = dreadTier >= 4 ? [
+                ' ETERNITY TREMBLES!',
+                ' THE VOID SATISFIED!',
+                ' THE SCREAMING DEPTHS LAUGH!',
+                ' NOT EVEN SOULS ESCAPE!',
+                ' THEY ARE LOST FOREVER!'
+            ] : [
                 ' The darkness consumes.',
                 ' Another soul lost to The Pit.',
                 ' The void grows stronger.',
                 ' Death echoes in the deep.',
                 ' Their screams fade to silence.'
-            ][Math.floor(Math.random() * 5)];
-            phrase += extra;
+            ];
+            phrase += extra[Math.floor(Math.random() * extra.length)];
         }
         
         return phrase;
