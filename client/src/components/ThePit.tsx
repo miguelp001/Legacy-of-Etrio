@@ -437,11 +437,11 @@ const ThePit: React.FC = () => {
             : true;
 
         if (shouldProgress) {
+            // Auto-progress to next room, but NOT auto-exit after last room
             if (!isLastRoom) {
                 autoTimerRef.current = setTimeout(nextRoom, AUTO_PROGRESS_MS);
-            } else {
-                autoTimerRef.current = setTimeout(exitPit, AUTO_PROGRESS_MS + 1000);
             }
+            // After last room: wait for player to choose Surface or Continue
             return () => {
                 if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
             };
@@ -661,13 +661,13 @@ const ThePit: React.FC = () => {
                 </div>
             </main>
 
-            {/* Bottom Controls - Auto-progress */}
+            {/* Bottom Controls - Player choice after each room */}
             {combatDone && (
                 <footer className="px-4 py-4 border-t border-white/10 bg-black/60 backdrop-blur-2xl shrink-0">
                     {!isVictory ? (
                         <div className="text-center space-y-2">
                             <p className="text-[10px] text-danger-color font-black uppercase tracking-widest animate-pulse">
-                                Defeat Imminent...
+                                Defeat...
                             </p>
                             <button
                                 onClick={exitPit}
@@ -677,12 +677,28 @@ const ThePit: React.FC = () => {
                             </button>
                         </div>
                     ) : isLastRoom ? (
-                        <button
-                            onClick={exitPit}
-                            className="w-full py-4 bg-primary-color text-white rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-transform"
-                        >
-                            Surface <Lucide.ArrowUp size={16} />
-                        </button>
+                        <div className="space-y-3">
+                            <div className="text-center">
+                                <p className="text-[10px] text-primary-color font-black uppercase tracking-widest">
+                                    Floor {currentFloor} Complete
+                                </p>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={startDescent}
+                                    className="flex-1 py-3 bg-danger-color/80 text-white rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                                >
+                                    <Lucide.Skull size={16} />
+                                    Continue
+                                </button>
+                                <button
+                                    onClick={exitPit}
+                                    className="flex-1 py-3 bg-primary-color text-white rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                                >
+                                    Surface <Lucide.ArrowUp size={16} />
+                                </button>
+                            </div>
+                        </div>
                     ) : (
                         <div className="flex items-center justify-center gap-3 text-white/40">
                             <div className="w-2 h-2 bg-primary-color rounded-full animate-pulse" />
