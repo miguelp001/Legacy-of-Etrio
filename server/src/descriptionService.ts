@@ -215,6 +215,93 @@ const KILL_PHRASES = [
     '${target} breathes their last as ${speaker} strikes true!'
 ];
 
+const DREAD_KILL_PHRASES = [
+    '${target} becomes another forgotten soul in the dark.',
+    'The abyss claims ${target}.',
+    '${target} falls—another sacrifice to The Pit.',
+    'Blood paints the stone as ${target} drops.',
+    '${target} joins the screaming ghosts below.',
+    'The darkness swallows ${target} whole.',
+    '${target}\'s death echoes in the void.',
+    'The Deep grows hungrier...'
+];
+
+const DREAD_AMBIENCE: Record<string, string[]> = {
+    'Frozen Caves': [
+        'Ice cracks beneath the combatants.',
+        'Frozen mist swirls around them.',
+        'The cold intensifies with each strike.',
+        'Frost forms where blood falls.',
+        'The frostbite gnaws at exposed flesh.',
+        'Breath turns to ice crystals.',
+        'Shadows stretch like claws in the cold.',
+        'The cave remembers those who fell here.'
+    ],
+    'Crystalline Peaks': [
+        'Crystals chime with each impact.',
+        'Shards of light scatter with every blow.',
+        'The cavern resonates with combat.',
+        'Crystal dust fills the air.',
+        'The crystals hunger for warm blood.',
+        'Eternal reflections watch the slaughter.',
+        'Light and shadow dance on dying faces.',
+        'The peaks remember every scream.'
+    ],
+    'Fungal Grotto': [
+        'Spores burst with each movement.',
+        'The fungi pulse with life and death.',
+        'Bioluminescent light flickers with combat.',
+        'The air thickens with fungal spores.',
+        'The mushrooms drink the fallen.',
+        'Organic walls pulse with hunger.',
+        'The grotto breathes—inhaling death.',
+        'Tendrils reach toward the wounded.'
+    ],
+    'Volcanic Depths': [
+        'Embers scatter with each blow.',
+        'The heat intensifies with combat.',
+        'Magma flows like distant blood.',
+        'Sulfur clouds choke the air.',
+        'The volcano rumbles with fury.',
+        'Lava casts demonic shadows.',
+        'Skin blisters and chars.',
+        'The depths hunger for souls.'
+    ]
+};
+
+const DREAD_CRIT_PHRASES = [
+    'THE STRIKE RESONATES WITH DEATH!',
+    'DARKNESS ITSELF ANSWERS!',
+    'THE ABYSS GASPS IN AWE!',
+    'BLOOD FEASTS ON BLOOD!',
+    'THE VOID CONSUMES!',
+    'A CRITICAL WOUND—THE DEEP SATISFIED!',
+    'THE PIT REMEMBERS!',
+    'ETERNITY WITNESSES THIS BLOOD!'
+];
+
+const DREAD_MISS_PHRASES = [
+    'The darkness toys with them...',
+    'The void laughs at their effort...',
+    'Shadows slip away from the blow...',
+    'The Deep denies this strike...',
+    'Another chance—the Pit is patient...',
+    'The darkness watches, waiting...',
+    'Their attack fades into nothing...',
+    'The void absorbs their rage...'
+];
+
+const LOW_HEALTH_PHRASES = [
+    'Blood drips with each heartbeat.',
+    'The darkness beckons closer.',
+    'Strength fades with the light.',
+    'The abyss whispers sweet nothings.',
+    'Each breath grows more ragged.',
+    'The void tastes their fear.',
+    'Death circles, patient and hungry.',
+    'The end draws near...'
+];
+
 const BIOME_AMBIENCE: Record<string, string[]> = {
     'Frozen Caves': [
         'Ice cracks beneath the combatants.',
@@ -283,15 +370,38 @@ export class DescriptionService {
         return '';
     }
 
+    private static getDreadLevel(dreadLevel: number): number {
+        if (dreadLevel < 10) return 0;
+        if (dreadLevel < 25) return 1;
+        if (dreadLevel < 50) return 2;
+        return 3;
+    }
+
     private static buildAttackPhrase(ctx: DescriptorContext): string {
-        const { speaker, target, hitQuality, damage } = ctx;
+        const { speaker, target, hitQuality, damage, dreadLevel } = ctx;
         const speakerName = this.formatName(speaker.name);
         const targetName = this.formatName(target.name);
         const weaponType = speaker.weaponType || 'natural';
         const weaponData = WEAPON_VERBS[weaponType] ?? WEAPON_VERBS.natural!;
         const damageTier = this.getDamageTier(damage, target.maxHp);
+        const dreadTier = this.getDreadLevel(dreadLevel || 0);
         
         let phrase = '';
+        
+        // At higher dread levels, add more visceral descriptors
+        const isLowHealth = target.hp < target.maxHp * 0.3;
+        
+        // CRITICAL: Use dread phrases at deeper levels
+        if (hitQuality === 'CRIT' && dreadTier >= 2) {
+            const critPhrase = DREAD_CRIT_PHRASES[Math.floor(Math.random() * DREAD_CRIT_PHRASES.length)];
+            return `${speakerName} ${this.pickRandom(weaponData.crit)} ${targetName}—${critPhrase}`;
+        }
+        
+        // MISS: Use dread miss phrases at deeper levels  
+        if (hitQuality === 'MISS' && dreadTier >= 2) {
+            const missPhrase = DREAD_MISS_PHRASES[Math.floor(Math.random() * DREAD_MISS_PHRASES.length)];
+            return `${speakerName} ${this.pickRandom(weaponData.miss)}. ${missPhrase}`;
+        }
         
         // Build subject phrase
         let subject = speakerName;
@@ -363,9 +473,18 @@ export class DescriptionService {
             phrase += ` ${this.pickRandom(classVocab.verbs)}!`;
         }
         
-        // Add biome ambience
-        if (ctx.biome && BIOME_AMBIENCE[ctx.biome] && Math.random() > 0.7) {
-            phrase += ` ${this.pickRandom(BIOME_AMBIENCE[ctx.biome]!)}`;
+        // Add biome ambience - use dread ambience at deeper levels
+        if (ctx.biome) {
+            const ambiencePool = dreadTier >= 1 ? DREAD_AMBIENCE[ctx.biome] || BIOME_AMBIENCE[ctx.biome] : BIOME_AMBIENCE[ctx.biome];
+            if (ambiencePool && Math.random() > 0.7) {
+                phrase += ` ${this.pickRandom(ambiencePool)}`;
+            }
+        }
+        
+        // Add low health desperation at deeper levels
+        if (isLowHealth && dreadTier >= 2 && Math.random() > 0.7) {
+            const desperation = LOW_HEALTH_PHRASES[Math.floor(Math.random() * LOW_HEALTH_PHRASES.length)];
+            phrase += ` ${desperation}`;
         }
         
         // Add trait passive (rare)
@@ -380,8 +499,16 @@ export class DescriptionService {
     private static buildKillPhrase(ctx: DescriptorContext): string {
         const speakerName = this.formatName(ctx.speaker.name);
         const targetName = this.formatName(ctx.target.name);
+        const dreadTier = this.getDreadLevel(ctx.dreadLevel || 0);
         
-        let phrase = this.pickRandom(KILL_PHRASES);
+        let phrase: string;
+        
+        // Use dread kill phrases at deeper levels
+        if (dreadTier >= 2) {
+            phrase = this.pickRandom(DREAD_KILL_PHRASES);
+        } else {
+            phrase = this.pickRandom(KILL_PHRASES);
+        }
         phrase = phrase.replace('${speaker}', speakerName);
         phrase = phrase.replace('${target}', targetName);
         
@@ -397,6 +524,18 @@ export class DescriptionService {
             phrase += ' Blood feeds their unholy thirst.';
         } else if (ctx.speaker.isAscended) {
             phrase += ' Their power grows.';
+        }
+        
+        // Add extra visceral descriptor at higher dread levels
+        if (dreadTier >= 3 && Math.random() > 0.5) {
+            const extra = [
+                ' The darkness consumes.',
+                ' Another soul lost to The Pit.',
+                ' The void grows stronger.',
+                ' Death echoes in the deep.',
+                ' Their screams fade to silence.'
+            ][Math.floor(Math.random() * 5)];
+            phrase += extra;
         }
         
         return phrase;

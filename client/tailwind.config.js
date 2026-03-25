@@ -30,6 +30,13 @@ export default {
         'cinzel': ['Cinzel', 'Times New Roman', 'serif'],
         'crimson': ['Crimson Pro', 'Georgia', 'serif'],
       },
+      boxShadow: {
+        'glow': '0 0 10px rgba(239, 68, 68, 0.5)',
+        'glow-lg': '0 0 20px rgba(239, 68, 68, 0.7)',
+      },
+      textShadow: {
+        'glow': '0 0 8px rgba(239, 68, 68, 0.8)',
+      },
     },
   },
   plugins: [],

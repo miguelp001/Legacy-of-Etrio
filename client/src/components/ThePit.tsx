@@ -597,26 +597,49 @@ const ThePit: React.FC = () => {
                     </div>
 
                      {/* Combat Log */}
-                    <div className="glass p-4 border-white/5 bg-black/40 min-h-[120px] shadow-inner">
+                    <div className={`glass p-4 border-white/5 min-h-[140px] shadow-inner ${
+                        currentFloor >= 50 ? 'bg-red-950/30' : currentFloor >= 25 ? 'bg-purple-950/20' : 'bg-black/40'
+                    }`}>
                         <div className="flex items-center justify-between mb-3">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Aetheric Resonance</span>
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${
+                                currentFloor >= 50 ? 'text-danger-color/60' : currentFloor >= 25 ? 'text-purple-400/60' : 'text-white/20'
+                            }`}>
+                                {currentFloor >= 50 ? 'THE ABYSS WATCHES' : currentFloor >= 25 ? 'DARKNESS DEEPENS' : 'Aetheric Resonance'}
+                            </span>
                             {isSimulating && <span className="w-1.5 h-1.5 bg-primary-color rounded-full animate-ping" />}
                         </div>
                         <div className="space-y-2">
-                             {displayedEvents.slice(-5).map((ev) => {
+                             {displayedEvents.slice(-5).map((ev, idx) => {
                                 const dialogue = formatDialogue(ev.banter, ev);
+                                const isFatal = ev.remainingHp !== undefined && ev.remainingHp <= 0;
+                                const isDeepFloor = currentFloor >= 25;
+                                
                                 return (
-                                    <div key={ev.id} className="animate-fade-in flex gap-3 text-[11px] leading-tight">
-                                        <span className="text-white/20 font-mono text-[9px] mt-0.5">{ev.turn}</span>
-                                        <p className="text-white/60">
-                                            <span className={ev.isCrit ? 'text-danger-color font-bold' : ev.isMiss ? 'text-white/40 italic' : ''}>
-                                                {dialogue}
-                                            </span>
+                                    <div key={ev.id} className={`animate-fade-in flex gap-2 text-[10px] leading-tight ${
+                                        isFatal ? 'border-l-2 border-danger-color pl-2' : ''
+                                    }`}>
+                                        <span className="text-white/10 font-mono text-[8px] mt-0.5 shrink-0">{ev.turn}</span>
+                                        <p className={`
+                                            ${ev.isCrit 
+                                                ? (isDeepFloor ? 'text-danger-color font-bold tracking-wide' : 'text-danger-color font-bold') + (currentFloor >= 50 ? ' text-shadow-glow' : '')
+                                                : ev.isMiss 
+                                                    ? 'text-white/30 italic' 
+                                                    : isFatal 
+                                                        ? 'text-white/50'
+                                                        : 'text-white/50'}
+                                        `}>
+                                            {dialogue}
                                         </p>
                                     </div>
                                 );
                             })}
-                            {displayedEvents.length === 0 && <div className="text-center py-4 text-white/10 text-xs italic tracking-widest">Shadows stir...</div>}
+                            {displayedEvents.length === 0 && (
+                                <div className={`text-center py-4 text-xs italic tracking-widest ${
+                                    currentFloor >= 50 ? 'text-danger-color/20' : 'text-white/10'
+                                }`}>
+                                    {currentFloor >= 50 ? 'The void awaits...' : currentFloor >= 25 ? 'Shadows stir in the deep...' : 'Shadows stir...'}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
