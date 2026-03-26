@@ -1,8 +1,0 @@
-
- Γ¢à∩╕Å wrangler 4.75.0
-ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-
-X [ERROR] This command cannot be run in a non-interactive context
-
-
-≡ƒ¬╡  Logs were written to "C:\Users\migue\AppData\Roaming\xdg.config\.wrangler\logs\wrangler-2026-03-18_17-47-13_165.log"

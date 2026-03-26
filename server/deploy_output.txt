@@ -1,8 +1,0 @@
-
- Γ¢à∩╕Å wrangler 4.75.0
-ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-Total Upload: 77.09 KiB / gzip: 18.97 KiB
-Uploaded etrio-api (7.19 sec)
-Deployed etrio-api triggers (1.60 sec)
-  https://etrio-api.miguelp001.workers.dev
-Current Version ID: 9fc63372-e3db-40ef-926f-4447af84226b

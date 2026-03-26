@@ -1,6 +1,0 @@
---- Verifying Phase 12: Soul-Binding (Heirloom Gear) ---
-Began ritual: Bound Staff of Holy Light to the lineage soul.
-Snapshot Result: Wiped = true
-Lost Gear: Wise Leather Vest, Burning Sword
-Γ£à SUCCESS: Soul-bound weapon was preserved, while other gear was lost.
---- Verification Complete ---

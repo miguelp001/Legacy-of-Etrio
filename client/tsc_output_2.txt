@@ -1,1 +1,0 @@
-../shared/src/items.ts(76,52): error TS2367: This comparison appears to be unintentional because the types '"Uncommon" | "Rare" | "Epic" | "Corrupted" | undefined' and '"Legendary"' have no overlap.
