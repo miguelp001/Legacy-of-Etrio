@@ -13,10 +13,11 @@ export type BiomeType = (typeof BiomeType)[keyof typeof BiomeType];
 
 export interface DungeonRoom {
     id: string;
-    type: 'Corridor' | 'Encounter' | 'Cache' | 'Boss' | 'Rest';
+    type: 'Corridor' | 'Encounter' | 'Cache' | 'Boss' | 'Rest' | 'Gate' | 'DeepBoss';
     description: string;
     enemies?: GeneratedEnemy[];
     loot?: any;
+    gateRequired?: number;
 }
 
 export interface DungeonFloor {
@@ -42,34 +43,45 @@ export class DungeonManager {
                 Encounter: ["A cluster of frozen statues... or are they?", "Shadows flit between frost-laden pillars.", "The air crackles with malevolent cold."],
                 Cache: ["A glint of metal beneath a layer of permafrost.", "An ancient crate, preserved in a block of ice.", "A frozen chest waits in the center of the hall."],
                 Boss: ["The throne of the Frost King looms ahead.", "An arena of pure, unyielding ice."],
-                Rest: ["A rare pocket of warmth near a geothermal vent.", "A sheltered alcove where the wind finally dies."]
+                Rest: ["A rare pocket of warmth near a geothermal vent.", "A sheltered alcove where the wind finally dies."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
             },
             [BiomeType.Crystalline]: {
                 Corridor: ["Humming vibrations echo from the crystal walls.", "Refractions of light dance in the silence.", "The ground is slick with crystalline dust."],
                 Encounter: ["Prismatic shards shift and stir as you approach.", "Echoes of ancient songs resonate from the walls.", "Light bends unnaturally around the figures ahead."],
                 Cache: ["A chest made of hollowed quartz.", "Loot scattered amongst the jagged crystals.", "A pile of discarded gear amidst the gems."],
                 Boss: ["The Great Resonator hums with terrifying power.", "The heart of the crystal spire."],
-                Rest: ["A quiet space where the crystals glow with a soft amber light.", "The harmonic resonance here is oddly calming."]
+                Rest: ["A quiet space where the crystals glow with a soft amber light.", "The harmonic resonance here is oddly calming."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
             },
             [BiomeType.Fungal]: {
                 Corridor: ["Spores hang thick in the damp air.", "Strange fungi pulse with bioluminescent light.", "The walls are alive with creeping moss."],
                 Encounter: ["Tentacles of mold reach out from the shadows.", "A swarm of spores coalesces into a familiar shape.", "The ground surges as something moves beneath the rot."],
                 Cache: ["A chest covered in thick, sticky lichen.", "Loot hidden within a giant puffball.", "Vines protect a discarded satchel."],
                 Boss: ["The Mycelial Heart thumps with a wet sound.", "The Apex Spore awaits its next meal."],
-                Rest: ["A circle of mushrooms that seem to filter the air.", "A dry patch of ground away from the dripping slime."]
+                Rest: ["A circle of mushrooms that seem to filter the air.", "A dry patch of ground away from the dripping slime."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
             },
             [BiomeType.Volcanic]: {
                 Corridor: ["Rivers of magma flow beneath the grating.", "The air is scorched and dry.", "The smell of sulfur is overwhelming."],
                 Encounter: ["Burning eyes watch you from the vents.", "The heat itself seems to take form.", "Obsidian guards block the path ahead."],
                 Cache: ["A chest of tempered steel on a bed of ash.", "Loot salvaged from a lava-scorched room.", "A scorched pile of armor hides a treasure."],
                 Boss: ["The Maw of the Inferno opens before you.", "The Lord of Cinders awakens."],
-                Rest: ["An obsidian shelf where the heat is somewhat bearable.", "A stone platform away from the lava flows."]
+                Rest: ["An obsidian shelf where the heat is somewhat bearable.", "A stone platform away from the lava flows."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
             }
         };
 
         const biomeGroup = descMap[biome] || descMap[BiomeType.Frozen];
-        const list = biomeGroup[type] || biomeGroup['Corridor'];
-        return list[Math.floor(Math.random() * list.length)]! || "A dark, silent chamber.";
+        const typeList = biomeGroup[type];
+        if (typeList && typeList.length > 0) {
+            return typeList[Math.floor(Math.random() * typeList.length)]!;
+        }
+        return "A dark, silent chamber.";
     }
 
     static generateFloor(floorNumber: number): DungeonFloor {
@@ -79,7 +91,20 @@ export class DungeonManager {
 
         for (let i = 0; i < roomCount; i++) {
             let type: DungeonRoom['type'] = 'Corridor';
-            if (i === roomCount - 1) {
+            
+            // Gate every 100 levels
+            if (floorNumber % 100 === 0 && floorNumber < 1000) {
+                if (i === 0) {
+                    type = 'Gate';
+                } else if (i === roomCount - 1) {
+                    type = 'Boss';
+                }
+            } else if (floorNumber === 1000) {
+                // Final battle
+                if (i === roomCount - 1) {
+                    type = 'DeepBoss';
+                }
+            } else if (i === roomCount - 1) {
                 type = floorNumber % 10 === 0 ? 'Boss' : 'Encounter'; // Boss on 10th floor
             } else {
                 const roll = Math.random();
@@ -91,8 +116,23 @@ export class DungeonManager {
 
             const enemies: GeneratedEnemy[] = [];
             const roomId = `room_${floorNumber}_${i}`;
+            let gateRequired = 0;
             
-            if (type === 'Encounter' || type === 'Boss') {
+            if (type === 'Gate') {
+                gateRequired = floorNumber * 500; // Gold required to unlock gate
+                const room: DungeonRoom = {
+                    id: roomId,
+                    type: 'Gate',
+                    description: this.getRoomDescription(type, biome),
+                    gateRequired
+                };
+                rooms.push(room);
+                continue;
+            }
+            
+            if (type === 'DeepBoss') {
+                enemies.push(...EnemyGenerator.generateDeepBoss(biome, floorNumber));
+            } else if (type === 'Encounter' || type === 'Boss') {
                 const isBoss = type === 'Boss';
 
                 if (isBoss) {

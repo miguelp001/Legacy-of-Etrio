@@ -171,6 +171,39 @@ export class GameService {
             console.log(`[BATTLE] Floor ${state.currentFloor}: ${participants.length} participants.`);
 
             for (const room of floorData.rooms) {
+                // Handle Gate room - require gold to proceed
+                if (room.type === 'Gate') {
+                    const gateCost = room.gateRequired || state.currentFloor * 500;
+                    if (state.gold >= gateCost) {
+                        state.gold -= gateCost;
+                        console.log('[GATE] Unlocked for', gateCost, 'gold. Remaining:', state.gold);
+                        roomResults.push({
+                            roomId: room.id,
+                            type: 'Gate',
+                            description: `The gate opens! You paid ${gateCost} gold to proceed.`,
+                            gateUnlocked: true,
+                            enemies: [],
+                            loot: [],
+                            goldEarned: 0,
+                            xpEarned: 0
+                        });
+                    } else {
+                        console.log('[GATE] Not enough gold! Need', gateCost);
+                        partyDefeated = true;
+                        break;
+                    }
+                    continue;
+                }
+                
+                // Handle Deep Boss (level 1000 - game end)
+                if (room.type === 'DeepBoss') {
+                    const hpMultiplier = 1 + (state.currentFloor * 0.03);
+                    room.enemies?.forEach((e: any) => {
+                        e.hp = Math.floor((e.hp || 50000) * hpMultiplier);
+                        e.maxHp = e.hp;
+                    });
+                }
+
                 if (room.enemies && room.enemies.length > 0) {
                     const hpMultiplier = 1 + (state.currentFloor * 0.03);
                     room.enemies.forEach((e: any) => {
@@ -278,9 +311,23 @@ export class GameService {
             }
 
             const floorVictory = participants.filter(p => p.hp > 0).length > 0;
-            console.log('[TICK] Floor result:', { floorVictory, participantsAlive: participants.filter(p => p.hp > 0).length });
+            console.log('[TICK] Floor result:', { floorVictory, participantsAlive: participants.filter(p => p.hp > 0).length, floor: state.currentFloor });
 
-            if (floorVictory) {
+            // Check for game win at level 1000
+            if (floorVictory && state.currentFloor === 1000) {
+                console.log('[GAME] VICTORY! The Deep has been vanquished!');
+                state.isGameWon = true;
+                roomResults.push({
+                    roomId: 'victory',
+                    type: 'DeepBoss',
+                    description: 'THE DEEP HAS BEEN VANQUISHED! Your lineage shall be remembered for eternity.',
+                    combatResult: null,
+                    enemies: [],
+                    loot: [],
+                    goldEarned: 0,
+                    xpEarned: 0
+                });
+            } else if (floorVictory) {
                 state.gold += Math.floor(25 * floorData.goldMultiplier);
                 totalFloorsCleared++;
                 

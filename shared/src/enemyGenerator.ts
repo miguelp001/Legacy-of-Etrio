@@ -430,6 +430,43 @@ export class EnemyGenerator {
         boss.xpValue = Math.floor(boss.xpValue * 3);
         return [boss];
     }
+
+    static generateDeepBoss(biome: string, floorNumber: number): GeneratedEnemy[] {
+        const level = floorNumber + 10;
+        const id = `deep_${Math.random().toString(36).substring(2, 8)}`;
+        
+        const stats = {
+            strength: 500 + floorNumber * 5,
+            intelligence: 500 + floorNumber * 5,
+            agility: 400 + floorNumber * 4,
+            vitality: 600 + floorNumber * 6,
+            spirit: 500 + floorNumber * 5,
+            luck: 100 + floorNumber
+        };
+        
+        const deepBoss: GeneratedEnemy = {
+            id,
+            name: 'THE DEEP',
+            level,
+            baseClass: BaseClass.Warrior,
+            isEnemy: true,
+            xp: 0,
+            templateName: 'THE DEEP',
+            hp: 50000 + floorNumber * 500,
+            maxHp: 50000 + floorNumber * 500,
+            mp: 5000,
+            maxMp: 5000,
+            stats,
+            weapon: { id: 'void', name: 'Void Cleaver', type: 'Weapon', rarity: 'Legendary' as any, level: floorNumber, stats: { strength: 200 }, baseName: 'Void Cleaver', durability: 100, maxDurability: 100 },
+            armor: null,
+            accessory: null,
+            xpValue: 10000,
+            lootTable: { type: 'Weapon' as ItemType, dropChance: 1, minLevel: floorNumber, maxLevel: floorNumber + 50, goldMin: 10000, goldMax: 50000 },
+            generation: 0
+        };
+        
+        return [deepBoss];
+    }
     
     static getEnemyDescription(enemies: Combatant[]): string {
         if (enemies.length === 0) return '';
