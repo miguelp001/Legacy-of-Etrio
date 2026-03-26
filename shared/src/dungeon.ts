@@ -7,7 +7,28 @@ export const BiomeType = {
     Frozen: 'Frozen Caves',
     Crystalline: 'Crystalline Peaks',
     Fungal: 'Fungal Grotto',
-    Volcanic: 'Volcanic Depths'
+    Volcanic: 'Volcanic Depths',
+    Shadow: 'Shadow Realm',
+    Abyssal: 'Abyssal Depths',
+    Twilight: 'Twilight Hollow',
+    Iron: 'Iron Fortress',
+    Haunted: 'Haunted Catacombs',
+    Blood: 'Blood Marsh',
+    Storm: 'Storm Wastes',
+    Corrupted: 'Corrupted Grove',
+    Library: 'Ancient Library',
+    Wasteland: 'Frozen Wasteland',
+    Core: 'Magma Core',
+    Dream: 'Dream Nexus',
+    Void: 'Void Corridor',
+    Luminous: 'Luminous Grotto',
+    Shattered: 'Shattered Realm',
+    Prison: 'Eternal Prison',
+    Bio: 'Bioluminescent Deep',
+    Foundry: 'Rusty Foundry',
+    Ethereal: 'Ethereal Maze',
+    Descent: 'The Final Descent',
+    Deep: 'The Deep'
 } as const;
 export type BiomeType = (typeof BiomeType)[keyof typeof BiomeType];
 
@@ -28,12 +49,38 @@ export interface DungeonFloor {
     goldMultiplier: number;
 }
 
+const BIOME_LIST: BiomeType[] = [
+    BiomeType.Frozen,
+    BiomeType.Crystalline,
+    BiomeType.Fungal,
+    BiomeType.Volcanic,
+    BiomeType.Shadow,
+    BiomeType.Abyssal,
+    BiomeType.Twilight,
+    BiomeType.Iron,
+    BiomeType.Haunted,
+    BiomeType.Blood,
+    BiomeType.Storm,
+    BiomeType.Corrupted,
+    BiomeType.Library,
+    BiomeType.Wasteland,
+    BiomeType.Core,
+    BiomeType.Dream,
+    BiomeType.Void,
+    BiomeType.Luminous,
+    BiomeType.Shattered,
+    BiomeType.Prison,
+    BiomeType.Bio,
+    BiomeType.Foundry,
+    BiomeType.Ethereal,
+    BiomeType.Descent,
+    BiomeType.Deep
+];
+
 export class DungeonManager {
     static getBiome(floor: number): BiomeType {
-        if (floor <= 10) return BiomeType.Frozen;
-        if (floor <= 20) return BiomeType.Crystalline;
-        if (floor <= 30) return BiomeType.Fungal;
-        return BiomeType.Volcanic;
+        const index = Math.min(Math.floor((floor - 1) / 40), BIOME_LIST.length - 1);
+        return BIOME_LIST[index] ?? BiomeType.Frozen;
     }
 
     private static getRoomDescription(type: DungeonRoom['type'], biome: BiomeType): string {
@@ -71,6 +118,195 @@ export class DungeonManager {
                 Cache: ["A chest of tempered steel on a bed of ash.", "Loot salvaged from a lava-scorched room.", "A scorched pile of armor hides a treasure."],
                 Boss: ["The Maw of the Inferno opens before you.", "The Lord of Cinders awakens."],
                 Rest: ["An obsidian shelf where the heat is somewhat bearable.", "A stone platform away from the lava flows."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Shadow]: {
+                Corridor: ["Shadows stretch and twist in the darkness.", "The path is cloaked in absolute black.", "Whispers drift from the void ahead."],
+                Encounter: ["Silhouettes of forgotten warriors surround you.", "Dark shapes coalesce from the corner of your eye.", "The shadows themselves seem to breathe."],
+                Cache: ["A chest half-consumed by darkness.", "Loot barely visible in the void.", "Something glimmers in the black."],
+                Boss: ["The Shadow Sovereign rises from the gloom.", "The Lord of Endless Night awaits."],
+                Rest: ["A rare pocket where the darkness fades slightly.", "A moment of respite from the endless night."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Abyssal]: {
+                Corridor: ["The weight of the deep presses down on you.", "Only darkness and pressure surround you.", "The walls shimmer with bioluminescent fear."],
+                Encounter: ["Things from the deep press against you.", "Ancient horrors stir in the abyss.", "Creatures of impossible shapes dart in the gloom."],
+                Cache: ["A chest from a lost ship.", "Treasure from a drowned kingdom.", "Something precious from the ocean floor."],
+                Boss: ["The Leviathan of the Depths awakens.", "The Abyssal King rises from the void."],
+                Rest: ["A pocket of air in the endless water.", "A shipwreck provides shelter."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Twilight]: {
+                Corridor: ["Eternal dusk casts long shadows.", "The sky above is never fully dark, never fully light.", "Fireflies drift in the permanent twilight."],
+                Encounter: ["Twilight creatures stalk the edges.", "Things that fear both light and dark.", "The boundary between worlds grows thin."],
+                Cache: ["A chest bathed in perpetual dusk.", "Loot from a forgotten twilight kingdom.", "Artifacts of the in-between."],
+                Boss: ["The Dusk Queen emerges from the gloom.", "The Twilight Tyrant commands the eternal dusk."],
+                Rest: ["A glade where the twilight is gentle.", "A shelter from both day and night."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Iron]: {
+                Corridor: ["Metal corridors stretch endlessly.", "The clang of distant forges echoes.", "Rust and blood mark the walls."],
+                Encounter: ["Iron constructs awaken.", "War machines of ancient design.", "Soldiers trapped in eternal steel."],
+                Cache: ["A chest of polished steel.", "Weapons from the iron age.", "Armament of a lost army."],
+                Boss: ["The Iron Warlord commands the fortress.", "The Steel Colossus rises to challenge you."],
+                Rest: ["A forge that has gone cold.", "A barracks with empty beds."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Haunted]: {
+                Corridor: ["Ghostly figures pass through walls.", "Moaning winds fill the corridors.", "Cold spots mark where the dead linger."],
+                Encounter: ["Phantoms of the past attack.", "Spirits wronged in life seek vengeance.", "The restless dead walk again."],
+                Cache: ["A chest that phases through reality.", "Haunted treasures of great power.", "Remnants of the departed."],
+                Boss: ["The Spectral King commands the dead.", "The Poltergeist Prince manifests."],
+                Rest: ["A circle of salt wards off the spirits.", "A shrine to the departed."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Blood]: {
+                Corridor: ["The ground squelches with each step.", "Blood-red mist fills the air.", "The smell of copper is overwhelming."],
+                Encounter: ["Vampires and blood beasts emerge.", "The cursed hunt the living.", "Blood-fed monstrosities lunge."],
+                Cache: ["A chest coated in dried blood.", "Cursed blood-gold.", "Artifacts of the sanguine."],
+                Boss: ["The Blood Lord commands the crimson horde.", "The Vampire King rises."],
+                Rest: ["A pool of somewhat clear water.", "Shelter from the blood rain."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Storm]: {
+                Corridor: ["Lightning cracks through the air.", "Violent winds tear at your clothes.", "Thunder shakes the very stone."],
+                Encounter: ["Storm elementals rage.", "Lightning-wraiths strike from clouds.", "Windigos charge through the gale."],
+                Cache: ["A chest protected by lightning.", "Storm-touched artifacts.", "Weapons of the tempest."],
+                Boss: ["The Storm King commands lightning.", "The Thunder Lord descends."],
+                Rest: ["A cave protected from the wind.", "An eye of the storm."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Corrupted]: {
+                Corridor: ["The corruption eats at reality itself.", "Grotesque growths cover the walls.", "The air itself feels tainted."],
+                Encounter: ["Corrupted creatures attack.", "The tainted hunt the pure.", "Things that should not be manifest."],
+                Cache: ["A chest of corrupted crystal.", "Cursed artifacts of old.", "Remnants of a corrupted kingdom."],
+                Boss: ["The Corruption Lord spreads the plague.", "The Blighted One commands the foul."],
+                Rest: ["Clean water flows here.", "A rare spot of purity."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Library]: {
+                Corridor: ["Endless shelves of ancient tomes.", "Knowledge floats in the air.", "Words write themselves on the walls."],
+                Encounter: ["Animated books attack.", "Knowledge made manifest.", "Librarians of the arcane."],
+                Cache: ["A chest of rare scrolls.", "Lost tomes of power.", "Ancient wisdom preserved."],
+                Boss: ["The Archivist commands the library.", "The Keeper of All Knowledge awakens."],
+                Rest: ["A reading nook with comfortable chairs.", "A quiet corner between shelves."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Wasteland]: {
+                Corridor: ["Barren wastes stretch endlessly.", "Scorched earth crunches underfoot.", "The sun beats down mercilessly."],
+                Encounter: ["Scavengers emerge from the wastes.", "Heat spirits shimmer in the distance.", "The desperate and deranged."],
+                Cache: ["A chest from a collapsed shelter.", "Remnants of a dead civilization.", "Precious water and supplies."],
+                Boss: ["The Wasteland Warlord commands the dunes.", "The Scorched King rises from the ashes."],
+                Rest: ["A shaded crevice.", "An oasis in the waste."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Core]: {
+                Corridor: ["Molten rivers flow through channels.", "The heat is beyond mortal endurance.", "The planet's heart beats beneath you."],
+                Encounter: ["Fire elementals of impossible heat.", "Magma creatures emerge.", "The core itself fights back."],
+                Cache: ["A chest of obsidian.", "Gems from the earth's heart.", "Fire-forged weapons."],
+                Boss: ["The Core Guardian awakens.", "The Molten Titan rises."],
+                Rest: ["A cool vent provides relief.", "Lava tubes offer shelter."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Dream]: {
+                Corridor: ["The floor shifts like sand.", "Impossible geometries twist reality.", "You walk through memories."],
+                Encounter: ["Nightmares made flesh attack.", "Dreams given form hunt you.", "The subconscious fights back."],
+                Cache: ["A chest of dream-stuff.", "Memories of great value.", "Lucid artifacts."],
+                Boss: ["The Dreamlord commands the unconscious.", "The Nightmare King awakens."],
+                Rest: ["A dream of peace.", "A quiet corner of REM sleep."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Void]: {
+                Corridor: ["Absolute nothing surrounds you.", "You float through emptiness.", "Stars are visible in the black."],
+                Encounter: ["Void creatures consume all.", "Nothing-made-manifest attacks.", "Entities of pure absence."],
+                Cache: ["A chest from beyond reality.", "Artifacts of the cosmos.", "Stardust and dark matter."],
+                Boss: ["The Void Emperor commands nothing.", "The Absence awakens."],
+                Rest: ["A pocket of reality remains.", "A small bubble in the void."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Luminous]: {
+                Corridor: ["Everything glows with soft light.", "Bioluminescence illuminates the way.", "The glow is gentle, but constant."],
+                Encounter: ["Radiant creatures emerge.", "Light elementals dance.", "Beings of pure luminescence."],
+                Cache: ["A chest of glowing gems.", "Light-infused artifacts.", "Radiant treasures."],
+                Boss: ["The Luminous Sovereign commands light.", "The Radiant King blazes forth."],
+                Rest: ["A shadow provides darkness.", "A moment away from the glow."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Shattered]: {
+                Corridor: ["Fragments of reality drift around you.", "The world is broken into pieces.", "Shards of existence float in space."],
+                Encounter: ["Fractured beings attack.", "Shards given purpose hunt you.", "Broken things seek wholeness."],
+                Cache: ["A chest of crystallized time.", "Fragments of power.", "Shards of legendary items."],
+                Boss: ["The Shattered Lord seeks to rebuild.", "The Fragment King commands pieces."],
+                Rest: ["A stable fragment provides safety.", "A moment of wholeness."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Prison]: {
+                Corridor: ["Endless cells line the walls.", "Echoes of suffering fill the air.", "The condemned never left."],
+                Encounter: ["Prisoners wronged seek release.", "Guards turned monsters hunt.", "The caged rage against you."],
+                Cache: ["A chest of confiscated goods.", "Treasures of the condemned.", "Keys to forgotten cells."],
+                Boss: ["The Prison Warden commands the caged.", "The Jailer of Souls awakens."],
+                Rest: ["An empty cell provides privacy.", "A moment away from the suffering."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Bio]: {
+                Corridor: ["Organic tunnels pulse with life.", "The walls breathe.", "Living architecture surrounds you."],
+                Encounter: ["Bio-creatures emerge from flesh.", "Genetic horrors hunt.", "Mutated things seek sustenance."],
+                Cache: ["A chest of biological treasures.", "DNA of extinct creatures.", "Organic artifacts."],
+                Boss: ["The Bio-Titan commands the flesh.", "The Hive Mind awakens."],
+                Rest: ["A cocoon of protection.", "A safe pocket of flesh."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Foundry]: {
+                Corridor: ["Rusted metal creaks and groans.", "Steam hisses from broken pipes.", "The smell of rust and oil pervades."],
+                Encounter: ["Rust monsters and steam constructs.", "Forgotten machines come alive.", "Workers fused with metal."],
+                Cache: ["A chest of machine parts.", "Oil-infused treasures.", "Steam-powered artifacts."],
+                Boss: ["The Foundry Lord commands rust.", "The Iron Golem awakens."],
+                Rest: ["A quiet corner away from the noise.", "A place where the machines rest."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Ethereal]: {
+                Corridor: ["You walk between worlds.", "The veil is thin here.", "Spirits pass through your body."],
+                Encounter: ["Ethereal beings attack.", "Ghosts of the living.", "Things from the in-between."],
+                Cache: ["A chest that phases in and out.", "Spirits' treasures.", "Veil-faded artifacts."],
+                Boss: ["The Ethereal Sovereign commands the boundary.", "The Ghost King manifests."],
+                Rest: ["A moment of corporeality.", "A solid spot in the ethereal."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Descent]: {
+                Corridor: ["The final descent into darkness.", "Only deeper and darker remains.", "The end is near."],
+                Encounter: ["The deepest horrors emerge.", "Things that should never see light.", "The void's children hunt."],
+                Cache: ["Priceless treasures of the deep.", "Relics of the first descent.", "Ancient artifacts."],
+                Boss: ["The Descent Lord commands the fall.", "The Final Guardian stands."],
+                Rest: ["The last safe place.", "A moment before the end."],
+                Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
+                DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
+            },
+            [BiomeType.Deep]: {
+                Corridor: ["You have reached the bottom.", "The weight of existence presses.", "This is the end of all things."],
+                Encounter: ["Everything that ever was attacks.", "The Deep itself fights back.", "All your fears manifest."],
+                Cache: ["Infinite treasure.", "The sum of all knowledge.", "Power beyond comprehension."],
+                Boss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back.", "Nothingness consumes all."],
+                Rest: ["The last rest.", "A moment of peace before the end."],
                 Gate: ["A massive golden gate blocks your path.", "Ancient runes glow as you approach the barrier.", "The Gate of the Deep looms before you."],
                 DeepBoss: ["THE DEEP ITSELF AWAKENS.", "The void between worlds stares back at you.", "Nothingness consumes all."]
             }
