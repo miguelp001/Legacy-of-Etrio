@@ -4,4 +4,5 @@ export { EnemyGenerator } from './enemyGenerator';
 export { NPCGenerator, type Relationship } from './party';
 export { BaseClass, SubClass, StatCalculator, TRIBE_BONUSES, type Stats, type CharacterStats } from './stats';
 export { Rarity, ItemType, ItemGenerator, type Item } from './items';
+export { LineageManager } from './lineage';
 export { type EventType, type HitQuality, type DescriptorTags, type DescriptorTemplate } from './descriptionTypes';
