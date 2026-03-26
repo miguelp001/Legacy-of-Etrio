@@ -224,8 +224,8 @@ export const useGameStore = create<GameState>()(
                 throw new Error('Server returned invalid combat data structure');
             }
 
-            const { state: updatedState, victory } = data;
-            console.log('[TICK] Received state with inventory:', updatedState.inventory?.length, 'items');
+            const { state: updatedState, defeated, roomResults } = data;
+            console.log('[TICK] Received state with inventory:', updatedState.inventory?.length, 'items, roomResults:', roomResults?.length);
             
             if (updatedState) {
               // Sync with server state but preserve local-only auth fields and UI location
@@ -240,9 +240,10 @@ export const useGameStore = create<GameState>()(
               console.log('[TICK] State synced. New inventory count:', updatedState.inventory?.length);
             }
             
+            const victory = !defeated;
             const logEntry = victory 
                 ? `Cleared Floor ${updatedState.currentFloor - 1}! Gained rewards.`
-                : `Retreated from Floor ${updatedState.currentFloor}...`;
+                : `Defeated at Floor ${updatedState.currentFloor}...`;
                 
             set((s) => ({
                 events: [{

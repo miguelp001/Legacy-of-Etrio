@@ -350,7 +350,7 @@ const ThePit: React.FC = () => {
         try {
             console.log('[PIT] Calling processCombatTick');
             const res = await processCombatTick(keepDelving);
-            console.log('[PIT] processCombatTick returned:', res);
+            console.log('[PIT] processCombatTick returned:', res, 'roomResults:', res?.roomResults?.length);
             if (res?.roomResults?.length) {
                 console.log('[PIT] Setting floor report, rooms:', res.roomResults.length);
                 setFloorReport(res);
@@ -359,8 +359,11 @@ const ThePit: React.FC = () => {
                 setTurnIndex(0);
                 setIsSimulating(false);
                 setIsActive(true);
+            } else if (res?.defeated) {
+                console.log('[PIT] Party was defeated!');
+                setLocation('Hospital');
             } else {
-                console.log('[PIT] No rooms in response');
+                console.log('[PIT] No rooms in response, res:', JSON.stringify(res));
             }
         } catch (err: any) {
             console.error('[PIT] Descent failed:', err.message);
