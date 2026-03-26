@@ -148,18 +148,31 @@ const Blacksmith: React.FC = () => {
 
                                 {/* Equip Carousel - One Handed Reach */}
                                 <div className="space-y-2">
-                                    <div className="text-[8px] font-black uppercase tracking-[0.2em] text-white/20 ml-1">Transfer Control</div>
+                                    <div className="text-[8px] font-black uppercase tracking-[0.2em] text-white/20 ml-1">
+                                        {(item.type || 'Weapon').toUpperCase()} → Tap character to equip
+                                    </div>
                                     <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
-                                        {fullParty.map(member => (
-                                            <button 
-                                                key={member.id}
-                                                onClick={() => equipItem(member.id, item, (item.type || 'Weapon').toLowerCase() as any)}
-                                                className="shrink-0 w-24 h-12 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-90 active:bg-primary-color/20 active:border-primary-color/40"
-                                            >
-                                                <span className="text-[9px] font-black uppercase tracking-tighter truncate w-20 text-center">{member.name.split(' ')[0]}</span>
-                                                <span className="text-[7px] text-muted font-bold">{(member.baseClass || '???').toString().substring(0,3)}</span>
-                                            </button>
-                                        ))}
+                                        {fullParty.map(member => {
+                                            const isMain = member.id === mainCharacter?.id;
+                                            const currentEquip = isMain 
+                                                ? member.weapon || member.armor || member.accessory
+                                                : (member as any).weapon || (member as any).armor || (member as any).accessory;
+                                            return (
+                                                <button 
+                                                    key={member.id}
+                                                    onClick={() => equipItem(member.id, item, (item.type || 'Weapon').toLowerCase() as any)}
+                                                    className={`shrink-0 w-24 h-14 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-90 border relative ${
+                                                        isMain 
+                                                            ? 'bg-primary-color/20 border-primary-color/40' 
+                                                            : 'bg-white/5 border-white/10'
+                                                    }`}
+                                                >
+                                                    <span className="text-[9px] font-black uppercase tracking-tighter truncate w-20 text-center">{member.name.split(' ')[0]}</span>
+                                                    <span className="text-[7px] text-muted font-bold">{(member.baseClass || '???').toString().substring(0,3)}</span>
+                                                    {isMain && <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary-color rounded-full" />}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
