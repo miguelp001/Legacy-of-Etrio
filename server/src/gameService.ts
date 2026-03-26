@@ -146,7 +146,7 @@ export class GameService {
                 }
             }
             
-            let participants = [mainChar, ...healableParty].filter(p => p !== null).map(p => {
+            participants = [mainChar, ...healableParty].filter(p => p !== null).map(p => {
                 const member = { ...p };
                 if (member.hp === null || isNaN(member.hp)) {
                     member.hp = Math.max(member.hp || 0, 150);
