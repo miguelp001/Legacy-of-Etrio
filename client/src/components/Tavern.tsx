@@ -8,15 +8,19 @@ const Tavern: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'Mercenaries' | 'Personnel'>('Mercenaries');
     const [candidates, setCandidates] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const { addToParty, removeFromParty, party, mainCharacter, gold, addGold, pollutionLevel } = useGameStore();
+    const { addToParty, removeFromParty, party, mainCharacter, gold, addGold, pollutionLevel, guildUpgrades } = useGameStore();
 
     const pollutionPenalty = pollutionLevel > 50 ? 1.2 : 1.0;
+    
+    const tavernBonus = (guildUpgrades.find(g => g.id === 'Tavern')?.level || 0) * 0.1;
+    const npcLevel = mainCharacter ? Math.max(1, Math.floor(mainCharacter.level * (1 + tavernBonus))) : 1;
 
     const fetchCandidates = async () => {
         setLoading(true);
         try {
             const fetchNPC = async () => {
-                const res = await fetch(`${API_BASE}/api/generate-npc?level=1`);
+                const levelParam = Math.max(1, npcLevel + Math.floor(Math.random() * 3) - 1);
+                const res = await fetch(`${API_BASE}/api/generate-npc?level=${levelParam}`);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 return res.json();
             };
@@ -32,7 +36,7 @@ const Tavern: React.FC = () => {
 
     useEffect(() => {
         fetchCandidates();
-    }, []);
+    }, [npcLevel]);
 
     const getHireCost = (socialClass: string) => {
         const costs: Record<string, number> = {
