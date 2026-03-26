@@ -184,6 +184,8 @@ export class GameService {
 
                     const survivors = participants.filter(p => p.hp > 0);
                     if (survivors.length === 0) {
+                        console.log('[BATTLE] All participants died in combat');
+                        partyDefeated = true;
                         break;
                     }
 
@@ -191,6 +193,11 @@ export class GameService {
                         biome: state.biome,
                         dreadLevel: state.currentFloor,
                         generator: (ctx) => DescriptionService.generateDescriptor(ctx as any)
+                    });
+                    console.log('[BATTLE] Combat result:', { 
+                        victory: combatResult.victory, 
+                        survivingMembers: combatResult.survivingMembers?.length,
+                        events: combatResult.events?.length 
                     });
 
                     let roomLoot: { enemy: any; loot: any }[] = [];
