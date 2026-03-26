@@ -159,8 +159,11 @@ export class GameService {
                 return member;
             });
 
-            if (participants.length === 0) {
-                console.log('[BATTLE] No fighters available!', { mainChar: !!state.mainCharacter, partySize: state.party?.length });
+            if (participants.length === 0 && state.mainCharacter) {
+                console.log('[BATTLE] No fighters but mainCharacter exists - reviving them');
+                participants = [{ ...state.mainCharacter, hp: state.mainCharacter.maxHp, recoveryUntil: 0 }];
+            } else if (participants.length === 0) {
+                console.log('[BATTLE] No fighters available at all!');
                 partyDefeated = true;
                 break;
             }
