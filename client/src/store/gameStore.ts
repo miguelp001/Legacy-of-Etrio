@@ -192,7 +192,7 @@ export const useGameStore = create<GameState>()(
           }
       },
 
-      processCombatTick: async () => {
+      processCombatTick: async (keepDelving: boolean = false) => {
           const state = useGameStore.getState();
           if (!state.playerId) {
             console.error('Combat tick aborted: Missing playerId');
@@ -200,11 +200,11 @@ export const useGameStore = create<GameState>()(
           }
 
           try {
-            console.log(`[TICK] Contacting engine at: ${API_BASE}/api/game/tick`);
+            console.log(`[TICK] Contacting engine at: ${API_BASE}/api/game/tick, keepDelving: ${keepDelving}`);
             const response = await fetch(`${API_BASE}/api/game/tick`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ playerId: state.playerId })
+                body: JSON.stringify({ playerId: state.playerId, keepDelving })
             });
 
             if (!response.ok) {

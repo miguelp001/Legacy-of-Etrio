@@ -317,6 +317,7 @@ const ThePit: React.FC = () => {
     const [displayedEvents, setDisplayedEvents] = useState<PitCombatEvent[]>([]);
     const [turnIndex, setTurnIndex] = useState(0);
     const [isSimulating, setIsSimulating] = useState(false);
+    const [keepDelving, setKeepDelving] = useState(false);
 
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -343,15 +344,15 @@ const ThePit: React.FC = () => {
     }, []);
 
     const startDescent = async () => {
-        console.log('[PIT] startDescent called');
+        console.log('[PIT] startDescent called, keepDelving:', keepDelving);
         setLoading(true);
         clearTimers();
         try {
             console.log('[PIT] Calling processCombatTick');
-            const res = await processCombatTick();
+            const res = await processCombatTick(keepDelving);
             console.log('[PIT] processCombatTick returned:', res);
-            if (res?.floorData?.rooms?.length) {
-                console.log('[PIT] Setting floor report, rooms:', res.floorData.rooms.length);
+            if (res?.roomResults?.length) {
+                console.log('[PIT] Setting floor report, rooms:', res.roomResults.length);
                 setFloorReport(res);
                 setCurrentRoomIdx(0);
                 setDisplayedEvents([]);
@@ -493,6 +494,16 @@ const ThePit: React.FC = () => {
                                 <div className="text-2xl font-black">{party.length + 1}</div>
                             </div>
                         </div>
+                        
+                        <label className="flex items-center justify-center gap-3 cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                checked={keepDelving}
+                                onChange={(e) => setKeepDelving(e.target.checked)}
+                                className="w-5 h-5 rounded border-white/20 bg-white/5 text-primary-color focus:ring-primary-color/50"
+                            />
+                            <span className="text-sm font-bold text-white/70 uppercase tracking-wide">Keep Delving</span>
+                        </label>
                         
                         <button
                             onClick={() => { console.log('[PIT] Button clicked!'); startDescent(); }}

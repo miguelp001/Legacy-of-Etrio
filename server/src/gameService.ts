@@ -62,13 +62,13 @@ export class GameService {
         return state;
     }
 
-    static async processCombatTick(playerId: string) {
+    static async processCombatTick(playerId: string, keepDelving: boolean = false) {
         if (!playerId || playerId === 'undefined') {
             console.error('[BATTLE] ABORTED: Invalid playerId:', playerId);
             throw new Error('Valid playerId required');
         }
 
-        console.log(`[BATTLE] Tick requested for player: ${playerId}`);
+        console.log(`[BATTLE] Tick requested for player: ${playerId}, keepDelving: ${keepDelving}`);
 
         let player;
         try {
@@ -110,275 +110,226 @@ export class GameService {
         }
 
         const state = JSON.parse(player.state);
-        console.log('[TICK] Starting tick for floor', state.currentFloor, 'with', state.party.length, 'party members');
-        const floorData = DungeonManager.generateFloor(state.currentFloor);
-        const roomResults: any[] = [];
-        console.log('[TICK] Floor has', floorData.rooms.length, 'rooms');
         
-        // Filter party members - only those who can fight
-        const now = Date.now();
-        const healableParty = state.party.filter((p: any) => {
-            // Revive if recovery expired
-            if (p.hp <= 0 && p.recoveryUntil && p.recoveryUntil <= now) {
-                p.hp = p.maxHp;
-                p.recoveryUntil = 0;
-            }
-            // Skip if dead or in recovery
-            if (p.hp <= 0) return false;
-            if (p.recoveryUntil && p.recoveryUntil > now) return false;
-            // NPC must be above 50% HP to fight
-            if (p.hp < p.maxHp * 0.5) return false;
-            return true;
-        });
-        
-        // Main character always fights if alive (revive if recovery expired)
-        let mainChar = state.mainCharacter;
-        if (mainChar) {
-            // Revive if recovery time has passed
-            if (mainChar.hp <= 0 && mainChar.recoveryUntil && mainChar.recoveryUntil <= now) {
-                mainChar = { ...mainChar, hp: mainChar.maxHp, recoveryUntil: 0 };
-                state.mainCharacter = mainChar;
-            }
-            if (mainChar.hp <= 0) {
-                mainChar = null;
-            } else if (mainChar.recoveryUntil && mainChar.recoveryUntil > now) {
-                mainChar = null;
-            }
-        }
-        
-        let participants = [mainChar, ...healableParty].filter(p => p !== null).map(p => {
-            const member = { ...p };
-            if (member.hp === null || isNaN(member.hp)) {
-                console.warn(`[BATTLE] HP FIXED: Player ${member.name} had ${member.hp} HP. Resetting to 150.`);
-                member.hp = Math.max(member.hp || 0, 150);
-                member.maxHp = Math.max(member.maxHp || 0, 150);
-            }
-            if (member.xp === undefined || member.xp === null) {
-                member.xp = 0;
-            }
-            return member;
-        });
-        
-        // Mark who stayed behind
-        const wounded = state.party.filter((p: any) => {
-            if (p.hp <= 0) return true;
-            if (p.recoveryUntil && p.recoveryUntil > now) return true;
-            if (p.hp < p.maxHp * 0.5) return true;
-            return false;
-        });
-        
-        if (wounded.length > 0) {
-            console.log(`[BATTLE] ${wounded.length} wounded resting: ${wounded.map((w: any) => w.name).join(', ')}`);
-        }
-        
-        let floorVictory = true;
-        const newLootItems: any[] = [];
+        let totalFloorsCleared = 0;
+        let allRoomResults: any[] = [];
+        let partyDefeated = false;
+        let participants: any[] = [];
 
-        console.log(`[BATTLE] Floor ${state.currentFloor}: ${participants.length} participants.`);
-
-        for (const room of floorData.rooms) {
-            if (room.enemies && room.enemies.length > 0) {
-                // Scale enemy HP based on floor level - minimal scaling for balance
-                const hpMultiplier = 1 + (state.currentFloor * 0.03);
-                room.enemies.forEach((e: any) => {
-                    const baseHp = Math.max(e.hp || 100, 30);
-                    e.hp = Math.floor(baseHp * hpMultiplier);
-                    e.maxHp = Math.floor((e.maxHp || baseHp) * hpMultiplier);
-                    // Keep enemy stats low for early floors
-                    if (e.stats) {
-                        e.stats.vitality = Math.max(5, 5 + Math.floor(state.currentFloor * 0.2));
-                    }
-                });
-
-                // Only active survivors fight
-                const survivors = participants.filter(p => p.hp > 0);
-                console.log(`[BATTLE] Room ${room.id} (${room.type}): ${room.enemies.length} enemies vs ${survivors.length} survivors.`);
-                
-                if (survivors.length === 0) {
-                    console.log(`[BATTLE] No survivors! Ending floor.`);
-                    floorVictory = false;
-                    break;
-                }
-
-                const combatResult = CombatEngine.simulate(survivors, room.enemies, {
-                    biome: state.biome,
-                    dreadLevel: state.currentFloor,
-                    generator: (ctx) => DescriptionService.generateDescriptor(ctx as any)
-                });
-                console.log(`[BATTLE] Sim Done: Victory=${combatResult.victory}, Events=${combatResult.events.length}`);
-
-                let roomLoot: { enemy: any; loot: any }[] = [];
-                let totalGold = 0;
-                let totalXp = 0;
-                if (combatResult.victory) {
-                    for (const enemy of room.enemies as GeneratedEnemy[]) {
-                        const mainChar = participants.find(p => p.id === state.mainCharacter?.id);
-                        const playerLuck = mainChar?.stats.luck || 0;
-                        const loot = EnemyGenerator.rollLootDrop(enemy, playerLuck);
-                        totalGold += loot.gold;
-                        totalXp += (enemy as any).xpValue || 25;
-                        
-                        // Always drop something on victory for testing
-                        if (!loot.item) {
-                            const item = ItemGenerator.generateItem(state.currentFloor);
-                            loot.item = item;
-                            console.log(`[LOOT] BONUS: Generated ${item.name} for ${enemy.name}`);
-                        }
-                        
-                        if (loot.item) {
-                            roomLoot.push({ enemy: enemy.name, loot: loot.item });
-                            newLootItems.push(loot.item);
-                            console.log(`[LOOT] ${enemy.name} dropped: ${loot.item.name}!`);
-                        }
-                        
-                        if (loot.gold > 0) {
-                            console.log(`[LOOT] ${enemy.name} dropped: ${loot.gold} gold`);
-                        }
-                    }
-                }
-
-                roomResults.push({
-                    roomId: room.id,
-                    type: room.type,
-                    description: room.description,
-                    combatResult,
-                    enemies: room.enemies.map((e: any) => ({ ...e })),
-                    loot: roomLoot,
-                    goldEarned: totalGold,
-                    xpEarned: totalXp
-                });
-
-                // Update participants with new HPs
-                participants.forEach(p => {
-                    const survivor = combatResult.survivingMembers.find(sm => sm.id === p.id);
-                    if (survivor) {
-                        p.hp = survivor.hp;
-                    } else {
-                        // Check events to see if they specifically died
-                        const deathEvent = combatResult.events.find(ev => ev.defenderName === p.name && ev.remainingHp <= 0);
-                        if (deathEvent) {
-                            p.hp = 0;
-                        }
-                    }
-                });
-
-                if (!combatResult.victory) {
-                    floorVictory = false;
-                    break;
-                }
-
-                // Award XP to surviving party members
-                // Solo bonus: +50% XP if only main character fights
-                const isSolo = participants.length === 1 && mainChar !== null;
-                const soloMultiplier = isSolo ? 1.5 : 1;
-                const xpPerEnemy = Math.floor(totalXp * soloMultiplier);
-                
-                if (isSolo) {
-                    console.log(`[XP] SOLO BONUS: ${mainChar?.name} fighting alone! XP multiplier: ${soloMultiplier}x`);
-                }
-                
-                for (const survivor of survivors) {
-                    const levelResult = this.awardXP(survivor, xpPerEnemy);
-                    if (levelResult.leveled) {
-                        console.log(`[XP] ${survivor.name} gained ${xpPerEnemy} XP and leveled up to ${levelResult.newLevel}!`);
-                    }
-                }
-                
-                // Award gold to main character
-                if (state.mainCharacter) {
-                    state.gold = (state.gold || 0) + totalGold;
-                    console.log(`[GOLD] Main character gained ${totalGold} gold (Total: ${state.gold})`);
-                }
-            } else {
-                roomResults.push({
-                    roomId: room.id,
-                    type: room.type,
-                    description: room.description,
-                    combatResult: null,
-                    enemies: []
-                });
-            }
-        }
-
-        // Update state with final HP/Survival
-        if (floorVictory) {
-            state.gold += Math.floor(25 * floorData.goldMultiplier);
-            state.currentFloor += 1;
+        do {
+            console.log('[TICK] Starting tick for floor', state.currentFloor, 'with', state.party.length, 'party members');
+            const floorData = DungeonManager.generateFloor(state.currentFloor);
+            const roomResults: any[] = [];
             
-            // Add loot items to inventory
-            if (newLootItems.length > 0) {
-                state.inventory = [...(state.inventory || []), ...newLootItems];
-                console.log(`[LOOT] Added ${newLootItems.length} items. Total: ${state.inventory.length}`);
+            const now = Date.now();
+            const healableParty = state.party.filter((p: any) => {
+                if (p.hp <= 0 && p.recoveryUntil && p.recoveryUntil <= now) {
+                    p.hp = p.maxHp;
+                    p.recoveryUntil = 0;
+                }
+                if (p.hp <= 0) return false;
+                if (p.recoveryUntil && p.recoveryUntil > now) return false;
+                if (p.hp < p.maxHp * 0.5) return false;
+                return true;
+            });
+            
+            let mainChar = state.mainCharacter;
+            if (mainChar) {
+                if (mainChar.hp <= 0 && mainChar.recoveryUntil && mainChar.recoveryUntil <= now) {
+                    mainChar = { ...mainChar, hp: mainChar.maxHp, recoveryUntil: 0 };
+                    state.mainCharacter = mainChar;
+                }
+                if (mainChar.hp <= 0) {
+                    mainChar = null;
+                } else if (mainChar.recoveryUntil && mainChar.recoveryUntil > now) {
+                    mainChar = null;
+                }
             }
             
-            // Sync survival back to state with XP and level
-            if (state.mainCharacter) {
-                const mc = participants.find(p => p.id === state.mainCharacter.id);
-                if (mc) {
-                    state.mainCharacter.hp = mc.hp;
-                    state.mainCharacter.xp = mc.xp;
-                    state.mainCharacter.level = mc.level;
-                    state.mainCharacter.stats = mc.stats;
-                    state.mainCharacter.maxHp = mc.maxHp;
-                    state.mainCharacter.maxMp = mc.maxMp;
+            let participants = [mainChar, ...healableParty].filter(p => p !== null).map(p => {
+                const member = { ...p };
+                if (member.hp === null || isNaN(member.hp)) {
+                    member.hp = Math.max(member.hp || 0, 150);
+                    member.maxHp = Math.max(member.maxHp || 0, 150);
                 }
-            }
-            state.party = state.party.map((p: any) => {
-                const updated = participants.find((up: any) => up.id === p.id);
-                if (updated) {
-                    return { 
-                        ...p, 
-                        hp: updated.hp, 
-                        xp: updated.xp, 
-                        level: updated.level,
-                        stats: updated.stats,
-                        maxHp: updated.maxHp,
-                        maxMp: updated.maxMp
-                    };
+                if (member.xp === undefined || member.xp === null) {
+                    member.xp = 0;
                 }
-                return { ...p, hp: 0 };
+                return member;
             });
 
-            // Relationships
-            if (state.party.length >= 2) {
-                if (!state.relationships) state.relationships = [];
-                for (let i = 0; i < state.party.length; i++) {
-                    for (let j = i + 1; j < state.party.length; j++) {
-                        const p1 = state.party[i].id;
-                        const p2 = state.party[j].id;
-                        let rel = state.relationships.find((r: any) => 
-                            (r.memberIds.includes(p1) && r.memberIds.includes(p2))
-                        );
-                        if (!rel) {
-                            rel = { memberIds: [p1, p2].sort(), affinity: 0, stage: 'Stranger' };
-                            state.relationships.push(rel);
+            if (participants.length === 0) {
+                console.log('[BATTLE] No fighters available!');
+                partyDefeated = true;
+                break;
+            }
+
+            console.log(`[BATTLE] Floor ${state.currentFloor}: ${participants.length} participants.`);
+
+            for (const room of floorData.rooms) {
+                if (room.enemies && room.enemies.length > 0) {
+                    const hpMultiplier = 1 + (state.currentFloor * 0.03);
+                    room.enemies.forEach((e: any) => {
+                        const baseHp = Math.max(e.hp || 100, 30);
+                        e.hp = Math.floor(baseHp * hpMultiplier);
+                        e.maxHp = Math.floor((e.maxHp || baseHp) * hpMultiplier);
+                        if (e.stats) {
+                            e.stats.vitality = Math.max(5, 5 + Math.floor(state.currentFloor * 0.2));
                         }
-                        rel.affinity += 5;
+                    });
+
+                    const survivors = participants.filter(p => p.hp > 0);
+                    if (survivors.length === 0) {
+                        break;
                     }
+
+                    const combatResult = CombatEngine.simulate(survivors, room.enemies, {
+                        biome: state.biome,
+                        dreadLevel: state.currentFloor,
+                        generator: (ctx) => DescriptionService.generateDescriptor(ctx as any)
+                    });
+
+                    let roomLoot: { enemy: any; loot: any }[] = [];
+                    let totalGold = 0;
+                    let totalXp = 0;
+                    if (combatResult.victory) {
+                        for (const enemy of room.enemies as GeneratedEnemy[]) {
+                            const mc = participants.find(p => p.id === state.mainCharacter?.id);
+                            const playerLuck = mc?.stats.luck || 0;
+                            const loot = EnemyGenerator.rollLootDrop(enemy, playerLuck);
+                            totalGold += loot.gold;
+                            totalXp += (enemy as any).xpValue || 25;
+                            
+                            if (!loot.item) {
+                                loot.item = ItemGenerator.generateItem(state.currentFloor);
+                            }
+                            
+                            if (loot.item) {
+                                roomLoot.push({ enemy: enemy.name, loot: loot.item });
+                            }
+                            
+                            if (loot.gold > 0) {
+                                console.log(`[LOOT] ${enemy.name} dropped: ${loot.gold} gold`);
+                            }
+                        }
+                    }
+
+                    roomResults.push({
+                        roomId: room.id,
+                        type: room.type,
+                        description: room.description,
+                        combatResult,
+                        enemies: room.enemies.map((e: any) => ({ ...e })),
+                        loot: roomLoot,
+                        goldEarned: totalGold,
+                        xpEarned: totalXp
+                    });
+
+                    participants.forEach(p => {
+                        const survivor = combatResult.survivingMembers.find(sm => sm.id === p.id);
+                        if (survivor) {
+                            p.hp = survivor.hp;
+                        } else {
+                            const deathEvent = combatResult.events.find(ev => ev.defenderName === p.name && ev.remainingHp <= 0);
+                            if (deathEvent) {
+                                p.hp = 0;
+                            }
+                        }
+                    });
+
+                    if (!combatResult.victory) {
+                        break;
+                    }
+
+                    const isSolo = participants.length === 1 && mainChar !== null;
+                    const soloMultiplier = isSolo ? 1.5 : 1;
+                    const xpPerEnemy = Math.floor(totalXp * soloMultiplier);
+                    
+                    for (const survivor of survivors) {
+                        const levelResult = this.awardXP(survivor, xpPerEnemy);
+                        if (levelResult.leveled) {
+                            console.log(`[XP] ${survivor.name} gained ${xpPerEnemy} XP and leveled up to ${levelResult.newLevel}!`);
+                        }
+                    }
+                    
+                    if (state.mainCharacter) {
+                        state.gold = (state.gold || 0) + totalGold;
+                    }
+                } else {
+                    roomResults.push({
+                        roomId: room.id,
+                        type: room.type,
+                        description: room.description,
+                        combatResult: null,
+                        enemies: []
+                    });
                 }
             }
-        } else {
-            // Defeated!
-            const recoveryTime = Date.now() + (5 * 60 * 1000); // 5 minutes recovery
-            if (state.mainCharacter) {
-                state.mainCharacter.hp = 0;
-                state.mainCharacter.recoveryUntil = recoveryTime;
+
+            const floorVictory = participants.filter(p => p.hp > 0).length > 0;
+
+            if (floorVictory) {
+                state.gold += Math.floor(25 * floorData.goldMultiplier);
+                totalFloorsCleared++;
+                
+                if (state.mainCharacter) {
+                    const mc = participants.find(p => p.id === state.mainCharacter.id);
+                    if (mc) {
+                        state.mainCharacter.hp = mc.hp;
+                        state.mainCharacter.xp = mc.xp;
+                        state.mainCharacter.level = mc.level;
+                        state.mainCharacter.stats = mc.stats;
+                        state.mainCharacter.maxHp = mc.maxHp;
+                        state.mainCharacter.maxMp = mc.maxMp;
+                    }
+                }
+                state.party = state.party.map((p: any) => {
+                    const updated = participants.find((up: any) => up.id === p.id);
+                    if (updated) {
+                        return { 
+                            ...p, 
+                            hp: updated.hp, 
+                            xp: updated.xp, 
+                            level: updated.level,
+                            stats: updated.stats,
+                            maxHp: updated.maxHp,
+                            maxMp: updated.maxMp
+                        };
+                    }
+                    return { ...p, hp: 0 };
+                });
+
+                state.currentFloor += 1;
+                allRoomResults.push(...roomResults);
+            } else {
+                const recoveryTime = Date.now() + (5 * 60 * 1000);
+                if (state.mainCharacter) {
+                    state.mainCharacter.hp = 0;
+                    state.mainCharacter.recoveryUntil = recoveryTime;
+                }
+                state.party = state.party.map((p: any) => ({ 
+                    ...p, 
+                    hp: 0,
+                    recoveryUntil: recoveryTime
+                }));
+                partyDefeated = true;
             }
-            state.party = state.party.map((p: any) => ({ 
-                ...p, 
-                hp: 0,
-                recoveryUntil: recoveryTime
-            }));
-        }
+        } while (keepDelving && !partyDefeated && participants.filter((p: any) => p.hp > 0).length > 0);
 
         await (prisma as any).playerState.update({
             where: { id: playerId },
             data: { state: JSON.stringify(state), updatedAt: new Date() }
         });
 
-        console.log('[TICK] Done. Victory:', floorVictory, 'Inventory:', state.inventory?.length, 'items');
+        console.log('[TICK] Done. Floors cleared:', totalFloorsCleared, 'Defeated:', partyDefeated);
         
-        return { floorData, roomResults, state, victory: floorVictory };
+        return { 
+            floorsCleared: totalFloorsCleared, 
+            roomResults: allRoomResults, 
+            state, 
+            defeated: partyDefeated,
+            floorData: allRoomResults.length > 0 ? { rooms: allRoomResults } : { rooms: [] }
+        };
     }
 
     static async infuseItem(playerId: string, inventoryIndex: number, cost: number) {

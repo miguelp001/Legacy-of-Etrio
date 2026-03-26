@@ -174,9 +174,9 @@ app.post('/api/game/upgrade', async (c) => {
 });
 
 app.post('/api/game/tick', async (c) => {
-    const { playerId } = await c.req.json();
+    const { playerId, keepDelving } = await c.req.json();
     try {
-        const result = await GameService.processCombatTick(playerId);
+        const result = await GameService.processCombatTick(playerId, keepDelving);
         return c.json(result);
     } catch (e: any) {
         return c.json({ error: e.message }, 400);
