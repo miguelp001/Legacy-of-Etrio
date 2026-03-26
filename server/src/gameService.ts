@@ -271,6 +271,7 @@ export class GameService {
             }
 
             const floorVictory = participants.filter(p => p.hp > 0).length > 0;
+            console.log('[TICK] Floor result:', { floorVictory, participantsAlive: participants.filter(p => p.hp > 0).length });
 
             if (floorVictory) {
                 state.gold += Math.floor(25 * floorData.goldMultiplier);
@@ -300,7 +301,8 @@ export class GameService {
                             maxMp: updated.maxMp
                         };
                     }
-                    return { ...p, hp: 0 };
+                    // Keep existing HP for party members not in this combat
+                    return p;
                 });
 
                 state.currentFloor += 1;
@@ -326,6 +328,12 @@ export class GameService {
         });
 
         console.log('[TICK] Done. Floors cleared:', totalFloorsCleared, 'Defeated:', partyDefeated, 'roomResults:', allRoomResults.length);
+        console.log('[TICK] Returning:', { 
+            floorsCleared: totalFloorsCleared, 
+            roomResultsLength: allRoomResults.length, 
+            defeated: partyDefeated,
+            currentFloor: state.currentFloor 
+        });
         
         return { 
             floorsCleared: totalFloorsCleared, 
