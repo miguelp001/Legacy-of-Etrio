@@ -110,6 +110,7 @@ export class GameService {
         }
 
         const state = JSON.parse(player.state);
+        console.log('[TICK] State loaded: mainCharacter:', !!state.mainCharacter, 'party:', state.party?.length, 'floor:', state.currentFloor);
         
         let totalFloorsCleared = 0;
         let allRoomResults: any[] = [];
@@ -159,7 +160,7 @@ export class GameService {
             });
 
             if (participants.length === 0) {
-                console.log('[BATTLE] No fighters available!');
+                console.log('[BATTLE] No fighters available!', { mainChar: !!state.mainCharacter, partySize: state.party?.length });
                 partyDefeated = true;
                 break;
             }
@@ -321,7 +322,7 @@ export class GameService {
             data: { state: JSON.stringify(state), updatedAt: new Date() }
         });
 
-        console.log('[TICK] Done. Floors cleared:', totalFloorsCleared, 'Defeated:', partyDefeated);
+        console.log('[TICK] Done. Floors cleared:', totalFloorsCleared, 'Defeated:', partyDefeated, 'roomResults:', allRoomResults.length);
         
         return { 
             floorsCleared: totalFloorsCleared, 

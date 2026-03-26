@@ -344,13 +344,17 @@ const ThePit: React.FC = () => {
     }, []);
 
     const startDescent = async () => {
-        console.log('[PIT] startDescent called, keepDelving:', keepDelving);
+        console.log('[PIT] startDescent called, keepDelving:', keepDelving, 'mainCharacter:', mainCharacter?.name, 'party:', party?.length);
         setLoading(true);
         clearTimers();
         try {
             console.log('[PIT] Calling processCombatTick');
             const res = await processCombatTick(keepDelving);
-            console.log('[PIT] processCombatTick returned:', res, 'roomResults:', res?.roomResults?.length);
+            console.log('[PIT] processCombatTick returned:', JSON.stringify({ 
+                defeated: res?.defeated, 
+                roomResultsLength: res?.roomResults?.length,
+                floorsCleared: res?.floorsCleared 
+            }));
             if (res?.roomResults?.length) {
                 console.log('[PIT] Setting floor report, rooms:', res.roomResults.length);
                 setFloorReport(res);
