@@ -55,13 +55,26 @@ export class LineageManager {
         };
         
         const baseStats = StatCalculator.calculateStats(level, baseClass, generation);
+        
+        let heirloomStatsBonus: Stats = { strength: 0, agility: 0, intelligence: 0, vitality: 0, spirit: 0, luck: 0 };
+        if (heirloomItem && heirloomItem.stats) {
+            heirloomStatsBonus = {
+                strength: heirloomItem.stats.strength || 0,
+                agility: heirloomItem.stats.agility || 0,
+                intelligence: heirloomItem.stats.intelligence || 0,
+                vitality: heirloomItem.stats.vitality || 0,
+                spirit: heirloomItem.stats.spirit || 0,
+                luck: heirloomItem.stats.luck || 0
+            };
+        }
+        
         const combinedStats: Stats = {
-            strength: Math.floor(baseStats.strength + inheritedStats.strength),
-            agility: Math.floor(baseStats.agility + inheritedStats.agility),
-            intelligence: Math.floor(baseStats.intelligence + inheritedStats.intelligence),
-            vitality: Math.floor(baseStats.vitality + inheritedStats.vitality),
-            spirit: Math.floor(baseStats.spirit + inheritedStats.spirit),
-            luck: Math.floor(baseStats.luck + inheritedStats.luck)
+            strength: Math.floor(baseStats.strength + inheritedStats.strength + heirloomStatsBonus.strength),
+            agility: Math.floor(baseStats.agility + inheritedStats.agility + heirloomStatsBonus.agility),
+            intelligence: Math.floor(baseStats.intelligence + inheritedStats.intelligence + heirloomStatsBonus.intelligence),
+            vitality: Math.floor(baseStats.vitality + inheritedStats.vitality + heirloomStatsBonus.vitality),
+            spirit: Math.floor(baseStats.spirit + inheritedStats.spirit + heirloomStatsBonus.spirit),
+            luck: Math.floor(baseStats.luck + inheritedStats.luck + heirloomStatsBonus.luck)
         };
         
         const name = `${parent1.name.split(' ')[0]}'s Heir`;

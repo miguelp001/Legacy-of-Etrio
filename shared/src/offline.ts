@@ -20,8 +20,8 @@ export class OfflineEngine {
         const cappedMinutes = Math.min(minutes, this.MAX_OFFLINE_MINUTES);
         const wasCapped = minutes > this.MAX_OFFLINE_MINUTES;
         
-        // Base rate: 1 minute per floor climb (simplified)
-        const floorsClimbed = Math.floor(cappedMinutes / 2);
+        // Base rate: 1 minute per 6 floors (1 floor per 6 minutes)
+        const floorsClimbed = Math.floor(cappedMinutes / 6);
         const finalFloor = startFloor + floorsClimbed;
         
         let totalGold = 0;
