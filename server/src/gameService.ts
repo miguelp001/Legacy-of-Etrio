@@ -119,7 +119,7 @@ export class GameService {
         let participants: any[] = [];
 
         do {
-            console.log('[TICK] Starting tick for floor', state.currentFloor, 'with', state.party.length, 'party members');
+            console.log('[TICK] Starting tick for floor', state.currentFloor, 'with', state.party.length, 'party members, mainChar hp:', state.mainCharacter?.hp);
             const floorData = DungeonManager.generateFloor(state.currentFloor);
             const roomResults: any[] = [];
             
