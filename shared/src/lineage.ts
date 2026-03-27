@@ -1,13 +1,22 @@
 import { StatCalculator } from './stats';
-import type { CharacterStats } from './stats';
+import type { CharacterStats, Stats } from './stats';
 import type { Trait } from './party';
 import type { SocialClass } from './combat';
+import type { Item } from './items';
+
+export interface HeirData {
+    character: CharacterStats & { id: string; name: string; traits: Trait[]; socialClass: SocialClass };
+    heirloomItem: Item | null;
+    inheritedGold: number;
+}
 
 export class LineageManager {
     static createHeir(
         parent1: CharacterStats & { name: string; traits: Trait[]; socialClass: SocialClass }, 
-        parent2: CharacterStats & { name: string; traits: Trait[]; socialClass: SocialClass }
-    ): CharacterStats & { id: string; name: string; traits: Trait[]; socialClass: SocialClass } {
+        parent2: CharacterStats & { name: string; traits: Trait[]; socialClass: SocialClass },
+        heirloomItem: Item | null = null,
+        goldToInherit: number = 0
+    ): HeirData {
         const id = Math.random().toString(36).substring(2, 11);
         const generation = Math.max(parent1.generation, parent2.generation) + 1;
         const level = 1;
@@ -34,24 +43,47 @@ export class LineageManager {
         
         const heirClass = classLevels[heirLevel]!;
 
-        const stats = StatCalculator.calculateStats(level, baseClass, generation);
+        const p1Stats = parent1.stats;
+        const p2Stats = parent2.stats;
+        const inheritedStats: Stats = {
+            strength: Math.max(p1Stats.strength, p2Stats.strength) * 0.2,
+            agility: Math.max(p1Stats.agility, p2Stats.agility) * 0.2,
+            intelligence: Math.max(p1Stats.intelligence, p2Stats.intelligence) * 0.2,
+            vitality: Math.max(p1Stats.vitality, p2Stats.vitality) * 0.2,
+            spirit: Math.max(p1Stats.spirit, p2Stats.spirit) * 0.2,
+            luck: Math.max(p1Stats.luck, p2Stats.luck) * 0.2
+        };
+        
+        const baseStats = StatCalculator.calculateStats(level, baseClass, generation);
+        const combinedStats: Stats = {
+            strength: Math.floor(baseStats.strength + inheritedStats.strength),
+            agility: Math.floor(baseStats.agility + inheritedStats.agility),
+            intelligence: Math.floor(baseStats.intelligence + inheritedStats.intelligence),
+            vitality: Math.floor(baseStats.vitality + inheritedStats.vitality),
+            spirit: Math.floor(baseStats.spirit + inheritedStats.spirit),
+            luck: Math.floor(baseStats.luck + inheritedStats.luck)
+        };
         
         const name = `${parent1.name.split(' ')[0]}'s Heir`;
 
         return {
-            id,
-            name,
-            level,
-            xp: 0,
-            baseClass,
-            generation,
-            traits: heirTraits,
-            socialClass: heirClass,
-            stats,
-            hp: StatCalculator.calculateHP(stats),
-            maxHp: StatCalculator.calculateHP(stats),
-            mp: StatCalculator.calculateMP(stats),
-            maxMp: StatCalculator.calculateMP(stats)
+            character: {
+                id,
+                name,
+                level,
+                xp: 0,
+                baseClass,
+                generation,
+                traits: heirTraits,
+                socialClass: heirClass,
+                stats: combinedStats,
+                hp: StatCalculator.calculateHP(combinedStats),
+                maxHp: StatCalculator.calculateHP(combinedStats),
+                mp: StatCalculator.calculateMP(combinedStats),
+                maxMp: StatCalculator.calculateMP(combinedStats)
+            },
+            heirloomItem,
+            inheritedGold: goldToInherit
         };
     }
 }

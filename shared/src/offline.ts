@@ -10,12 +10,18 @@ export interface OfflineGains {
 }
 
 export class OfflineEngine {
+    static readonly MAX_OFFLINE_MINUTES = 24 * 60; // 24 hours
+
     static calculateGains(startTime: number, endTime: number, startFloor: number): OfflineGains {
         const timeElapsedMs = endTime - startTime;
-        const minutes = Math.floor(timeElapsedMs / (1000 * 60));
+        let minutes = Math.floor(timeElapsedMs / (1000 * 60));
+        
+        // Cap offline time at 24 hours
+        const cappedMinutes = Math.min(minutes, this.MAX_OFFLINE_MINUTES);
+        const wasCapped = minutes > this.MAX_OFFLINE_MINUTES;
         
         // Base rate: 1 minute per floor climb (simplified)
-        const floorsClimbed = Math.floor(minutes / 2);
+        const floorsClimbed = Math.floor(cappedMinutes / 2);
         const finalFloor = startFloor + floorsClimbed;
         
         let totalGold = 0;
@@ -37,7 +43,7 @@ export class OfflineEngine {
             gold: totalGold,
             items,
             floorsClimbed,
-            timeElapsedMinutes: minutes
+            timeElapsedMinutes: wasCapped ? this.MAX_OFFLINE_MINUTES : minutes
         };
     }
 }

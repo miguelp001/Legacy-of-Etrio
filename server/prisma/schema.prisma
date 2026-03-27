@@ -19,6 +19,7 @@ model GuildSettings {
   id             String @id @default("global")
   pollutionLevel Int    @default(0)
   masteryLevel   Int    @default(0)
+  vaultItems     String @default("[]") // JSON array of items
 }
 
 model PlayerState {

@@ -76,6 +76,9 @@ interface GameState {
   removeItems: (itemIds: string[]) => void;
   ascendCharacter: (memberId: string) => void;
   confrontHeart: () => void;
+  donateItemToGuild: (itemId: string) => Promise<void>;
+  claimItemFromGuild: (itemId: string) => Promise<void>;
+  loadGuildVault: () => Promise<void>;
 }
 
 export const useGameStore = create<GameState>()(
@@ -622,6 +625,85 @@ export const useGameStore = create<GameState>()(
           events: [event, ...state.events]
         };
       }),
+
+      guildVault: [] as Item[],
+
+      donateItemToGuild: async (itemId: string) => {
+        const state = useGameStore.getState();
+        if (!state.playerId) return;
+
+        try {
+          const response = await fetch(`${API_BASE}/api/guild/vault/donate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              playerId: state.playerId, 
+              itemId,
+              donorName: state.user?.username || 'Anonymous'
+            })
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            console.error('Donation failed:', error.error);
+            return;
+          }
+
+          const { state: updatedState, vault } = await response.json();
+          set({ 
+            ...updatedState, 
+            playerId: state.playerId,
+            isAuthenticated: state.isAuthenticated,
+            user: state.user,
+            token: state.token,
+            guildVault: vault
+          });
+        } catch (error) {
+          console.error('Failed to donate item:', error);
+        }
+      },
+
+      claimItemFromGuild: async (itemId: string) => {
+        const state = useGameStore.getState();
+        if (!state.playerId) return;
+
+        try {
+          const response = await fetch(`${API_BASE}/api/guild/vault/claim`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ playerId: state.playerId, itemId })
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            console.error('Claim failed:', error.error);
+            return;
+          }
+
+          const { state: updatedState, vault } = await response.json();
+          set({ 
+            ...updatedState, 
+            playerId: state.playerId,
+            isAuthenticated: state.isAuthenticated,
+            user: state.user,
+            token: state.token,
+            guildVault: vault
+          });
+        } catch (error) {
+          console.error('Failed to claim item:', error);
+        }
+      },
+
+      loadGuildVault: async () => {
+        try {
+          const response = await fetch(`${API_BASE}/api/guild/vault`);
+          if (!response.ok) return;
+          const { vault } = await response.json();
+          set({ guildVault: vault || [] });
+        } catch (error) {
+          console.error('Failed to load guild vault:', error);
+        }
+      },
 
       saveProgress: async () => {
         const state = useGameStore.getState();

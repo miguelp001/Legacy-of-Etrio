@@ -213,6 +213,64 @@ app.post('/api/game/donate', async (c) => {
     }
 });
 
+app.get('/api/guild/vault', async (c) => {
+    try {
+        const vault = await StateService.getGuildVault();
+        return c.json({ vault });
+    } catch (e: any) {
+        return c.json({ error: e.message }, 400);
+    }
+});
+
+app.post('/api/guild/vault/donate', async (c) => {
+    const { playerId, itemId } = await c.req.json();
+    try {
+        const player = await (prisma as any).playerState.findUnique({ where: { id: playerId } });
+        if (!player) throw new Error('Player not found');
+        
+        const state = JSON.parse(player.state);
+        const itemIndex = state.inventory.findIndex((i: any) => i.id === itemId);
+        if (itemIndex === -1) throw new Error('Item not found in inventory');
+        
+        const item = state.inventory[itemIndex];
+        state.inventory.splice(itemIndex, 1);
+        
+        const newVault = await StateService.addToGuildVault(item);
+        
+        await (prisma as any).playerState.update({
+            where: { id: playerId },
+            data: { state: JSON.stringify(state), updatedAt: new Date() }
+        });
+        
+        return c.json({ state, vault: newVault });
+    } catch (e: any) {
+        return c.json({ error: e.message }, 400);
+    }
+});
+
+app.post('/api/guild/vault/claim', async (c) => {
+    const { playerId, itemId } = await c.req.json();
+    try {
+        const result = await StateService.takeFromGuildVault(itemId);
+        if (!result) throw new Error('Item not found in vault');
+        
+        const player = await (prisma as any).playerState.findUnique({ where: { id: playerId } });
+        if (!player) throw new Error('Player not found');
+        
+        const state = JSON.parse(player.state);
+        state.inventory.push(result.item);
+        
+        await (prisma as any).playerState.update({
+            where: { id: playerId },
+            data: { state: JSON.stringify(state), updatedAt: new Date() }
+        });
+        
+        return c.json({ state, vault: result.vault });
+    } catch (e: any) {
+        return c.json({ error: e.message }, 400);
+    }
+});
+
 app.post('/api/game/heal', async (c) => {
     const { playerId, targetId, cost } = await c.req.json();
     try {

@@ -6,6 +6,7 @@ import type { GeneratedEnemy } from '../../shared/src/enemyGenerator.js';
 import { ItemGenerator } from '../../shared/src/items.js';
 import { StatCalculator, BaseClass } from '../../shared/src/stats.js';
 import { DescriptionService } from './descriptionService.js';
+import { NPCGenerator } from '../../shared/src/party.js';
 
 export class GameService {
     private static handleLevelUp(character: any): { leveled: boolean; newLevel: number; xpGained: number } {
@@ -246,6 +247,18 @@ export class GameService {
                     let totalGold = 0;
                     let totalXp = 0;
                     if (combatResult.victory) {
+                        // Award affinity to player-companion pairs after combat victory
+                        if (state.mainCharacter && state.party.length > 0) {
+                            for (const companion of state.party) {
+                                state.relationships = NPCGenerator.updateAffinity(
+                                    state.relationships || [],
+                                    state.mainCharacter.id,
+                                    companion.id,
+                                    2 // +2 affinity per combat victory
+                                );
+                            }
+                        }
+
                         for (const enemy of room.enemies as GeneratedEnemy[]) {
                             const mc = participants.find(p => p.id === state.mainCharacter?.id);
                             const playerLuck = mc?.stats.luck || 0;

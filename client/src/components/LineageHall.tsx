@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Heart, Users, Sparkles, UserPlus, ShieldAlert, History, ShieldCheck, Zap } from 'lucide-react';
+import { Heart, Users, Sparkles, UserPlus, ShieldAlert, History, ShieldCheck, Zap, Package } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
-import { LineageManager } from '../../../shared/src/lineage';
+import { LineageManager, type HeirData } from '../../../shared/src/lineage';
 
 const LineageHall: React.FC = () => {
     const { 
         party, relationships, addToParty, removeFromParty, 
-        mainCharacter, bindItemToSoul, gold 
+        mainCharacter, bindItemToSoul, gold, inventory, addGold
     } = useGameStore();
     const [selectedParents, setSelectedParents] = useState<string[]>([]);
+    const [selectedHeirloom, setSelectedHeirloom] = useState<string | null>(null);
 
     const getRelationship = (m1: string, m2: string) => {
         const sorted = [m1, m2].sort();
@@ -56,22 +57,39 @@ const LineageHall: React.FC = () => {
             return;
         }
 
-        const { gold, addGold } = useGameStore.getState();
+        const { gold, addGold, inventory } = useGameStore.getState();
         const cost = getRitualCost();
         if (gold < cost) {
             alert(`Not enough gold! Ritual costs ${cost}g.`);
             return;
         }
 
-        // Create Heir
-        const heir = LineageManager.createHeir(parent1 as any, parent2 as any);
+        const heirloomItem = selectedHeirloom 
+            ? inventory.find(i => i.id === selectedHeirloom) || null
+            : null;
+
+        const currentGold = useGameStore.getState().gold;
         
-        // Subtract gold and add to party
-        addGold(-cost);
-        addToParty(heir as any);
+        const heirData: HeirData = LineageManager.createHeir(
+            parent1 as any, 
+            parent2 as any,
+            heirloomItem,
+            currentGold
+        );
         
-        alert(`Success! ${heir.name} (Generation ${heir.generation}) has been born with a +${heir.generation * 10}% Legacy Bonus.`);
+        removeFromParty(parent1.id);
+        removeFromParty(parent2.id);
+        
+        addGold(-cost + heirData.inheritedGold);
+        addToParty(heirData.character as any);
+        
+        if (heirloomItem) {
+            useGameStore.getState().removeItems([heirloomItem.id]);
+        }
+        
+        alert(`Success! ${heirData.character.name} (Generation ${heirData.character.generation}) has been born.\n\nThey inherited ${heirData.inheritedGold.toLocaleString()} gold and ${heirloomItem ? `the ${heirloomItem.name} as an heirloom` : 'no heirloom'}.`);
         setSelectedParents([]);
+        setSelectedHeirloom(null);
     };
 
     const handleRetire = (id: string, name: string) => {
@@ -220,7 +238,7 @@ const LineageHall: React.FC = () => {
                             Select two <span className="text-secondary-color font-black">Soulmate</span> parents to produce an Heir. The Heir inherits base stats plus a cumulative +10% stackable legacy bonus.
                         </p>
 
-                        <div className="space-y-3 mb-8 relative z-10">
+                        <div className="space-y-3 mb-6 relative z-10">
                             {party.map((member, idx) => (
                                 <button 
                                     key={member.id || idx}
@@ -235,6 +253,43 @@ const LineageHall: React.FC = () => {
                                     {selectedParents.includes(member.id) && <Sparkles size={16} className="text-secondary-color animate-pulse" />}
                                 </button>
                             ))}
+                        </div>
+
+                        <div className="mb-6 relative z-10">
+                            <div className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3 flex items-center gap-2">
+                                <Package size={14} />
+                                Select Heirloom (optional)
+                            </div>
+                            <div className="space-y-2 max-h-32 overflow-y-auto">
+                                <button
+                                    onClick={() => setSelectedHeirloom(null)}
+                                    className={`w-full p-3 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all ${
+                                        selectedHeirloom === null
+                                        ? 'bg-white/10 border-white/30 text-white'
+                                        : 'bg-white/5 border-white/10 text-white/40 hover:border-white/20'
+                                    }`}
+                                >
+                                    No Heirloom
+                                </button>
+                                {inventory.filter(i => i.isSoulBound).map((item) => (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => setSelectedHeirloom(item.id)}
+                                        className={`w-full p-3 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all text-left ${
+                                            selectedHeirloom === item.id
+                                            ? 'bg-primary-color/20 border-primary-color text-white'
+                                            : 'bg-white/5 border-white/10 text-white/40 hover:border-white/20'
+                                        }`}
+                                    >
+                                        {item.name} <span className="text-[8px] opacity-50">({item.rarity})</span>
+                                    </button>
+                                ))}
+                                {inventory.filter(i => i.isSoulBound).length === 0 && (
+                                    <div className="text-[10px] text-white/20 italic p-2 text-center">
+                                        Soul-bound items will appear here
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <button 
