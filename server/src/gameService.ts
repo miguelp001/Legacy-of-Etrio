@@ -118,60 +118,61 @@ export class GameService {
         let allRoomResults: any[] = [];
         let partyDefeated = false;
         let participants: any[] = [];
+        
+        const now = Date.now();
+        
+        // ALWAYS revive mainCharacter if they have 0 HP and not in active recovery
+        if (state.mainCharacter) {
+            const mc = state.mainCharacter;
+            const isInRecovery = mc.recoveryUntil && mc.recoveryUntil > now;
+            if (!isInRecovery && mc.hp <= 0) {
+                console.log('[BATTLE] FORCING REVIVE mainCharacter');
+                mc.hp = mc.maxHp || 150;
+                mc.recoveryUntil = 0;
+            }
+            // Ensure maxHp
+            if (!mc.maxHp || mc.maxHp <= 0) {
+                mc.maxHp = 150;
+                mc.hp = 150;
+            }
+        }
+        
+        // ALWAYS revive party members with 0 HP and not in active recovery
+        state.party = state.party.map((p: any) => {
+            const isInRecovery = p.recoveryUntil && p.recoveryUntil > now;
+            if (!isInRecovery && p.hp <= 0) {
+                console.log('[BATTLE] FORCING REVIVE party member:', p.name);
+                p.hp = p.maxHp || 150;
+                p.recoveryUntil = 0;
+            }
+            if (!p.maxHp || p.maxHp <= 0) {
+                p.maxHp = 150;
+                p.hp = 150;
+            }
+            return p;
+        });
 
         do {
-            console.log('[TICK] Starting tick for floor', state.currentFloor, 'with', state.party.length, 'party members, mainChar hp:', state.mainCharacter?.hp);
+            console.log('[TICK] Starting tick for floor', state.currentFloor, 'with party:', state.party?.length, 'mainChar hp:', state.mainCharacter?.hp);
             const floorData = DungeonManager.generateFloor(state.currentFloor);
             const roomResults: any[] = [];
             
             const now = Date.now();
-            const healableParty = state.party.map((p: any) => {
-                // Ensure maxHp exists
-                if (!p.maxHp || p.maxHp <= 0) {
-                    p.maxHp = 150;
-                    p.hp = 150;
-                }
-                if (p.hp <= 0 && p.recoveryUntil && p.recoveryUntil <= now) {
-                    p.hp = p.maxHp;
-                    p.recoveryUntil = 0;
-                }
-                // Revive if HP is 0 but not in recovery
-                if (p.hp <= 0 && (!p.recoveryUntil || p.recoveryUntil <= now)) {
-                    p.hp = p.maxHp;
-                    p.recoveryUntil = 0;
-                }
-                if (p.hp <= 0) return false;
-                if (p.recoveryUntil && p.recoveryUntil > now) return false;
-                return true;
-            }).filter((p: any) => p);
-            console.log('[BATTLE] healableParty:', healableParty.map(p => ({ name: p.name, hp: p.hp, maxHp: p.maxHp })));
             
+            // Party members who can fight (not in recovery)
+            const healableParty = state.party.filter((p: any) => {
+                const isInRecovery = p.recoveryUntil && p.recoveryUntil > now;
+                return !isInRecovery && p.hp > 0;
+            });
+            console.log('[BATTLE] healableParty:', healableParty.map(p => ({ name: p.name, hp: p.hp })));
+            
+            // Main character
             let mainChar = state.mainCharacter;
-            console.log('[BATTLE] mainChar check:', { hp: mainChar?.hp, maxHp: mainChar?.maxHp, recoveryUntil: mainChar?.recoveryUntil, now });
-            if (mainChar) {
-                // Ensure maxHp exists
-                if (!mainChar.maxHp || mainChar.maxHp <= 0) {
-                    mainChar = { ...mainChar, maxHp: 150, hp: 150 };
-                    state.mainCharacter = mainChar;
-                }
-                // Revive if recovery expired OR if HP is 0 and not in recovery
-                if (mainChar.hp <= 0 && mainChar.recoveryUntil && mainChar.recoveryUntil <= now) {
-                    console.log('[BATTLE] Reviving mainChar - recovery expired');
-                    mainChar = { ...mainChar, hp: mainChar.maxHp, recoveryUntil: 0 };
-                    state.mainCharacter = mainChar;
-                } else if (mainChar.hp <= 0 && (!mainChar.recoveryUntil || mainChar.recoveryUntil <= now)) {
-                    console.log('[BATTLE] Reviving mainChar - HP 0, no active recovery');
-                    mainChar = { ...mainChar, hp: mainChar.maxHp, recoveryUntil: 0 };
-                    state.mainCharacter = mainChar;
-                }
-                if (mainChar.hp <= 0) {
-                    console.log('[BATTLE] mainChar still has 0 HP after revive, setting to null');
-                    mainChar = null;
-                } else if (mainChar.recoveryUntil && mainChar.recoveryUntil > now) {
-                    console.log('[BATTLE] mainChar is in recovery');
-                    mainChar = null;
-                }
+            const mainInRecovery = mainChar?.recoveryUntil && mainChar.recoveryUntil > now;
+            if (mainChar && !mainInRecovery && mainChar.hp <= 0) {
+                mainChar = null;
             }
+            console.log('[BATTLE] mainChar:', mainChar ? `${mainChar.name} hp:${mainChar.hp}` : 'null', 'inRecovery:', mainInRecovery);
             
             participants = [mainChar, ...healableParty].filter(p => p !== null).map(p => {
                 const member = { ...p };
