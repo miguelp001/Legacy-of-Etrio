@@ -12,8 +12,10 @@ const Tavern: React.FC = () => {
 
     const pollutionPenalty = pollutionLevel > 50 ? 1.2 : 1.0;
     
-    const tavernBonus = (guildUpgrades.find(g => g.id === 'Tavern')?.level || 0) * 0.1;
-    const npcLevel = mainCharacter ? Math.max(1, Math.floor(mainCharacter.level * (1 + tavernBonus))) : 1;
+    const tavernLevel = guildUpgrades.find(g => g.id === 'Tavern')?.level || 0;
+    const tavernBonus = Math.floor(tavernLevel * 2); // +2 levels per tavern level
+    const npcLevel = mainCharacter ? Math.max(1, mainCharacter.level + tavernBonus) : 1;
+    console.log('[TAVERN] tavernLevel:', tavernLevel, 'tavernBonus:', tavernBonus, 'playerLevel:', mainCharacter?.level, 'npcLevel:', npcLevel);
 
     const fetchCandidates = async () => {
         setLoading(true);
