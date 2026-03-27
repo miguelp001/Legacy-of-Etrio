@@ -111,6 +111,7 @@ export class GameService {
         }
 
         const state = JSON.parse(player.state);
+        console.log('[TICK] State loaded: mainCharacter:', state.mainCharacter?.name, 'hp:', state.mainCharacter?.hp, 'party:', state.party?.length);
         console.log('[TICK] State loaded: mainCharacter:', !!state.mainCharacter, 'party:', state.party?.length, 'floor:', state.currentFloor);
         
         let totalFloorsCleared = 0;
