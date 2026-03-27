@@ -141,11 +141,12 @@ export class GameService {
                 }
                 if (p.hp <= 0) return false;
                 if (p.recoveryUntil && p.recoveryUntil > now) return false;
-                // Remove the 50% HP requirement - party can fight when injured
                 return true;
             }).filter((p: any) => p);
+            console.log('[BATTLE] healableParty:', healableParty.map(p => ({ name: p.name, hp: p.hp, maxHp: p.maxHp })));
             
             let mainChar = state.mainCharacter;
+            console.log('[BATTLE] mainChar check:', { hp: mainChar?.hp, maxHp: mainChar?.maxHp, recoveryUntil: mainChar?.recoveryUntil, now });
             if (mainChar) {
                 // Ensure maxHp exists
                 if (!mainChar.maxHp || mainChar.maxHp <= 0) {
@@ -154,15 +155,19 @@ export class GameService {
                 }
                 // Revive if recovery expired OR if HP is 0 and not in recovery
                 if (mainChar.hp <= 0 && mainChar.recoveryUntil && mainChar.recoveryUntil <= now) {
+                    console.log('[BATTLE] Reviving mainChar - recovery expired');
                     mainChar = { ...mainChar, hp: mainChar.maxHp, recoveryUntil: 0 };
                     state.mainCharacter = mainChar;
                 } else if (mainChar.hp <= 0 && (!mainChar.recoveryUntil || mainChar.recoveryUntil <= now)) {
+                    console.log('[BATTLE] Reviving mainChar - HP 0, no active recovery');
                     mainChar = { ...mainChar, hp: mainChar.maxHp, recoveryUntil: 0 };
                     state.mainCharacter = mainChar;
                 }
                 if (mainChar.hp <= 0) {
+                    console.log('[BATTLE] mainChar still has 0 HP after revive, setting to null');
                     mainChar = null;
                 } else if (mainChar.recoveryUntil && mainChar.recoveryUntil > now) {
+                    console.log('[BATTLE] mainChar is in recovery');
                     mainChar = null;
                 }
             }
