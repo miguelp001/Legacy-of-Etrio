@@ -124,7 +124,12 @@ export class GameService {
             const roomResults: any[] = [];
             
             const now = Date.now();
-            const healableParty = state.party.filter((p: any) => {
+            const healableParty = state.party.map((p: any) => {
+                // Ensure maxHp exists
+                if (!p.maxHp || p.maxHp <= 0) {
+                    p.maxHp = 150;
+                    p.hp = 150;
+                }
                 if (p.hp <= 0 && p.recoveryUntil && p.recoveryUntil <= now) {
                     p.hp = p.maxHp;
                     p.recoveryUntil = 0;
@@ -138,10 +143,15 @@ export class GameService {
                 if (p.recoveryUntil && p.recoveryUntil > now) return false;
                 // Remove the 50% HP requirement - party can fight when injured
                 return true;
-            });
+            }).filter((p: any) => p);
             
             let mainChar = state.mainCharacter;
             if (mainChar) {
+                // Ensure maxHp exists
+                if (!mainChar.maxHp || mainChar.maxHp <= 0) {
+                    mainChar = { ...mainChar, maxHp: 150, hp: 150 };
+                    state.mainCharacter = mainChar;
+                }
                 // Revive if recovery expired OR if HP is 0 and not in recovery
                 if (mainChar.hp <= 0 && mainChar.recoveryUntil && mainChar.recoveryUntil <= now) {
                     mainChar = { ...mainChar, hp: mainChar.maxHp, recoveryUntil: 0 };
@@ -159,6 +169,7 @@ export class GameService {
             
             participants = [mainChar, ...healableParty].filter(p => p !== null).map(p => {
                 const member = { ...p };
+                console.log('[BATTLE] Participant:', member.name, 'HP:', member.hp, 'maxHp:', member.maxHp);
                 if (member.hp === null || isNaN(member.hp)) {
                     member.hp = Math.max(member.hp || 0, 150);
                     member.maxHp = Math.max(member.maxHp || 0, 150);
