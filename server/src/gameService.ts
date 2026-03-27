@@ -128,15 +128,24 @@ export class GameService {
                     p.hp = p.maxHp;
                     p.recoveryUntil = 0;
                 }
+                // Revive if HP is 0 but not in recovery
+                if (p.hp <= 0 && (!p.recoveryUntil || p.recoveryUntil <= now)) {
+                    p.hp = p.maxHp;
+                    p.recoveryUntil = 0;
+                }
                 if (p.hp <= 0) return false;
                 if (p.recoveryUntil && p.recoveryUntil > now) return false;
-                if (p.hp < p.maxHp * 0.5) return false;
+                // Remove the 50% HP requirement - party can fight when injured
                 return true;
             });
             
             let mainChar = state.mainCharacter;
             if (mainChar) {
+                // Revive if recovery expired OR if HP is 0 and not in recovery
                 if (mainChar.hp <= 0 && mainChar.recoveryUntil && mainChar.recoveryUntil <= now) {
+                    mainChar = { ...mainChar, hp: mainChar.maxHp, recoveryUntil: 0 };
+                    state.mainCharacter = mainChar;
+                } else if (mainChar.hp <= 0 && (!mainChar.recoveryUntil || mainChar.recoveryUntil <= now)) {
                     mainChar = { ...mainChar, hp: mainChar.maxHp, recoveryUntil: 0 };
                     state.mainCharacter = mainChar;
                 }
