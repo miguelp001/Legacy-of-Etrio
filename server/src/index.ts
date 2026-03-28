@@ -174,6 +174,9 @@ app.post('/api/game/upgrade', async (c) => {
 });
 
 app.post('/api/game/tick', async (c) => {
+    c.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    c.header('Pragma', 'no-cache');
+    c.header('Expires', '0');
     const { playerId, keepDelving } = await c.req.json();
     console.log('[API] tick called with playerId:', playerId, 'keepDelving:', keepDelving);
     try {

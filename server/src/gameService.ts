@@ -458,12 +458,27 @@ export class GameService {
             currentFloor: state.currentFloor 
         });
         
+        // Ensure we always return something
+        if (allRoomResults.length === 0) {
+            console.log('[TICK] WARNING: No room results, creating emergency room');
+            allRoomResults.push({
+                roomId: 'emergency',
+                type: 'Encounter',
+                description: 'Emergency encounter',
+                combatResult: null,
+                enemies: [],
+                loot: [],
+                goldEarned: 0,
+                xpEarned: 0
+            });
+        }
+        
         return { 
             floorsCleared: totalFloorsCleared, 
             roomResults: allRoomResults, 
             state, 
             defeated: partyDefeated,
-            floorData: allRoomResults.length > 0 ? { rooms: allRoomResults } : { rooms: [] }
+            floorData: { rooms: allRoomResults }
         };
     }
 
