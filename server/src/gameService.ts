@@ -153,8 +153,21 @@ export class GameService {
         });
 
         do {
+            console.log('[TICK] === STARTING FLOOR LOOP ===');
             console.log('[TICK] Starting tick for floor', state.currentFloor, 'with party:', state.party?.length, 'mainChar hp:', state.mainCharacter?.hp);
             const floorData = DungeonManager.generateFloor(state.currentFloor);
+            console.log('[TICK] Generated floor with', floorData.rooms.length, 'rooms');
+            
+            // Ensure at least one combat room
+            if (floorData.rooms.length === 0 || !floorData.rooms.some(r => r.type === 'Encounter' || r.type === 'Boss')) {
+                console.log('[TICK] WARNING: No combat rooms, forcing one');
+                floorData.rooms.push({
+                    id: 'forced_combat',
+                    type: 'Encounter',
+                    description: 'A forced encounter for testing'
+                });
+            }
+            
             const roomResults: any[] = [];
             
         // Ensure floor is valid
