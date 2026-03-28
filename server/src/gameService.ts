@@ -174,6 +174,17 @@ export class GameService {
             }
             console.log('[BATTLE] mainChar:', mainChar ? `${mainChar.name} hp:${mainChar.hp}` : 'null', 'inRecovery:', mainInRecovery);
             
+            // EMERGENCY FIX: If no participants, force mainChar to fight
+            if (!mainChar && state.mainCharacter) {
+                console.log('[BATTLE] EMERGENCY: No mainChar, forcing fight');
+                mainChar = { ...state.mainCharacter, hp: state.mainCharacter.maxHp || 150 };
+            }
+            if (healableParty.length === 0 && state.party.length > 0) {
+                console.log('[BATTLE] EMERGENCY: No party fighting, forcing first member');
+                const firstPartyMember = { ...state.party[0], hp: state.party[0].maxHp || 150 };
+                healableParty.push(firstPartyMember);
+            }
+            
             participants = [mainChar, ...healableParty].filter(p => p !== null).map(p => {
                 const member = { ...p };
                 console.log('[BATTLE] Participant:', member.name, 'HP:', member.hp, 'maxHp:', member.maxHp);
@@ -188,8 +199,8 @@ export class GameService {
             });
 
             if (participants.length === 0 && state.mainCharacter) {
-                console.log('[BATTLE] No fighters but mainCharacter exists - reviving them');
-                participants = [{ ...state.mainCharacter, hp: state.mainCharacter.maxHp, recoveryUntil: 0 }];
+                console.log('[BATTLE] ULTIMATE FALLBACK: Force mainCharacter to fight');
+                participants = [{ ...state.mainCharacter, hp: state.mainCharacter.maxHp || 150, recoveryUntil: 0 }];
             } else if (participants.length === 0) {
                 console.log('[BATTLE] No fighters available at all!');
                 partyDefeated = true;
