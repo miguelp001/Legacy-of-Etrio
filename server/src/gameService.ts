@@ -157,7 +157,12 @@ export class GameService {
             const floorData = DungeonManager.generateFloor(state.currentFloor);
             const roomResults: any[] = [];
             
-            const now = Date.now();
+        // Ensure floor is valid
+        if (!state.currentFloor || state.currentFloor < 1) {
+            state.currentFloor = 1;
+        }
+        
+        const now = Date.now();
             
             // Party members who can fight (not in recovery)
             const healableParty = state.party.filter((p: any) => {
