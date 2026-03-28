@@ -175,11 +175,14 @@ app.post('/api/game/upgrade', async (c) => {
 
 app.post('/api/game/tick', async (c) => {
     const { playerId, keepDelving } = await c.req.json();
+    console.log('[API] tick called with playerId:', playerId, 'keepDelving:', keepDelving);
     try {
         const result = await GameService.processCombatTick(playerId, keepDelving);
+        console.log('[API] tick returning result, roomResults:', result.roomResults?.length, 'defeated:', result.defeated);
         return c.json(result);
     } catch (e: any) {
-        return c.json({ error: e.message }, 400);
+        console.error('[API] tick error:', e.message, e.stack);
+        return c.json({ error: e.message, stack: e.stack, apiError: true }, 500);
     }
 });
 
