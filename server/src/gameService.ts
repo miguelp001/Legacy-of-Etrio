@@ -170,19 +170,19 @@ export class GameService {
             
             const roomResults: any[] = [];
             
-        // Ensure floor is valid
-        if (!state.currentFloor || state.currentFloor < 1) {
-            state.currentFloor = 1;
-        }
-        
-        const now = Date.now();
+            // Ensure floor is valid
+            if (!state.currentFloor || state.currentFloor < 1) {
+                state.currentFloor = 1;
+            }
+            
+            const now = Date.now();
             
             // Party members who can fight (not in recovery)
             const healableParty = state.party.filter((p: any) => {
                 const isInRecovery = p.recoveryUntil && p.recoveryUntil > now;
                 return !isInRecovery && p.hp > 0;
             });
-            console.log('[BATTLE] healableParty:', healableParty.map(p => ({ name: p.name, hp: p.hp })));
+            console.log('[BATTLE] healableParty:', healableParty.map((p: any) => ({ name: p.name, hp: p.hp })));
             
             // Main character
             let mainChar = state.mainCharacter;
