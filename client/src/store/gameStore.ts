@@ -7,8 +7,8 @@ import { NPCGenerator } from '../../../shared/src/party.js';
 import type { GateMilestone } from '../../../shared/src/gate.js';
 import { GateManager } from '../../../shared/src/gate.js';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
-console.log('API_BASE configured as:', API_BASE || '(relative paths)');
+const API_BASE = 'https://etrio-api.miguelp001.workers.dev';
+console.log('API_BASE configured as:', API_BASE);
 
 interface GuildUpgrade {
     id: string;
@@ -203,26 +203,35 @@ export const useGameStore = create<GameState>()(
           }
 
           try {
-            console.log(`[TICK] Contacting engine at: ${API_BASE}/api/game/tick, keepDelving: ${keepDelving}`);
-            const url = `${API_BASE}/api/game/tick`;
+            const url = 'https://etrio-api.miguelp001.workers.dev/api/game/tick';
             console.log('[TICK] Full URL:', url);
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ playerId: state.playerId, keepDelving })
-            });
-
+            let response;
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 30000);
+                
+                response = await fetch(url, {
+                    method: 'POST',
+                    mode: 'cors',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ playerId: state.playerId, keepDelving }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeout);
+            } catch (fetchErr: any) {
+                alert('Network error: ' + fetchErr.message);
+                console.error('Fetch error:', fetchErr);
+                throw fetchErr;
+            }
+            
             console.log('[TICK] Response status:', response.status, 'ok:', response.ok);
 
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`Combat tick failed (${response.status}):`, errorText);
-                try {
-                  const errorJson = JSON.parse(errorText);
-                  throw new Error(errorJson.error || 'Server error during combat tick');
-                } catch {
-                  throw new Error(`Server Error ${response.status}: ${errorText.substring(0, 50)}`);
-                }
+                alert('Server error: ' + response.status + ' - ' + errorText.substring(0, 100));
+                throw new Error('Server error: ' + response.status);
             }
 
             const data = await response.json();
