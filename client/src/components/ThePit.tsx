@@ -368,9 +368,11 @@ const ThePit: React.FC = () => {
                 setLocation('Hospital');
             } else {
                 console.log('[PIT] No rooms in response, res:', JSON.stringify(res));
+                alert('Failed to descend: No rooms generated. Please try again. (Floor: ' + currentFloor + ')');
             }
         } catch (err: any) {
             console.error('[PIT] Descent failed:', err.message);
+            alert('Descent failed: ' + err.message);
         } finally {
             setLoading(false);
         }
