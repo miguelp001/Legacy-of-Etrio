@@ -344,17 +344,24 @@ const ThePit: React.FC = () => {
     }, []);
 
     const startDescent = async () => {
-        console.log('[PIT] startDescent called, keepDelving:', keepDelving, 'mainCharacter:', mainCharacter?.name, 'party:', party?.length);
+        console.log('[PIT] startDescent called, keepDelving:', keepDelving, 'mainCharacter:', mainCharacter?.name, 'party:', party?.length, 'currentFloor:', currentFloor);
         setLoading(true);
         clearTimers();
         try {
             console.log('[PIT] Calling processCombatTick');
             const res = await processCombatTick(keepDelving);
-            console.log('[PIT] processCombatTick returned:', JSON.stringify({ 
+            console.log('[PIT] processCombatTick returned:', res);
+            console.log('[PIT] processCombatTick returned (parsed):', JSON.stringify({ 
                 defeated: res?.defeated, 
                 roomResultsLength: res?.roomResults?.length,
-                floorsCleared: res?.floorsCleared 
+                floorsCleared: res?.floorsCleared,
+                hasState: !!res?.state,
+                stateFloor: res?.state?.currentFloor
             }));
+            if (!res) {
+                alert('Error: No response from server');
+                return;
+            }
             if (res?.roomResults?.length) {
                 console.log('[PIT] Setting floor report, rooms:', res.roomResults.length);
                 setFloorReport(res);
@@ -368,7 +375,7 @@ const ThePit: React.FC = () => {
                 setLocation('Hospital');
             } else {
                 console.log('[PIT] No rooms in response, res:', JSON.stringify(res));
-                alert('Failed to descend: No rooms generated. Please try again. (Floor: ' + currentFloor + ')');
+                alert('Failed to descend: No rooms generated. Please try again. (Floor: ' + currentFloor + ', keepDelving: ' + keepDelving + ')');
             }
         } catch (err: any) {
             console.error('[PIT] Descent failed:', err.message);
